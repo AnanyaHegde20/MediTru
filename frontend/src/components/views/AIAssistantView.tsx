@@ -32,7 +32,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     {
       id: 'msg_welcome',
       sender: 'assistant',
-      text: `Hello ${currentUser.name.split(' ')[0]}! I am your MediCare AI Health Assistant.\n\nI can help you understand lab reports, learn about medications, review symptoms, and suggest lifestyle adjustments. How can I support your health today?`,
+      text: `Hello ${currentUser.name.split(' ')[0]}! I am your MediTru AI Health Assistant.\n\nI can help you understand lab reports, learn about medications, review symptoms, and suggest lifestyle adjustments. How can I support your health today?`,
       timestamp: 'Just now',
     },
   ]);
@@ -217,7 +217,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
               <Bot className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-xs font-bold text-slate-900">MediCare AI Health Assistant</h2>
+              <h2 className="text-xs font-bold text-slate-900">MediTru AI Health Assistant</h2>
               <p className="text-[10px] text-slate-400">Available 24/7 • Clinical Insights Engine</p>
             </div>
           </div>

@@ -56,7 +56,7 @@ export const mockDoctors: Doctor[] = [
     nextAvailable: 'Tomorrow, 10:00 AM',
     avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&auto=format&fit=crop&q=80',
     bio: 'Board-certified dermatologist specializing in clinical dermatology, skin cancer screenings, and advanced cosmetic therapies.',
-    hospital: 'MediCare Central Hospital, San Francisco',
+    hospital: 'MediTru Central Hospital, San Francisco',
     education: 'MD from Stanford University School of Medicine',
     slots: {
       morning: ['09:00 AM', '10:00 AM', '11:30 AM'],

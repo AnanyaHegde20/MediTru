@@ -348,7 +348,7 @@ export default function App() {
                   {[
                     { name: 'Dr. Alan Stone', role: 'Cardiologist', time: '10:45 AM', unread: 2, snippet: 'Your lipid panel looks steady. Keep up the morning walks.' },
                     { name: 'Dr. Rajesh Kumar', role: 'Internal Medicine', time: 'Yesterday', unread: 0, snippet: 'Please remember to bring your BP log to next session.' },
-                    { name: 'MediCare Care Coordinator', role: 'Clinical Staff', time: 'Oct 20', unread: 0, snippet: 'Your prescription refill for Lisinopril has been approved.' },
+                    { name: 'MediTru Care Coordinator', role: 'Clinical Staff', time: 'Oct 20', unread: 0, snippet: 'Your prescription refill for Lisinopril has been approved.' },
                   ].map((chat, idx) => (
                     <div key={idx} className="p-3 rounded-xl border border-slate-200/80 bg-slate-50/70 hover:bg-white transition-all cursor-pointer">
                       <div className="flex items-center justify-between">

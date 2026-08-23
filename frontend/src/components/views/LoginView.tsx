@@ -79,7 +79,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center justify-center gap-1.5">
-            MediCare
+            MediTru
           </h1>
           <p className="text-xs md:text-sm text-slate-500 mt-1 font-normal">
             Welcome back. Please sign in to your dashboard.

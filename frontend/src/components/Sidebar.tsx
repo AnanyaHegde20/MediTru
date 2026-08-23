@@ -85,7 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {!isCollapsed && (
             <div>
               <div className="font-bold text-slate-900 text-lg tracking-tight flex items-center gap-1.5">
-                MediCare
+                MediTru
               </div>
               <p className="text-[11px] text-slate-400 font-medium leading-none">Healthcare OS</p>
             </div>

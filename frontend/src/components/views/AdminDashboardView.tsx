@@ -48,7 +48,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const [showAddDoctorModal, setShowAddDoctorModal] = useState(false);
   const [docName, setDocName] = useState('');
   const [docSpecialty, setDocSpecialty] = useState('Cardiology');
-  const [docHospital, setDocHospital] = useState('MediCare Heart Institute, San Francisco');
+  const [docHospital, setDocHospital] = useState('MediTru Heart Institute, San Francisco');
   const [docFee, setDocFee] = useState(90);
 
   const handleAddDoctorSubmit = (e: React.FormEvent) => {
@@ -387,7 +387,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
             <h3 className="text-base font-bold text-slate-900 mb-1">Add Healthcare Provider</h3>
             <p className="text-xs text-slate-500 mb-4">
-              Register a certified doctor to the MediCare directory and scheduling system.
+              Register a certified doctor to the MediTru directory and scheduling system.
             </p>
 
             <form onSubmit={handleAddDoctorSubmit} className="space-y-4">

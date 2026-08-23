@@ -99,7 +99,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
               +
             </div>
-            MediCare
+            MediTru
           </div>
         </div>
 

@@ -54,7 +54,7 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
       `Patient Name: ${currentUser.name}\n` +
       `Date: ${new Date().toLocaleDateString()}\n` +
       `Report: ${reportName}\n` +
-      `Facility: MediCare Central Diagnostics\n\n` +
+      `Facility: MediTru Central Diagnostics\n\n` +
       `Clinical Status: Verified by Medical Board\n` +
       `Summary: All recorded values have been cross-checked with certified clinical reference standards.`
     ], { type: 'text/plain' });
@@ -283,14 +283,14 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
         </div>
       </div>
 
-      {/* MediCare AI Assistant Prompt Bar */}
+      {/* MediTru AI Assistant Prompt Bar */}
       <div className="card-minimal p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 bg-gradient-to-r from-blue-50 to-white border border-blue-100">
         <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-sm shrink-0 self-start sm:self-auto">
           <Bot className="w-5 h-5" />
         </div>
         <form onSubmit={handleQuickSubmit} className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <div className="flex-1">
-            <div className="text-xs font-semibold text-blue-900 mb-1">MediCare AI Assistant</div>
+            <div className="text-xs font-semibold text-blue-900 mb-1">MediTru AI Assistant</div>
             <input
               type="text"
               value={quickPrompt}
