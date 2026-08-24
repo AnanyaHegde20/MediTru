@@ -1,39 +1,32 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Sparkles, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, CheckCircle2, ArrowRight, ShieldCheck, Stethoscope, UserCog } from 'lucide-react';
 import { UserRole } from '../../types';
 
+const ROLE_CREDENTIALS: Record<UserRole, { email: string; password: string }> = {
+  patient: { email: 'priya.sharma@example.com', password: 'password123' },
+  doctor: { email: 'rajesh.kumar@medicare.health', password: 'doctorpass2024' },
+  admin: { email: 'admin@medicare.health', password: 'adminsecure99' },
+};
+
 interface LoginViewProps {
+  role?: UserRole;
   onLogin: (role: UserRole) => void;
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({
+  role = 'patient',
   onLogin,
 }) => {
-  const [selectedRole, setSelectedRole] = useState<UserRole>('patient');
-  const [email, setEmail] = useState('priya.sharma@example.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState(ROLE_CREDENTIALS[role].email);
+  const [password, setPassword] = useState(ROLE_CREDENTIALS[role].password);
   const [isLoading, setIsLoading] = useState(false);
-
-  const handleRoleChange = (role: UserRole) => {
-    setSelectedRole(role);
-    if (role === 'patient') {
-      setEmail('priya.sharma@example.com');
-      setPassword('password123');
-    } else if (role === 'doctor') {
-      setEmail('rajesh.kumar@medicare.health');
-      setPassword('doctorpass2024');
-    } else {
-      setEmail('admin@medicare.health');
-      setPassword('adminsecure99');
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      onLogin(selectedRole);
+      onLogin(role);
     }, 450);
   };
 
@@ -41,7 +34,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      onLogin(selectedRole);
+      onLogin(role);
     }, 450);
   };
 
@@ -81,31 +74,26 @@ export const LoginView: React.FC<LoginViewProps> = ({
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center justify-center gap-1.5">
             MediTru
           </h1>
-          <p className="text-xs md:text-sm text-slate-500 mt-1 font-normal">
-            Welcome back. Please sign in to your dashboard.
+          <div
+            id={`login-role-badge-${role}`}
+            className="inline-flex items-center gap-1.5 mt-2.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-bold uppercase tracking-wider text-blue-700"
+          >
+            {role === 'doctor' ? (
+              <Stethoscope className="w-3 h-3" />
+            ) : role === 'admin' ? (
+              <UserCog className="w-3 h-3" />
+            ) : (
+              <ShieldCheck className="w-3 h-3" />
+            )}
+            <span>{role} Portal</span>
+          </div>
+          <p className="text-xs md:text-sm text-slate-500 mt-1.5 font-normal">
+            {role === 'doctor'
+              ? 'Sign in to manage patients, queue & clinical notes.'
+              : role === 'admin'
+                ? 'Sign in to oversee providers, KPIs & revenue.'
+                : 'Sign in to your appointments, records & AI health assistant.'}
           </p>
-        </div>
-
-        {/* Role Segmented Switcher */}
-        <div
-          id="login-role-tabs"
-          className="bg-slate-100/90 p-1 rounded-xl flex items-center gap-1 mb-6 border border-slate-200/60"
-        >
-          {(['patient', 'doctor', 'admin'] as UserRole[]).map((role) => (
-            <button
-              key={role}
-              type="button"
-              id={`login-role-${role}`}
-              onClick={() => handleRoleChange(role)}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg capitalize transition-all ${
-                selectedRole === role
-                  ? 'bg-white text-blue-600 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {role}
-            </button>
-          ))}
         </div>
 
         {/* Login Form */}
@@ -165,7 +153,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
-                <span>Sign In as {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}</span>
+                <span>Sign In as {role.charAt(0).toUpperCase() + role.slice(1)}</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </>
             )}
@@ -214,7 +202,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
         <div className="text-center mt-5 text-xs text-slate-500">
           Don't have an account?{' '}
           <button
-            onClick={() => onLogin(selectedRole)}
+            onClick={() => onLogin(role)}
             className="text-blue-600 font-semibold hover:underline"
           >
             Create account
@@ -224,36 +212,27 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
       {/* Demo Credentials Quick Switch Pill Bar */}
       <div className="mt-5 text-center text-xs text-slate-400 flex items-center justify-center gap-3">
-        <span>Quick Demo:</span>
-        <button
-          onClick={() => {
-            handleRoleChange('patient');
-            onLogin('patient');
-          }}
-          className="text-blue-600 font-semibold hover:underline"
+        <span>Switch Portal:</span>
+        <a
+          href="/patient"
+          className={`font-semibold hover:underline ${role === 'patient' ? 'text-blue-600 underline' : 'text-blue-600/70'}`}
         >
           Patient (Priya)
-        </button>
+        </a>
         <span>•</span>
-        <button
-          onClick={() => {
-            handleRoleChange('doctor');
-            onLogin('doctor');
-          }}
-          className="text-emerald-600 font-semibold hover:underline"
+        <a
+          href="/doctor"
+          className={`font-semibold hover:underline ${role === 'doctor' ? 'text-emerald-600 underline' : 'text-emerald-600/70'}`}
         >
           Doctor (Dr. Rajesh)
-        </button>
+        </a>
         <span>•</span>
-        <button
-          onClick={() => {
-            handleRoleChange('admin');
-            onLogin('admin');
-          }}
-          className="text-slate-800 font-semibold hover:underline"
+        <a
+          href="/admin"
+          className={`font-semibold hover:underline ${role === 'admin' ? 'text-slate-800 underline' : 'text-slate-800/70'}`}
         >
           Admin (Sarah)
-        </button>
+        </a>
       </div>
     </div>
   );

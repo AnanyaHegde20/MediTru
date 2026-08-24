@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
 import { MobileNav } from './components/MobileNav';
@@ -41,10 +41,22 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+// URL-based role routing: /patient, /doctor, /admin open that workspace directly
+const getRoleFromPath = (): UserRole | null => {
+  const segment = window.location.pathname.split('/').filter(Boolean)[0]?.toLowerCase();
+  if (segment === 'patient' || segment === 'doctor' || segment === 'admin') {
+    return segment as UserRole;
+  }
+  return null;
+};
+
 export default function App() {
-  // Current user & authentication state
-  const [currentUser, setCurrentUser] = useState<UserProfile>(mockUsers.patient);
-  const [currentTab, setCurrentTab] = useState<ActiveTab>('dashboard');
+  // Current user & authentication state (seeded from the URL)
+  const initialRole = getRoleFromPath();
+  const [currentUser, setCurrentUser] = useState<UserProfile>(
+    initialRole ? mockUsers[initialRole] : mockUsers.patient
+  );
+  const [currentTab, setCurrentTab] = useState<ActiveTab>('login');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Application Data States
@@ -63,6 +75,17 @@ export default function App() {
   // Modal Visibility States
   const [showClinicalNotesModal, setShowClinicalNotesModal] = useState(false);
 
+  // Keep UI in sync when the browser back/forward buttons are used
+  useEffect(() => {
+    const onPopState = () => {
+      const role = getRoleFromPath();
+      setCurrentUser(role ? mockUsers[role] : mockUsers.patient);
+      setCurrentTab('login');
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
   // Handle Role Switch
   const handleRoleChange = (role: UserRole) => {
     if (role === 'patient') {
@@ -78,6 +101,7 @@ export default function App() {
   const handleLogin = (role: UserRole) => {
     handleRoleChange(role);
     setCurrentTab('dashboard');
+    window.history.pushState({ role }, '', `/${role}`);
   };
 
   // Handle new appointment booking
@@ -130,12 +154,14 @@ export default function App() {
     setCurrentTab('login');
     setSelectedReport(null);
     setAiInitialQuery(undefined);
+    window.history.pushState({}, '', '/');
   };
 
   // Render Login view directly if selected
   if (currentTab === 'login') {
     return (
       <LoginView
+        role={getRoleFromPath() ?? 'patient'}
         onLogin={handleLogin}
       />
     );
