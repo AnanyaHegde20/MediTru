@@ -7,6 +7,7 @@ import {
   PatientQueueItem,
   PatientActivityItem,
   AdminKPIs,
+  UserRole,
 } from '../types';
 
 export const mockUsers: Record<string, UserProfile> = {
@@ -592,4 +593,158 @@ export const mockRecentAdminActivity = [
   { id: '3', patient: 'Amit Patel', action: 'Consultation Started', doctor: 'Dr. Rajesh Kumar', time: '40 mins ago', status: 'In Progress' },
   { id: '4', patient: 'Sneha Reddy', action: 'Prescription Dispensed', doctor: 'Dr. Sarah Jenkins', time: '1 hr ago', status: 'Completed' },
   { id: '5', patient: 'Vikram Singh', action: 'Doctor Registered', doctor: 'Dr. Lisa Wong', time: '2 hrs ago', status: 'Completed' },
+];
+
+// ─── Secure Messaging (role-based inboxes) ───────────────────────────────
+
+export interface ChatBubble {
+  id: string;
+  sender: 'self' | 'other';
+  text: string;
+  time: string;
+}
+
+export interface MessageThread {
+  id: string;
+  forRole: UserRole; // whose inbox this thread appears in
+  participantName: string;
+  participantRoleLabel: string;
+  participantAvatar: string;
+  lastTime: string;
+  unread: number;
+  messages: ChatBubble[];
+}
+
+export const mockMessageThreads: MessageThread[] = [
+  // ── Patient inbox (Priya Sharma)
+  {
+    id: 'thr_pt_stone',
+    forRole: 'patient',
+    participantName: 'Dr. Alan Stone',
+    participantRoleLabel: 'Cardiologist',
+    participantAvatar:
+      'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80',
+    lastTime: '10:45 AM',
+    unread: 1,
+    messages: [
+      { id: 'm1', sender: 'self', text: 'Hello Dr. Stone! I reviewed the lipid panel and noticed my HDL is up to 58 mg/dL. Should I continue the same dosage?', time: '10:42 AM' },
+      { id: 'm2', sender: 'other', text: 'Hello Priya! Yes, your lipid panel looks steady. Keep up the morning walks and low-sodium diet. We will do a routine review next month.', time: '10:45 AM' },
+    ],
+  },
+  {
+    id: 'thr_pt_kumar',
+    forRole: 'patient',
+    participantName: 'Dr. Rajesh Kumar',
+    participantRoleLabel: 'Internal Medicine',
+    participantAvatar:
+      'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&auto=format&fit=crop&q=80',
+    lastTime: 'Yesterday',
+    unread: 0,
+    messages: [
+      { id: 'm1', sender: 'other', text: 'Please remember to bring your BP log to next session.', time: 'Yesterday' },
+      { id: 'm2', sender: 'self', text: 'Noted, doctor. I have recorded readings for the full week.', time: 'Yesterday' },
+    ],
+  },
+  {
+    id: 'thr_pt_coord',
+    forRole: 'patient',
+    participantName: 'MediTru Care Coordinator',
+    participantRoleLabel: 'Clinical Staff',
+    participantAvatar:
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+    lastTime: 'Oct 20',
+    unread: 0,
+    messages: [
+      { id: 'm1', sender: 'other', text: 'Your prescription refill for Lisinopril has been approved.', time: 'Oct 20' },
+      { id: 'm2', sender: 'self', text: 'Thank you! When will it be ready for pickup?', time: 'Oct 20' },
+    ],
+  },
+
+  // ── Doctor inbox (Dr. Rajesh Kumar)
+  {
+    id: 'thr_dr_priya',
+    forRole: 'doctor',
+    participantName: 'Priya Sharma',
+    participantRoleLabel: 'Patient • Hypertension',
+    participantAvatar:
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    lastTime: '10:42 AM',
+    unread: 1,
+    messages: [
+      { id: 'm1', sender: 'other', text: 'Hello doctor! My HDL is up to 58 mg/dL now. Should I continue the same dosage?', time: '10:42 AM' },
+      { id: 'm2', sender: 'self', text: 'Great progress Priya! Yes, continue Lisinopril 10mg and keep up the morning walks.', time: '10:45 AM' },
+    ],
+  },
+  {
+    id: 'thr_dr_vikram',
+    forRole: 'doctor',
+    participantName: 'Vikram Singh',
+    participantRoleLabel: 'Patient • Coronary Monitoring',
+    participantAvatar:
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+    lastTime: '9:15 AM',
+    unread: 0,
+    messages: [
+      { id: 'm1', sender: 'other', text: 'I felt mild chest tightness after climbing stairs today. Should I be concerned?', time: '9:10 AM' },
+      { id: 'm2', sender: 'self', text: 'Monitor it and log the episodes. If it recurs at rest or worsens, come in immediately.', time: '9:15 AM' },
+    ],
+  },
+  {
+    id: 'thr_dr_sneha',
+    forRole: 'doctor',
+    participantName: 'Sneha Reddy',
+    participantRoleLabel: 'Patient • Hypothyroidism',
+    participantAvatar:
+      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+    lastTime: 'Mon',
+    unread: 0,
+    messages: [
+      { id: 'm1', sender: 'self', text: 'Your TSH report is attached in records. Levels are stable on 50mcg.', time: 'Mon' },
+      { id: 'm2', sender: 'other', text: 'Thank you doctor, feeling much better this month!', time: 'Mon' },
+    ],
+  },
+
+  // ── Admin inbox
+  {
+    id: 'thr_ad_mercer',
+    forRole: 'admin',
+    participantName: 'Dr. Robert Mercer',
+    participantRoleLabel: 'Cardiology Dept.',
+    participantAvatar:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    lastTime: '11:20 AM',
+    unread: 1,
+    messages: [
+      { id: 'm1', sender: 'other', text: 'Two consults overlap in Room 304 tomorrow. Can we shift one to Telehealth?', time: '11:18 AM' },
+      { id: 'm2', sender: 'self', text: 'Approved — moving the 2 PM slot to Telehealth Room B.', time: '11:20 AM' },
+    ],
+  },
+  {
+    id: 'thr_ad_ops',
+    forRole: 'admin',
+    participantName: 'Front Desk Ops',
+    participantRoleLabel: 'Staff',
+    participantAvatar:
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    lastTime: '9:02 AM',
+    unread: 0,
+    messages: [
+      { id: 'm1', sender: 'other', text: 'Morning census: 42 OPD arrivals, 3 admissions pending.', time: '9:00 AM' },
+      { id: 'm2', sender: 'self', text: 'Acknowledged. Route admissions to Ward C.', time: '9:02 AM' },
+    ],
+  },
+  {
+    id: 'thr_ad_billing',
+    forRole: 'admin',
+    participantName: 'Billing Team',
+    participantRoleLabel: 'Finance',
+    participantAvatar:
+      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
+    lastTime: 'Fri',
+    unread: 0,
+    messages: [
+      { id: 'm1', sender: 'other', text: 'Insurance claim batch #8841 submitted — 96% clearance rate.', time: 'Fri' },
+      { id: 'm2', sender: 'self', text: 'Excellent. Escalate the rejected 4% for review.', time: 'Fri' },
+    ],
+  },
 ];

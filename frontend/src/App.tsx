@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
 import { MobileNav } from './components/MobileNav';
+import { MessagesView } from './components/MessagesView';
 
 // View screens matching Figma specs
 import { LoginView } from './components/views/LoginView';
@@ -357,64 +358,7 @@ export default function App() {
 
           {/* 8. MESSAGES VIEW */}
           {currentTab === 'messages' && (
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div>
-                  <h2 className="text-base font-bold text-slate-900">Secure Care Team Messages</h2>
-                  <p className="text-xs text-slate-400">Encrypted clinical communications between patients & providers</p>
-                </div>
-                <span className="text-xs font-semibold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>256-bit Encrypted</span>
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  {[
-                    { name: 'Dr. Alan Stone', role: 'Cardiologist', time: '10:45 AM', unread: 2, snippet: 'Your lipid panel looks steady. Keep up the morning walks.' },
-                    { name: 'Dr. Rajesh Kumar', role: 'Internal Medicine', time: 'Yesterday', unread: 0, snippet: 'Please remember to bring your BP log to next session.' },
-                    { name: 'MediTru Care Coordinator', role: 'Clinical Staff', time: 'Oct 20', unread: 0, snippet: 'Your prescription refill for Lisinopril has been approved.' },
-                  ].map((chat, idx) => (
-                    <div key={idx} className="p-3 rounded-xl border border-slate-200/80 bg-slate-50/70 hover:bg-white transition-all cursor-pointer">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900">{chat.name}</span>
-                        <span className="text-[10px] text-slate-400">{chat.time}</span>
-                      </div>
-                      <div className="text-[11px] text-blue-600">{chat.role}</div>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-1">{chat.snippet}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="md:col-span-2 bg-slate-50/50 rounded-xl border border-slate-200/80 p-4 flex flex-col justify-between min-h-[300px]">
-                  <div className="space-y-3">
-                    <div className="p-3 bg-blue-600 text-white text-xs rounded-xl rounded-tr-xs max-w-md ml-auto">
-                      Hello Dr. Stone! I reviewed the lipid panel and noticed my HDL is up to 58 mg/dL. Should I continue the same dosage?
-                      <div className="text-[10px] text-blue-200 text-right mt-1">10:42 AM</div>
-                    </div>
-                    <div className="p-3 bg-white border border-slate-200 text-slate-800 text-xs rounded-xl rounded-tl-xs max-w-md">
-                      Hello Priya! Yes, your lipid panel looks steady. Keep up the morning walks and low-sodium diet. We will do a routine review next month.
-                      <div className="text-[10px] text-slate-400 text-right mt-1">10:45 AM</div>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-slate-200 flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Type a secure message to your care team..."
-                      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                    <button
-                      onClick={() => alert('Message sent securely to Care Team!')}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold cursor-pointer"
-                    >
-                      Send
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <MessagesView currentUser={currentUser} />
           )}
 
           {/* 9. SETTINGS & BACKEND CONFIG VIEW */}
