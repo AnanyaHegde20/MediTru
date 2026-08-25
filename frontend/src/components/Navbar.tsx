@@ -36,8 +36,12 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (onSwitchRole) onSwitchRole(role);
     else if (onRoleChange) onRoleChange(role);
   };
+  // Fall back to internal state when no external search handler is provided
+  const [internalQuery, setInternalQuery] = useState('');
+  const activeQuery = onSearchChange ? searchQuery : internalQuery;
   const handleSearchChange = (value: string) => {
     if (onSearchChange) onSearchChange(value);
+    else setInternalQuery(value);
   };
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
@@ -109,12 +113,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           <input
             id="global-search-input"
             type="text"
-            value={searchQuery}
+            value={activeQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder={getSearchPlaceholder()}
             className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs md:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all shadow-2xs"
           />
-          {searchQuery && (
+          {activeQuery && (
             <button
               onClick={() => handleSearchChange('')}
               className="absolute right-3 text-slate-400 hover:text-slate-600 cursor-pointer"
