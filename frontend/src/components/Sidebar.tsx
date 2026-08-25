@@ -112,7 +112,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Main Navigation Links */}
-      <div className="flex-1 py-4 space-y-1 overflow-y-auto">
+      <div
+        className={`flex-1 py-4 space-y-1 ${
+          isCollapsed ? 'overflow-visible' : 'overflow-y-auto'
+        }`}
+      >
         {!isCollapsed && (
           <div className="px-5 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
             Menu
@@ -126,7 +130,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               key={item.id}
               id={`nav-${item.id}`}
               onClick={() => onSelectTab(item.id)}
-              className={`w-[calc(100%-24px)] mx-3 flex items-center px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all group ${
+              className={`relative w-[calc(100%-24px)] mx-3 flex items-center px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all group ${
                 isCollapsed ? 'justify-center' : 'justify-between'
               } ${
                 isActive
@@ -156,6 +160,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </span>
                   )}
                 </div>
+              )}
+
+              {/* Collapsed-state hover tooltip (all roles share this sidebar) */}
+              {isCollapsed && (
+                <span
+                  role="tooltip"
+                  className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-lg opacity-0 transition-all duration-150 ease-out group-hover:opacity-100 group-hover:translate-x-0"
+                >
+                  {item.label}
+                </span>
               )}
             </button>
           );
