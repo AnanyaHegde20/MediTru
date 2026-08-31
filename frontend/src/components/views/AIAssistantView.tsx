@@ -14,14 +14,42 @@ import {
   ShieldAlert,
   CheckCircle2,
   Trash2,
+  Image as ImageIcon,
+  Film,
 } from 'lucide-react';
 import { ChatMessage, UserProfile } from '../../types';
+
+interface AttachedFileItem {
+  name: string;
+  size: string;
+  type: string;
+}
 
 interface AIAssistantViewProps {
   currentUser: UserProfile;
   onNavigateTab: (tab: any) => void;
   initialQuery?: string;
 }
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+};
+
+const getFileIcon = (type: string) => {
+  if (type.startsWith('image/')) return ImageIcon;
+  if (type.startsWith('video/')) return Film;
+  return FileText;
+};
+
+const getFileTypeLabel = (type: string): string => {
+  if (type.startsWith('image/')) return 'Image';
+  if (type.startsWith('video/')) return 'Video';
+  if (type.includes('pdf')) return 'PDF';
+  if (type.includes('word') || type.includes('document')) return 'Document';
+  return 'File';
+};
 
 export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   currentUser,
@@ -39,7 +67,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
 
   const [inputPrompt, setInputPrompt] = useState(initialQuery || '');
   const [isTyping, setIsTyping] = useState(false);
-  const [attachedFile, setAttachedFile] = useState<{ name: string; size: string; content?: string } | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFileItem[]>([]);
 
   const [chatHistory, setChatHistory] = useState([
     { id: 'h1', title: 'Lipid Panel Review & HDL Tips', date: 'Yesterday' },
@@ -48,7 +76,10 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     { id: 'h4', title: 'Seasonal Rhinitis & Antihistamines', date: '2 weeks ago' },
   ]);
 
+  const [activeChatId, setActiveChatId] = useState<string>('current');
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -62,20 +93,22 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
 
   const handleSendMessage = async (customText?: string) => {
     const textToSend = customText || inputPrompt;
-    if (!textToSend.trim() && !attachedFile) return;
+    if (!textToSend.trim() && attachedFiles.length === 0) return;
 
     const userMessage: ChatMessage = {
       id: `user_${Date.now()}`,
       sender: 'user',
       text: textToSend,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      attachments: attachedFile ? [{ name: attachedFile.name, size: attachedFile.size, type: 'PDF' }] : undefined,
+      attachments: attachedFiles.length > 0
+        ? attachedFiles.map((f) => ({ name: f.name, size: f.size, type: getFileTypeLabel(f.type) }))
+        : undefined,
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInputPrompt('');
-    const currentAttachment = attachedFile;
-    setAttachedFile(null);
+    const currentAttachments = [...attachedFiles];
+    setAttachedFiles([]);
     setIsTyping(true);
 
     try {
@@ -84,7 +117,9 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: textToSend,
-          reportContext: currentAttachment ? `Attached document: ${currentAttachment.name}` : undefined,
+          reportContext: currentAttachments.length > 0
+            ? `Attached documents: ${currentAttachments.map((f) => f.name).join(', ')}`
+            : undefined,
           history: messages.slice(-4).map((m) => ({ role: m.sender, text: m.text })),
         }),
       });
@@ -92,7 +127,6 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       const data = await response.json();
       const replyText = data.reply || data.message || 'I have reviewed your inquiry. Please consult a doctor for a definitive diagnostic exam.';
 
-      // Check if critical symptoms mentioned to show inline action
       const isUrgent = textToSend.toLowerCase().includes('chest pain') ||
         textToSend.toLowerCase().includes('palpitation') ||
         textToSend.toLowerCase().includes('shortness of breath') ||
@@ -112,7 +146,6 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (err) {
-      // Offline fallback
       setTimeout(() => {
         setMessages((prev) => [
           ...prev,
@@ -134,15 +167,47 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   };
 
   const handleAttachReport = () => {
-    // Simulated upload of PDF
-    setAttachedFile({
-      name: 'Lipid_Panel_Report_Oct2024.pdf',
-      size: '1.4 MB',
-      content: 'Total Cholesterol: 184 mg/dL, HDL: 58, LDL: 102, Triglycerides: 120.',
-    });
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newFiles: AttachedFileItem[] = Array.from(files).map((file) => ({
+      name: file.name,
+      size: formatFileSize(file.size),
+      type: file.type,
+    }));
+
+    setAttachedFiles((prev) => [...prev, ...newFiles]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleNewChat = () => {
+    const userMessages = messages.filter((m) => m.sender === 'user');
+    if (userMessages.length > 0) {
+      const firstUserMsg = userMessages[0].text;
+      const title = firstUserMsg.length > 40 ? firstUserMsg.substring(0, 40) + '...' : firstUserMsg;
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+      const newHistoryEntry = {
+        id: `h_${Date.now()}`,
+        title,
+        date: dateStr,
+      };
+
+      setChatHistory((prev) => [newHistoryEntry, ...prev]);
+    }
+
     setMessages([
       {
         id: `msg_new_${Date.now()}`,
@@ -151,10 +216,23 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         timestamp: 'Just now',
       },
     ]);
+    setInputPrompt('');
+    setAttachedFiles([]);
+    setActiveChatId(`chat_${Date.now()}`);
   };
 
   return (
     <div id="ai-assistant-screen" className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col md:flex-row min-h-[700px] h-[calc(100vh-140px)] animate-in fade-in">
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="image/*,video/*,.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
       {/* Left Chat History Panel */}
       <div className="w-full md:w-64 border-r border-slate-200/80 bg-slate-50/70 p-4 flex flex-col justify-between shrink-0">
         <div>
@@ -185,10 +263,17 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
                         timestamp: item.date,
                       },
                     ]);
+                    setInputPrompt('');
+                    setAttachedFiles([]);
+                    setActiveChatId(item.id);
                   }}
-                  className="w-full text-left p-2.5 rounded-xl hover:bg-white hover:border-slate-200 border border-transparent text-xs transition-all group"
+                  className={`w-full text-left p-2.5 rounded-xl hover:bg-white hover:border-slate-200 border text-xs transition-all group ${
+                    activeChatId === item.id ? 'bg-white border-slate-200' : 'border-transparent'
+                  }`}
                 >
-                  <div className="font-medium text-slate-800 group-hover:text-blue-600 truncate">
+                  <div className={`font-medium truncate ${
+                    activeChatId === item.id ? 'text-blue-600' : 'text-slate-800 group-hover:text-blue-600'
+                  }`}>
                     {item.title}
                   </div>
                   <div className="text-[10px] text-slate-400 mt-0.5">{item.date}</div>
@@ -260,12 +345,16 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
                       : 'bg-white border border-slate-200/90 text-slate-800 rounded-tl-xs'
                   }`}
                 >
-                  {/* Attached file badge if present */}
+                  {/* Attached file badges if present */}
                   {msg.attachments && msg.attachments.length > 0 && (
-                    <div className="mb-2.5 p-2 rounded-lg bg-blue-700/60 border border-white/20 flex items-center gap-2 text-xs">
-                      <FileText className="w-3.5 h-3.5" />
-                      <span className="truncate">{msg.attachments[0].name}</span>
-                      <span className="text-[10px] opacity-75">({msg.attachments[0].size})</span>
+                    <div className="mb-2.5 space-y-1.5">
+                      {msg.attachments.map((att, idx) => (
+                        <div key={idx} className="p-2 rounded-lg bg-blue-700/60 border border-white/20 flex items-center gap-2 text-xs">
+                          <FileText className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{att.name}</span>
+                          <span className="text-[10px] opacity-75 shrink-0">({att.size})</span>
+                        </div>
+                      ))}
                     </div>
                   )}
 
@@ -339,19 +428,28 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Attached file preview chip above input */}
-        {attachedFile && (
-          <div className="px-5 py-2 bg-slate-50 border-t border-slate-200/60 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs text-slate-700 font-medium">
-              <FileText className="w-4 h-4 text-blue-600" />
-              <span>Attached: <strong>{attachedFile.name}</strong> ({attachedFile.size})</span>
-            </div>
-            <button
-              onClick={() => setAttachedFile(null)}
-              className="text-slate-400 hover:text-rose-600 p-1"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
+        {/* Attached files preview chips above input */}
+        {attachedFiles.length > 0 && (
+          <div className="px-5 py-2 bg-slate-50 border-t border-slate-200/60 flex items-center gap-2 flex-wrap">
+            {attachedFiles.map((file, idx) => {
+              const Icon = getFileIcon(file.type);
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 font-medium shadow-2xs"
+                >
+                  <Icon className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  <span className="truncate max-w-[160px]">{file.name}</span>
+                  <span className="text-[10px] text-slate-400 shrink-0">({file.size})</span>
+                  <button
+                    onClick={() => handleRemoveFile(idx)}
+                    className="text-slate-400 hover:text-rose-600 p-0.5 ml-0.5 cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -367,7 +465,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
             <button
               type="button"
               onClick={handleAttachReport}
-              title="Attach Lab Report PDF for RAG interpretation"
+              title="Attach files, images, or videos"
               className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 hover:text-blue-600 transition-colors shadow-2xs cursor-pointer shrink-0"
             >
               <Paperclip className="w-4 h-4" />
@@ -385,7 +483,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
             <button
               id="btn-ai-send"
               type="submit"
-              disabled={!inputPrompt.trim() && !attachedFile}
+              disabled={!inputPrompt.trim() && attachedFiles.length === 0}
               className="p-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl shadow-xs transition-colors cursor-pointer shrink-0"
             >
               <Send className="w-4 h-4" />
