@@ -1,4 +1,0 @@
-frontend/** linguist-vendored
-*.tsx linguist-vendored
-*.ts linguist-vendored
-frontend/package-lock.json linguist-generated
