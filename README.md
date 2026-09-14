@@ -3,16 +3,21 @@
 MediTru is a full-stack web application for managing healthcare workflows. It provides separate **Patient**, **Doctor**, and **Admin** workspaces with appointment booking, medical records, prescriptions, an AI Health Assistant, and AI-generated clinical notes (SOAP) for doctors.
 
 - **Frontend:** React 19 + Vite + Tailwind CSS (`frontend/`)
-- **Backend:** Node.js + Express + Google Gemini API (`backend/`)
+- **Backend:** Java 17 + Spring Boot 3.4 + Google Gemini API (`backend/`)
 
 ## Project Structure
 
 ```
 MediTru/
-├── backend/    # Express API server (port 3001)
-│   ├── server.ts
-│   ├── .env          # GEMINI_API_KEY lives here
-│   └── package.json
+├── backend/    # Spring Boot API server (port 3001)
+│   ├── pom.xml
+│   ├── .env              # GEMINI_API_KEY lives here
+│   └── src/main/java/com/meditru/
+│       ├── MediTruApplication.java
+│       ├── controller/   # REST controllers
+│       ├── service/      # Gemini API service
+│       ├── filter/       # Rate limiting, request logging
+│       └── config/       # CORS, properties
 └── frontend/   # React + Vite app (port 3000)
     ├── src/
     ├── index.html
@@ -21,6 +26,8 @@ MediTru/
 
 ## Prerequisites
 
+- [Java 17+](https://adoptium.net/) (JDK)
+- [Apache Maven 3.8+](https://maven.apache.org/)
 - [Node.js](https://nodejs.org/) (v18 or later)
 
 ## Setup
@@ -29,7 +36,7 @@ MediTru/
 
 ```bash
 cd backend
-npm install
+mvn compile
 ```
 
 ### 2. Frontend
@@ -59,7 +66,7 @@ Open **two terminals**:
 
 ```bash
 cd backend
-npm run start:dev
+mvn spring-boot:run
 ```
 
 **Terminal 2 — Frontend (port 3000):**
