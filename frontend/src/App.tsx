@@ -4,6 +4,7 @@ import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
 import { MobileNav } from './components/MobileNav';
 import { MessagesView } from './components/MessagesView';
+import { RouteErrorBoundary } from './components/RouteErrorBoundary';
 
 import { LoginView } from './components/views/LoginView';
 import { PatientDashboardView } from './components/views/PatientDashboardView';
@@ -71,6 +72,7 @@ function PatientRoutes() {
     <Routes>
       <Route index element={<Navigate to="dashboard" replace />} />
       <Route path="dashboard" element={
+        <RouteErrorBoundary>
         <PatientDashboardView
           currentUser={currentUser}
           appointments={store.appointments}
@@ -82,16 +84,20 @@ function PatientRoutes() {
           }}
           onQuickAskAI={quickAskAI}
         />
+        </RouteErrorBoundary>
       } />
       <Route path="appointments" element={
+        <RouteErrorBoundary>
         <AppointmentBookingView
           doctors={store.doctors}
           currentUser={currentUser}
           onBookAppointment={store.bookAppointment}
           onNavigateTab={() => {}}
         />
+        </RouteErrorBoundary>
       } />
       <Route path="records" element={
+        <RouteErrorBoundary>
         <MedicalRecordsView
           currentUser={currentUser}
           labReports={store.labReports}
@@ -101,8 +107,10 @@ function PatientRoutes() {
           onAskAIAboutReport={askAIAboutReport}
           onAddNewReport={store.addLabReport}
         />
+        </RouteErrorBoundary>
       } />
       <Route path="prescriptions" element={
+        <RouteErrorBoundary>
         <MedicalRecordsView
           currentUser={currentUser}
           labReports={store.labReports}
@@ -112,16 +120,19 @@ function PatientRoutes() {
           onAskAIAboutReport={askAIAboutReport}
           onAddNewReport={store.addLabReport}
         />
+        </RouteErrorBoundary>
       } />
       <Route path="ai-assistant" element={
+        <RouteErrorBoundary>
         <AIAssistantView
           currentUser={currentUser}
           onNavigateTab={() => {}}
           initialQuery={aiInitialQuery}
         />
+        </RouteErrorBoundary>
       } />
-      <Route path="messages" element={<MessagesView currentUser={currentUser} />} />
-      <Route path="settings" element={<SettingsView />} />
+      <Route path="messages" element={<RouteErrorBoundary><MessagesView currentUser={currentUser} /></RouteErrorBoundary>} />
+      <Route path="settings" element={<RouteErrorBoundary><SettingsView /></RouteErrorBoundary>} />
       <Route path="*" element={<Navigate to="dashboard" replace />} />
     </Routes>
   );
@@ -137,6 +148,7 @@ function DoctorRoutes() {
     <Routes>
       <Route index element={<Navigate to="dashboard" replace />} />
       <Route path="dashboard" element={
+        <RouteErrorBoundary>
         <DoctorDashboardView
           currentUser={currentUser}
           schedule={store.appointments}
@@ -146,16 +158,20 @@ function DoctorRoutes() {
           onNavigateTab={() => {}}
           onUpdateQueueStatus={store.updateQueueStatus}
         />
+        </RouteErrorBoundary>
       } />
       <Route path="patients" element={
+        <RouteErrorBoundary>
         <PatientsDirectoryView
           labReports={store.labReports}
           onSelectReport={() => {}}
           onNavigateToRecords={() => {}}
           onOpenClinicalNotes={openClinicalNotes}
         />
+        </RouteErrorBoundary>
       } />
       <Route path="records" element={
+        <RouteErrorBoundary>
         <MedicalRecordsView
           currentUser={currentUser}
           labReports={store.labReports}
@@ -165,9 +181,10 @@ function DoctorRoutes() {
           onAskAIAboutReport={() => {}}
           onAddNewReport={store.addLabReport}
         />
+        </RouteErrorBoundary>
       } />
-      <Route path="messages" element={<MessagesView currentUser={currentUser} />} />
-      <Route path="settings" element={<SettingsView />} />
+      <Route path="messages" element={<RouteErrorBoundary><MessagesView currentUser={currentUser} /></RouteErrorBoundary>} />
+      <Route path="settings" element={<RouteErrorBoundary><SettingsView /></RouteErrorBoundary>} />
       <Route path="*" element={<Navigate to="dashboard" replace />} />
     </Routes>
   );
@@ -183,21 +200,27 @@ function AdminRoutes() {
     <Routes>
       <Route index element={<Navigate to="dashboard" replace />} />
       <Route path="dashboard" element={
+        <RouteErrorBoundary>
         <AdminDashboardView onAddDoctor={store.addDoctor} />
+        </RouteErrorBoundary>
       } />
       <Route path="patients" element={
+        <RouteErrorBoundary>
         <PatientsDirectoryView
           labReports={store.labReports}
           onSelectReport={() => {}}
           onNavigateToRecords={() => {}}
           onOpenClinicalNotes={openClinicalNotes}
         />
+        </RouteErrorBoundary>
       } />
       <Route path="analytics" element={
+        <RouteErrorBoundary>
         <AdminDashboardView onAddDoctor={store.addDoctor} />
+        </RouteErrorBoundary>
       } />
-      <Route path="messages" element={<MessagesView currentUser={currentUser} />} />
-      <Route path="settings" element={<SettingsView />} />
+      <Route path="messages" element={<RouteErrorBoundary><MessagesView currentUser={currentUser} /></RouteErrorBoundary>} />
+      <Route path="settings" element={<RouteErrorBoundary><SettingsView /></RouteErrorBoundary>} />
       <Route path="*" element={<Navigate to="dashboard" replace />} />
     </Routes>
   );
