@@ -11,17 +11,21 @@ MediTru is a full-stack web application for managing healthcare workflows. It pr
 MediTru/
 ├── backend/    # Spring Boot API server (port 3001)
 │   ├── pom.xml
+│   ├── Dockerfile
 │   ├── .env              # GEMINI_API_KEY lives here
 │   └── src/main/java/com/meditru/
 │       ├── MediTruApplication.java
 │       ├── controller/   # REST controllers
 │       ├── service/      # Gemini API service
-│       ├── filter/       # Rate limiting, request logging
-│       └── config/       # CORS, properties
-└── frontend/   # React + Vite app (port 3000)
-    ├── src/
-    ├── index.html
-    └── package.json
+│       ├── filter/       # Rate limiting, security headers, logging
+│       ├── config/       # CORS, properties
+│       └── dto/          # Request/response records
+├── frontend/   # React + Vite app (port 3000)
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   ├── src/
+│   └── package.json
+└── docker-compose.yml
 ```
 
 ## Prerequisites
@@ -60,6 +64,8 @@ Get a free key from [Google AI Studio](https://aistudio.google.com/apikey).
 
 ## Running the App
 
+### Option A: Manual
+
 Open **two terminals**:
 
 **Terminal 1 — Backend (port 3001):**
@@ -78,14 +84,85 @@ npm run dev
 
 Then open **http://localhost:3000**
 
+### Option B: Docker Compose
+
+```bash
+docker-compose up --build
+```
+
+## Running Tests
+
+### Backend
+
+```bash
+cd backend
+mvn test
+```
+
+### Frontend
+
+```bash
+cd frontend
+npx vitest run
+```
+
+### Type Check
+
+```bash
+cd frontend
+npx tsc --noEmit
+```
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/health` | Health check (returns status, timestamp, hasGeminiKey) |
+| POST | `/api/gemini/health-assistant` | AI health assistant (message + chat history) |
+| POST | `/api/gemini/clinical-notes` | AI SOAP clinical notes generator |
+
+### Example Request — Health Assistant
+
+```json
+POST /api/gemini/health-assistant
+{
+  "message": "What are symptoms of flu?",
+  "history": [],
+  "reportContext": null
+}
+```
+
+### Example Request — Clinical Notes
+
+```json
+POST /api/gemini/clinical-notes
+{
+  "patientName": "John Doe",
+  "age": 35,
+  "symptoms": "fever, cough for 3 days",
+  "vitals": "Temp 101F, BP 120/80",
+  "consultationTranscript": "Patient reports persistent cough"
+}
+```
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GEMINI_API_KEY` | (empty) | Google Gemini API key |
+| `ALLOWED_ORIGINS` | `http://localhost:3000` | CORS allowed origins |
+
 ## Role-Based URLs
 
-| URL       | Page                    |
-| --------- | ----------------------- |
-| `/login`  | Login page              |
-| `/patient/*` | Patient portal      |
-| `/doctor/*`  | Doctor portal       |
-| `/admin/*`   | Admin console       |
+| URL | Page |
+|-----|------|
+| `/login` | Login page |
+| `/patient/*` | Patient portal |
+| `/doctor/*` | Doctor portal |
+| `/admin/*` | Admin console |
 
+## CI/CD
 
-
+GitHub Actions runs automatically on every push/PR to `main`:
+- Backend: compile + test (Java 17, Maven)
+- Frontend: install + typecheck + test + build (Node 20)

@@ -12,19 +12,19 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiErrorResponse> handleAllExceptions(Exception ex) {
-        log.error("[FATAL] {}", ex.getMessage(), ex);
-        return ResponseEntity.internalServerError().body(
-            ApiErrorResponse.of("Internal server error", "An unexpected error occurred.")
-        );
-    }
-
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiErrorResponse> handleRuntimeException(RuntimeException ex) {
         log.error("[ERROR] {}", ex.getMessage(), ex);
         return ResponseEntity.internalServerError().body(
             ApiErrorResponse.of("Service error", ex.getMessage())
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleAllExceptions(Exception ex) {
+        log.error("[FATAL] {}", ex.getMessage(), ex);
+        return ResponseEntity.internalServerError().body(
+            ApiErrorResponse.of("Internal server error", "An unexpected error occurred.")
         );
     }
 }

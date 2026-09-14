@@ -57,8 +57,13 @@ export const ClinicalNotesModal: React.FC<ClinicalNotesModalProps> = ({
       });
 
       const data = await response.json();
-      if (data.notes) {
-        setClinicalNotes(data.notes);
+      if (data.notesText) {
+        try {
+          const parsed = typeof data.notesText === 'string' ? JSON.parse(data.notesText) : data.notesText;
+          setClinicalNotes(parsed);
+        } catch {
+          setClinicalNotes({ subjective: data.notesText });
+        }
       }
     } catch (err) {
       console.error('Generation error:', err);
