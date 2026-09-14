@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
@@ -67,6 +67,13 @@ function PatientRoutes() {
   const store = useDataStore();
   const { selectedReport, setSelectedReport, quickAskAI, askAIAboutReport, aiInitialQuery } = useAIAssistant();
   const { openClinicalNotes } = useClinicalNotes();
+
+  useEffect(() => {
+    store.fetchDoctors();
+    store.fetchAppointments(undefined, undefined);
+    store.fetchLabReports(undefined);
+    store.fetchPrescriptions(undefined);
+  }, []);
 
   return (
     <Routes>
@@ -144,6 +151,13 @@ function DoctorRoutes() {
   const store = useDataStore();
   const { openClinicalNotes } = useClinicalNotes();
 
+  useEffect(() => {
+    store.fetchAppointments(undefined, undefined);
+    store.fetchPatientQueue(undefined);
+    store.fetchLabReports(undefined);
+    store.fetchPrescriptions(undefined);
+  }, []);
+
   return (
     <Routes>
       <Route index element={<Navigate to="dashboard" replace />} />
@@ -195,6 +209,11 @@ function AdminRoutes() {
   const { currentUser } = useAuth();
   const store = useDataStore();
   const { openClinicalNotes } = useClinicalNotes();
+
+  useEffect(() => {
+    store.fetchDoctors();
+    store.fetchAppointments(undefined, undefined);
+  }, []);
 
   return (
     <Routes>
