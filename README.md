@@ -82,10 +82,10 @@ Then open **http://localhost:3000**
 
 | URL       | Page                    |
 | --------- | ----------------------- |
-| `/`       | Patient sign-in (default) |
-| `/patient` | Patient portal sign-in |
-| `/doctor`  | Doctor portal sign-in   |
-| `/admin`   | Admin console sign-in   |
+| `/login`  | Login page              |
+| `/patient/*` | Patient portal      |
+| `/doctor/*`  | Doctor portal       |
+| `/admin/*`   | Admin console       |
 
 
 

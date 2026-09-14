@@ -68,9 +68,17 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private String getClientIp(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            return xForwardedFor.split(",")[0].trim();
+            String firstIp = xForwardedFor.split(",")[0].trim();
+            if (isValidIp(firstIp)) {
+                return firstIp;
+            }
         }
         return request.getRemoteAddr() != null ? request.getRemoteAddr() : "unknown";
+    }
+
+    private boolean isValidIp(String ip) {
+        if (ip == null || ip.isEmpty()) return false;
+        return ip.matches("^[\\d.:a-fA-F]+$");
     }
 
     private static class RateLimitEntry {

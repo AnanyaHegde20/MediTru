@@ -9,11 +9,8 @@ public final class Validators {
      */
     public static String sanitize(String input, int maxLength) {
         if (input == null) return "";
-        return input
-            .replace("<", "")
-            .replace(">", "")
-            .trim()
-            .substring(0, Math.min(input.trim().length(), maxLength));
+        String cleaned = input.replace("<", "").replace(">", "").trim();
+        return cleaned.substring(0, Math.min(cleaned.length(), maxLength));
     }
 
     /**

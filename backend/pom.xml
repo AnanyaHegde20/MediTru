@@ -28,6 +28,13 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- dotenv-java for .env file loading -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+
         <!-- Configuration Properties Processor -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
