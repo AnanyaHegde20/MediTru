@@ -10,6 +10,7 @@ import {
   FileText,
   Clock,
 } from 'lucide-react';
+import { useToast } from '../Toast';
 
 interface ClinicalNotesModalProps {
   patientName?: string;
@@ -41,6 +42,7 @@ export const ClinicalNotesModal: React.FC<ClinicalNotesModalProps> = ({
     suggestedPrescription: 'No immediate medication needed. Continue daily Multivitamin with Iron and Omega-3.',
     followUp: 'Follow up in clinic in 4 weeks with home blood pressure logs.',
   });
+  const { showToast } = useToast();
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -50,7 +52,7 @@ export const ClinicalNotesModal: React.FC<ClinicalNotesModalProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientName: patientInput,
-          rawSymptoms: symptomsInput,
+          symptoms: symptomsInput,
         }),
       });
 
@@ -218,7 +220,7 @@ export const ClinicalNotesModal: React.FC<ClinicalNotesModalProps> = ({
             </button>
             <button
               onClick={() => {
-                alert(`Consultation note saved directly to EHR for ${patientInput}!`);
+                showToast(`Consultation note saved to EHR for ${patientInput}.`);
                 onClose();
               }}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs cursor-pointer"

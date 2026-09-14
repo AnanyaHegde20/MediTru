@@ -17,6 +17,7 @@ import {
   Search,
 } from 'lucide-react';
 import { LabReport, Prescription, UserProfile } from '../../types';
+import { useToast } from '../Toast';
 
 interface MedicalRecordsViewProps {
   currentUser: UserProfile;
@@ -47,6 +48,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
   const [newReportDoctor, setNewReportDoctor] = useState('Dr. Alan Stone');
   const [newReportCategory, setNewReportCategory] = useState<'Hematology' | 'Lipid' | 'Metabolic'>('Hematology');
   const [isAbnormal, setIsAbnormal] = useState(false);
+  const { showToast } = useToast();
 
   const activeReport = selectedReport || labReports[0];
 
@@ -241,7 +243,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  alert(`Link generated to securely share ${report.name} with certified provider.`);
+                                  showToast(`Secure sharing link generated for ${report.name}.`);
                                 }}
                                 title="Share with Doctor"
                                 className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

@@ -37,6 +37,7 @@ import {
   mockRecentAdminActivity,
 } from '../../data/mockData';
 import { Doctor } from '../../types';
+import { useToast } from '../Toast';
 
 interface AdminDashboardViewProps {
   onAddDoctor: (doc: Doctor) => void;
@@ -50,6 +51,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const [docSpecialty, setDocSpecialty] = useState('Cardiology');
   const [docHospital, setDocHospital] = useState('MediTru Heart Institute, San Francisco');
   const [docFee, setDocFee] = useState(90);
+  const { showToast } = useToast();
 
   const handleAddDoctorSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -365,7 +367,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           </button>
 
           <button
-            onClick={() => alert('Exporting HIPAA Compliance Audit Log CSV...')}
+            onClick={() => showToast('HIPAA Compliance Audit Log CSV exported.')}
             className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4" />

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Lock, CheckCircle2, ArrowRight, ShieldCheck, Stethoscope, UserCog } from 'lucide-react';
 import { UserRole } from '../../types';
+import { useToast } from '../Toast';
 
 const ROLE_CREDENTIALS: Record<UserRole, { email: string; password: string }> = {
   patient: { email: 'priya.sharma@example.com', password: 'password123' },
@@ -20,6 +21,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const [email, setEmail] = useState(ROLE_CREDENTIALS[role].email);
   const [password, setPassword] = useState(ROLE_CREDENTIALS[role].password);
   const [isLoading, setIsLoading] = useState(false);
+  const { showToast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +125,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               </label>
               <button
                 type="button"
-                onClick={() => alert('Demo Reset Link: In production, password reset instructions are sent to ' + email)}
+                onClick={() => showToast('Password reset instructions sent to ' + email, 'info')}
                 className="text-xs font-medium text-blue-600 hover:text-blue-700"
               >
                 Forgot password?
