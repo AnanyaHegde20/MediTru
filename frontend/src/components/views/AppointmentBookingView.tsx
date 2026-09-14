@@ -14,13 +14,13 @@ import {
   X,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { Doctor, Appointment, UserProfile } from '../../types';
+import { ActiveTab, Doctor, Appointment, UserProfile } from '../../types';
 
 interface AppointmentBookingViewProps {
   doctors: Doctor[];
   currentUser: UserProfile;
   onBookAppointment: (newAppointment: Appointment) => void;
-  onNavigateTab: (tab: any) => void;
+  onNavigateTab: (tab: ActiveTab) => void;
 }
 
 export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({

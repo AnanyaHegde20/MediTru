@@ -14,14 +14,14 @@ import {
   ExternalLink,
   Bot,
 } from 'lucide-react';
-import { Appointment, LabReport, Prescription, UserProfile } from '../../types';
+import { ActiveTab, Appointment, LabReport, Prescription, UserProfile } from '../../types';
 
 interface PatientDashboardViewProps {
   currentUser: UserProfile;
   appointments: Appointment[];
   labReports: LabReport[];
   prescriptions: Prescription[];
-  onNavigateTab: (tab: any) => void;
+  onNavigateTab: (tab: ActiveTab) => void;
   onSelectReport: (report: LabReport) => void;
   onQuickAskAI: (query: string) => void;
 }

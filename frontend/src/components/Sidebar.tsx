@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Calendar,
@@ -9,65 +10,65 @@ import {
   Settings,
   Users,
   BarChart3,
-  Sparkles,
   LogOut,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { ActiveTab, UserRole, UserProfile } from '../types';
+import { UserRole, UserProfile } from '../types';
 
 interface SidebarProps {
-  currentTab: ActiveTab;
-  onSelectTab: (tab: ActiveTab) => void;
   currentUser: UserProfile;
   onLogout?: () => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }
 
+function getNavItems(role: UserRole) {
+  switch (role) {
+    case 'patient':
+      return [
+        { path: '/patient/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/patient/appointments', label: 'Appointments', icon: Calendar },
+        { path: '/patient/records', label: 'My Records', icon: FileText },
+        { path: '/patient/ai-assistant', label: 'AI Health Assistant', icon: Bot, badge: 'AI' },
+        { path: '/patient/prescriptions', label: 'Prescriptions', icon: Pill },
+        { path: '/patient/messages', label: 'Messages', icon: MessageSquare, count: 4 },
+        { path: '/patient/settings', label: 'Settings', icon: Settings },
+      ];
+    case 'doctor':
+      return [
+        { path: '/doctor/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/doctor/patients', label: 'My Patients', icon: Users },
+        { path: '/doctor/appointments', label: 'Appointments', icon: Calendar },
+        { path: '/doctor/ai-assistant', label: 'AI Assistant', icon: Bot, badge: 'AI' },
+        { path: '/doctor/prescriptions', label: 'Prescriptions', icon: Pill },
+        { path: '/doctor/analytics', label: 'Analytics', icon: BarChart3 },
+        { path: '/doctor/settings', label: 'Settings', icon: Settings },
+      ];
+    case 'admin':
+      return [
+        { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/admin/patients', label: 'Patients Directory', icon: Users },
+        { path: '/admin/analytics', label: 'Analytics & KPIs', icon: BarChart3 },
+        { path: '/admin/settings', label: 'System Settings', icon: Settings },
+      ];
+  }
+}
+
 export const Sidebar: React.FC<SidebarProps> = ({
-  currentTab,
-  onSelectTab,
   currentUser,
   onLogout,
   isCollapsed = false,
   onToggleCollapse,
 }) => {
-  const getNavItems = (role: UserRole) => {
-    switch (role) {
-      case 'patient':
-        return [
-          { id: 'dashboard' as ActiveTab, label: 'Dashboard', icon: LayoutDashboard },
-          { id: 'appointments' as ActiveTab, label: 'Appointments', icon: Calendar },
-          { id: 'records' as ActiveTab, label: 'My Records', icon: FileText },
-          { id: 'ai-assistant' as ActiveTab, label: 'AI Health Assistant', icon: Bot, badge: 'AI' },
-          { id: 'prescriptions' as ActiveTab, label: 'Prescriptions', icon: Pill },
-          { id: 'messages' as ActiveTab, label: 'Messages', icon: MessageSquare, count: 4 },
-          { id: 'settings' as ActiveTab, label: 'Settings', icon: Settings },
-        ];
-      case 'doctor':
-        return [
-          { id: 'dashboard' as ActiveTab, label: 'Dashboard', icon: LayoutDashboard },
-          { id: 'patients' as ActiveTab, label: 'My Patients', icon: Users },
-          { id: 'appointments' as ActiveTab, label: 'Appointments', icon: Calendar },
-          { id: 'ai-assistant' as ActiveTab, label: 'AI Assistant', icon: Bot, badge: 'AI' },
-          { id: 'prescriptions' as ActiveTab, label: 'Prescriptions', icon: Pill },
-          { id: 'analytics' as ActiveTab, label: 'Analytics', icon: BarChart3 },
-          { id: 'settings' as ActiveTab, label: 'Settings', icon: Settings },
-        ];
-      case 'admin':
-        return [
-          { id: 'dashboard' as ActiveTab, label: 'Dashboard', icon: LayoutDashboard },
-          { id: 'patients' as ActiveTab, label: 'Patients Directory', icon: Users },
-          { id: 'appointments' as ActiveTab, label: 'All Appointments', icon: Calendar },
-          { id: 'analytics' as ActiveTab, label: 'Analytics & KPIs', icon: BarChart3 },
-          { id: 'records' as ActiveTab, label: 'Audit & Records', icon: FileText },
-          { id: 'settings' as ActiveTab, label: 'System Settings', icon: Settings },
-        ];
-    }
-  };
-
+  const navigate = useNavigate();
+  const location = useLocation();
   const navItems = getNavItems(currentUser.role);
+
+  const handleLogout = () => {
+    onLogout?.();
+    navigate('/');
+  };
 
   return (
     <aside
@@ -124,26 +125,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = currentTab === item.id;
           return (
-            <button
-              key={item.id}
-              id={`nav-${item.id}`}
-              onClick={() => onSelectTab(item.id)}
-              className={`relative w-[calc(100%-24px)] mx-3 flex items-center px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all group ${
-                isCollapsed ? 'justify-center' : 'justify-between'
-              } ${
-                isActive
-                  ? 'bg-blue-50 text-blue-600 font-semibold'
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-              }`}
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `relative w-[calc(100%-24px)] mx-3 flex items-center px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all group ${
+                  isCollapsed ? 'justify-center' : 'justify-between'
+                } ${
+                  isActive
+                    ? 'bg-blue-50 text-blue-600 font-semibold'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                }`
+              }
             >
               <div className="flex items-center gap-3">
-                <Icon
-                  className={`w-4 h-4 transition-colors ${
-                    isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'
-                  }`}
-                />
+                <Icon className="w-4 h-4 transition-colors" />
                 {!isCollapsed && <span>{item.label}</span>}
               </div>
 
@@ -162,7 +159,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               )}
 
-              {/* Collapsed-state hover tooltip (all roles share this sidebar) */}
               {isCollapsed && (
                 <span
                   role="tooltip"
@@ -171,7 +167,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {item.label}
                 </span>
               )}
-            </button>
+            </NavLink>
           );
         })}
       </div>
@@ -199,7 +195,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <button
             id="btn-logout"
-            onClick={() => onLogout?.()}
+            onClick={handleLogout}
             title="Sign Out / Switch Role"
             className={`p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shrink-0 ${
               isCollapsed ? 'hidden' : 'ml-1'
@@ -210,7 +206,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
         {isCollapsed && (
           <button
-            onClick={() => onLogout?.()}
+            onClick={handleLogout}
             title="Sign Out / Switch Role"
             className="mt-2 mx-auto flex p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
           >

@@ -469,7 +469,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                   </label>
                   <select
                     value={newReportCategory}
-                    onChange={(e: any) => setNewReportCategory(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNewReportCategory(e.target.value as 'Hematology' | 'Lipid' | 'Metabolic')}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none"
                   >
                     <option value="Hematology">Hematology</option>

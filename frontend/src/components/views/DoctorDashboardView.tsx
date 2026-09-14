@@ -14,7 +14,7 @@ import {
   Activity,
   Plus,
 } from 'lucide-react';
-import { Appointment, PatientActivityItem, PatientQueueItem, UserProfile } from '../../types';
+import { ActiveTab, Appointment, PatientActivityItem, PatientQueueItem, UserProfile } from '../../types';
 
 interface DoctorDashboardViewProps {
   currentUser: UserProfile;
@@ -22,7 +22,7 @@ interface DoctorDashboardViewProps {
   queue: PatientQueueItem[];
   activity: PatientActivityItem[];
   onOpenClinicalNotes: (patientName?: string) => void;
-  onNavigateTab: (tab: any) => void;
+  onNavigateTab: (tab: ActiveTab) => void;
   onUpdateQueueStatus: (id: string, status: 'Waiting' | 'In Progress' | 'Done') => void;
 }
 

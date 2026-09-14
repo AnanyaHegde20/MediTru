@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Calendar,
@@ -9,45 +10,42 @@ import {
   Users,
   BarChart3,
 } from 'lucide-react';
-import { ActiveTab, UserRole } from '../types';
+import { UserRole } from '../types';
 
 interface MobileNavProps {
-  currentTab: ActiveTab;
-  onSelectTab: (tab: ActiveTab) => void;
   role: UserRole;
 }
 
-export const MobileNav: React.FC<MobileNavProps> = ({ currentTab, onSelectTab, role }) => {
-  const getTabs = () => {
-    switch (role) {
-      case 'patient':
-        return [
-          { id: 'dashboard' as ActiveTab, label: 'Home', icon: LayoutDashboard },
-          { id: 'appointments' as ActiveTab, label: 'Book', icon: Calendar },
-          { id: 'records' as ActiveTab, label: 'Records', icon: FileText },
-          { id: 'ai-assistant' as ActiveTab, label: 'AI Health', icon: Bot },
-          { id: 'messages' as ActiveTab, label: 'Messages', icon: MessageSquare },
-        ];
-      case 'doctor':
-        return [
-          { id: 'dashboard' as ActiveTab, label: 'Schedule', icon: LayoutDashboard },
-          { id: 'patients' as ActiveTab, label: 'Patients', icon: Users },
-          { id: 'appointments' as ActiveTab, label: 'Calendar', icon: Calendar },
-          { id: 'ai-assistant' as ActiveTab, label: 'AI Scribe', icon: Bot },
-          { id: 'prescriptions' as ActiveTab, label: 'Rx', icon: Pill },
-        ];
-      case 'admin':
-        return [
-          { id: 'dashboard' as ActiveTab, label: 'Overview', icon: LayoutDashboard },
-          { id: 'analytics' as ActiveTab, label: 'Analytics', icon: BarChart3 },
-          { id: 'patients' as ActiveTab, label: 'Users', icon: Users },
-          { id: 'appointments' as ActiveTab, label: 'Schedule', icon: Calendar },
-          { id: 'records' as ActiveTab, label: 'Audit', icon: FileText },
-        ];
-    }
-  };
+function getTabs(role: UserRole) {
+  switch (role) {
+    case 'patient':
+      return [
+        { path: '/patient/dashboard', label: 'Home', icon: LayoutDashboard },
+        { path: '/patient/appointments', label: 'Book', icon: Calendar },
+        { path: '/patient/records', label: 'Records', icon: FileText },
+        { path: '/patient/ai-assistant', label: 'AI Health', icon: Bot },
+        { path: '/patient/messages', label: 'Messages', icon: MessageSquare },
+      ];
+    case 'doctor':
+      return [
+        { path: '/doctor/dashboard', label: 'Schedule', icon: LayoutDashboard },
+        { path: '/doctor/patients', label: 'Patients', icon: Users },
+        { path: '/doctor/appointments', label: 'Calendar', icon: Calendar },
+        { path: '/doctor/ai-assistant', label: 'AI Scribe', icon: Bot },
+        { path: '/doctor/prescriptions', label: 'Rx', icon: Pill },
+      ];
+    case 'admin':
+      return [
+        { path: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
+        { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+        { path: '/admin/patients', label: 'Users', icon: Users },
+        { path: '/admin/appointments', label: 'Schedule', icon: Calendar },
+      ];
+  }
+}
 
-  const tabs = getTabs();
+export const MobileNav: React.FC<MobileNavProps> = ({ role }) => {
+  const tabs = getTabs(role);
 
   return (
     <nav
@@ -56,22 +54,26 @@ export const MobileNav: React.FC<MobileNavProps> = ({ currentTab, onSelectTab, r
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
-        const isActive = currentTab === tab.id;
         return (
-          <button
-            key={tab.id}
-            id={`mobile-tab-${tab.id}`}
-            onClick={() => onSelectTab(tab.id)}
-            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all relative ${
-              isActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
-            }`}
+          <NavLink
+            key={tab.path}
+            to={tab.path}
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all relative ${
+                isActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
+              }`
+            }
           >
-            <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'stroke-[2.2px]' : ''}`} />
-            <span className="text-[10px] tracking-tight">{tab.label}</span>
-            {isActive && (
-              <span className="w-1 h-1 rounded-full bg-blue-600 absolute -bottom-0.5" />
+            {({ isActive }) => (
+              <>
+                <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'stroke-[2.2px]' : ''}`} />
+                <span className="text-[10px] tracking-tight">{tab.label}</span>
+                {isActive && (
+                  <span className="w-1 h-1 rounded-full bg-blue-600 absolute -bottom-0.5" />
+                )}
+              </>
             )}
-          </button>
+          </NavLink>
         );
       })}
     </nav>

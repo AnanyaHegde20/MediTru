@@ -17,7 +17,7 @@ import {
   Image as ImageIcon,
   Film,
 } from 'lucide-react';
-import { ChatMessage, UserProfile } from '../../types';
+import { ActiveTab, ChatMessage, UserProfile } from '../../types';
 
 interface AttachedFileItem {
   name: string;
@@ -27,7 +27,7 @@ interface AttachedFileItem {
 
 interface AIAssistantViewProps {
   currentUser: UserProfile;
-  onNavigateTab: (tab: any) => void;
+  onNavigateTab: (tab: ActiveTab) => void;
   initialQuery?: string;
 }
 

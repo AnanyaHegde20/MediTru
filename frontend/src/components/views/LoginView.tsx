@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Mail, Lock, CheckCircle2, ArrowRight, ShieldCheck, Stethoscope, UserCog } from 'lucide-react';
 import { UserRole } from '../../types';
 import { useToast } from '../Toast';
@@ -215,26 +216,26 @@ export const LoginView: React.FC<LoginViewProps> = ({
       {/* Demo Credentials Quick Switch Pill Bar */}
       <div className="mt-5 text-center text-xs text-slate-400 flex items-center justify-center gap-3">
         <span>Switch Portal:</span>
-        <a
-          href="/patient"
+        <Link
+          to="/patient"
           className={`font-semibold hover:underline ${role === 'patient' ? 'text-blue-600 underline' : 'text-blue-600/70'}`}
         >
           Patient (Priya)
-        </a>
+        </Link>
         <span>•</span>
-        <a
-          href="/doctor"
+        <Link
+          to="/doctor"
           className={`font-semibold hover:underline ${role === 'doctor' ? 'text-emerald-600 underline' : 'text-emerald-600/70'}`}
         >
           Doctor (Dr. Rajesh)
-        </a>
+        </Link>
         <span>•</span>
-        <a
-          href="/admin"
+        <Link
+          to="/admin"
           className={`font-semibold hover:underline ${role === 'admin' ? 'text-slate-800 underline' : 'text-slate-800/70'}`}
         >
           Admin (Sarah)
-        </a>
+        </Link>
       </div>
     </div>
   );

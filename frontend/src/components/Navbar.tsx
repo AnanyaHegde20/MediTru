@@ -1,48 +1,27 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
   Bell,
   Check,
   ChevronDown,
-  Sparkles,
   User,
   Shield,
   Stethoscope,
   X,
   Menu,
 } from 'lucide-react';
-import { UserProfile, UserRole, ActiveTab } from '../types';
+import { UserProfile, UserRole } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 interface NavbarProps {
   currentUser: UserProfile;
-  onSwitchRole?: (role: UserRole) => void;
-  onRoleChange?: (role: UserRole) => void;
-  onNavigateTab?: (tab: ActiveTab) => void;
-  searchQuery?: string;
-  onSearchChange?: (q: string) => void;
-  onOpenMobileMenu?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({
-  currentUser,
-  onSwitchRole,
-  onRoleChange,
-  onNavigateTab,
-  searchQuery = '',
-  onSearchChange,
-  onOpenMobileMenu,
-}) => {
-  const handleSwitchRole = (role: UserRole) => {
-    if (onSwitchRole) onSwitchRole(role);
-    else if (onRoleChange) onRoleChange(role);
-  };
-  // Fall back to internal state when no external search handler is provided
+export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
+  const navigate = useNavigate();
+  const { handleRoleChange } = useAuth();
   const [internalQuery, setInternalQuery] = useState('');
-  const activeQuery = onSearchChange ? searchQuery : internalQuery;
-  const handleSearchChange = (value: string) => {
-    if (onSearchChange) onSearchChange(value);
-    else setInternalQuery(value);
-  };
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [notifications, setNotifications] = useState([
@@ -78,6 +57,12 @@ export const Navbar: React.FC<NavbarProps> = ({
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
   };
 
+  const handleSwitchRole = (role: UserRole) => {
+    handleRoleChange(role);
+    navigate(`/${role}/dashboard`);
+    setShowRoleMenu(false);
+  };
+
   const getSearchPlaceholder = () => {
     if (currentUser.role === 'patient') return 'Search records, vitals, doctors...';
     if (currentUser.role === 'doctor') return 'Search patient records, labs, schedules...';
@@ -92,13 +77,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
         {/* Mobile menu trigger */}
         <div className="flex items-center gap-3 md:hidden">
-          <button
-            id="btn-mobile-menu"
-            onClick={() => onOpenMobileMenu?.()}
-            className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
           <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
             <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
               +
@@ -113,14 +91,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           <input
             id="global-search-input"
             type="text"
-            value={activeQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            value={internalQuery}
+            onChange={(e) => setInternalQuery(e.target.value)}
             placeholder={getSearchPlaceholder()}
             className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs md:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all shadow-2xs"
           />
-          {activeQuery && (
+          {internalQuery && (
             <button
-              onClick={() => handleSearchChange('')}
+              onClick={() => setInternalQuery('')}
               className="absolute right-3 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
@@ -156,7 +134,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-900 text-sm">Notifications</span>
                     {unreadCount > 0 && (
-                      <span className="badge-clean badge-clean-info">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
                         {unreadCount} new
                       </span>
                     )}
@@ -233,10 +211,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="p-1 space-y-1 mt-1">
                   <button
                     id="switch-role-patient"
-                    onClick={() => {
-                      handleSwitchRole('patient');
-                      setShowRoleMenu(false);
-                    }}
+                    onClick={() => handleSwitchRole('patient')}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                       currentUser.role === 'patient'
                         ? 'bg-blue-50 text-blue-700 font-semibold'
@@ -255,10 +230,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                   <button
                     id="switch-role-doctor"
-                    onClick={() => {
-                      handleSwitchRole('doctor');
-                      setShowRoleMenu(false);
-                    }}
+                    onClick={() => handleSwitchRole('doctor')}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                       currentUser.role === 'doctor'
                         ? 'bg-blue-50 text-blue-700 font-semibold'
@@ -277,10 +249,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                   <button
                     id="switch-role-admin"
-                    onClick={() => {
-                      handleSwitchRole('admin');
-                      setShowRoleMenu(false);
-                    }}
+                    onClick={() => handleSwitchRole('admin')}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                       currentUser.role === 'admin'
                         ? 'bg-blue-50 text-blue-700 font-semibold'
