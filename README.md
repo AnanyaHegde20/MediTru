@@ -13,6 +13,7 @@ MediTru/
 │   ├── pom.xml
 │   ├── Dockerfile
 │   ├── .env              # GEMINI_API_KEY lives here
+│   ├── data/             # H2 file database (gitignored, created on first run)
 │   └── src/main/java/com/meditru/
 │       ├── MediTruApplication.java
 │       ├── controller/   # REST controllers
@@ -42,6 +43,10 @@ MediTru/
 cd backend
 mvn compile
 ```
+
+Data is stored in an **H2 file database** at `backend/data/` and survives restarts.
+The database is seeded with demo users/doctors on first boot. To reset everything,
+stop the backend and delete the `backend/data/` folder.
 
 ### 2. Frontend
 
@@ -114,6 +119,8 @@ npx tsc --noEmit
 ```
 
 ## API Endpoints
+
+GET/POST/PUT/DELETE on resources use the H2 **file** database (`backend/data/`), so created doctors, appointments, queue updates etc. persist across restarts.
 
 ### Core / AI
 

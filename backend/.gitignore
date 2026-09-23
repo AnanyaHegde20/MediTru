@@ -1,5 +1,6 @@
 target/
 logs/
+data/
 .env
 .env.*
 !.env.example

@@ -10,6 +10,8 @@ services:
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - ALLOWED_ORIGINS=http://localhost:3000
+    volumes:
+      - meditru-data:/app/data
     restart: unless-stopped
 
   frontend:
@@ -19,3 +21,6 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
+volumes:
+  meditru-data:

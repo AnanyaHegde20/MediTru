@@ -23,8 +23,8 @@ export const SettingsView: React.FC = () => {
               <span className="text-blue-700 bg-blue-100 font-bold px-2 py-0.5 rounded-full text-[10px]">Connected</span>
             </div>
             <div className="flex items-center justify-between py-1.5">
-              <span>H2 Database Persistence Layer</span>
-              <span className="text-emerald-700 bg-emerald-100 font-bold px-2 py-0.5 rounded-full text-[10px]">Ready</span>
+              <span>H2 Database — File Persistence</span>
+              <span className="text-emerald-700 bg-emerald-100 font-bold px-2 py-0.5 rounded-full text-[10px]">Persistent</span>
             </div>
           </div>
         </div>
