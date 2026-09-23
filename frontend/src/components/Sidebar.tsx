@@ -49,6 +49,7 @@ function getNavItems(role: UserRole) {
       return [
         { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/admin/patients', label: 'Patients Directory', icon: Users },
+        { path: '/admin/appointments', label: 'Appointments', icon: Calendar },
         { path: '/admin/analytics', label: 'Analytics & KPIs', icon: BarChart3 },
         { path: '/admin/settings', label: 'System Settings', icon: Settings },
       ];

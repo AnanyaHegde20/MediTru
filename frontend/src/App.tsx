@@ -14,6 +14,7 @@ import { AIAssistantView } from './components/views/AIAssistantView';
 import { MedicalRecordsView } from './components/views/MedicalRecordsView';
 import { AdminDashboardView } from './components/views/AdminDashboardView';
 import { PatientsDirectoryView } from './components/views/PatientsDirectoryView';
+import { AppointmentsListView } from './components/views/AppointmentsListView';
 import { SettingsView } from './components/views/SettingsView';
 
 import { ClinicalNotesModal } from './components/modals/ClinicalNotesModal';
@@ -150,6 +151,7 @@ function DoctorRoutes() {
   const { currentUser } = useAuth();
   const store = useDataStore();
   const { openClinicalNotes } = useClinicalNotes();
+  const { aiInitialQuery } = useAIAssistant();
 
   useEffect(() => {
     store.fetchAppointments(undefined, undefined);
@@ -184,6 +186,41 @@ function DoctorRoutes() {
         />
         </RouteErrorBoundary>
       } />
+      <Route path="appointments" element={
+        <RouteErrorBoundary>
+        <AppointmentsListView
+          appointments={store.appointments}
+          currentUser={currentUser}
+        />
+        </RouteErrorBoundary>
+      } />
+      <Route path="ai-assistant" element={
+        <RouteErrorBoundary>
+        <AIAssistantView
+          currentUser={currentUser}
+          onNavigateTab={() => {}}
+          initialQuery={aiInitialQuery}
+        />
+        </RouteErrorBoundary>
+      } />
+      <Route path="prescriptions" element={
+        <RouteErrorBoundary>
+        <MedicalRecordsView
+          currentUser={currentUser}
+          labReports={store.labReports}
+          prescriptions={store.prescriptions}
+          selectedReport={null}
+          onSelectReport={() => {}}
+          onAskAIAboutReport={() => {}}
+          onAddNewReport={store.addLabReport}
+        />
+        </RouteErrorBoundary>
+      } />
+      <Route path="analytics" element={
+        <RouteErrorBoundary>
+        <AdminDashboardView onAddDoctor={store.addDoctor} />
+        </RouteErrorBoundary>
+      } />
       <Route path="records" element={
         <RouteErrorBoundary>
         <MedicalRecordsView
@@ -213,6 +250,7 @@ function AdminRoutes() {
   useEffect(() => {
     store.fetchDoctors();
     store.fetchAppointments(undefined, undefined);
+    store.fetchLabReports(undefined);
   }, []);
 
   return (
@@ -230,6 +268,14 @@ function AdminRoutes() {
           onSelectReport={() => {}}
           onNavigateToRecords={() => {}}
           onOpenClinicalNotes={openClinicalNotes}
+        />
+        </RouteErrorBoundary>
+      } />
+      <Route path="appointments" element={
+        <RouteErrorBoundary>
+        <AppointmentsListView
+          appointments={store.appointments}
+          currentUser={currentUser}
         />
         </RouteErrorBoundary>
       } />

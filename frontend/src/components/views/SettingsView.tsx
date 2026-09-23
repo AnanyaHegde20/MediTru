@@ -19,11 +19,11 @@ export const SettingsView: React.FC = () => {
               <span className="text-emerald-700 bg-emerald-100 font-bold px-2 py-0.5 rounded-full text-[10px]">Active</span>
             </div>
             <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
-              <span>FHIR HL7 Diagnostic Protocol</span>
+              <span>REST API Integration</span>
               <span className="text-blue-700 bg-blue-100 font-bold px-2 py-0.5 rounded-full text-[10px]">Connected</span>
             </div>
             <div className="flex items-center justify-between py-1.5">
-              <span>MongoDB 7.0 Persistence Layer</span>
+              <span>H2 Database Persistence Layer</span>
               <span className="text-emerald-700 bg-emerald-100 font-bold px-2 py-0.5 rounded-full text-[10px]">Ready</span>
             </div>
           </div>

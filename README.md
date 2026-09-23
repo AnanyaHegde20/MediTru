@@ -115,11 +115,73 @@ npx tsc --noEmit
 
 ## API Endpoints
 
+### Core / AI
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/health` | Health check (returns status, timestamp, hasGeminiKey) |
-| POST | `/api/gemini/health-assistant` | AI health assistant (message + chat history) |
+| POST | `/api/gemini/health-assistant` | AI health assistant (message + chat history + optional report context) |
 | POST | `/api/gemini/clinical-notes` | AI SOAP clinical notes generator |
+
+### Users
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/users` | List all users |
+| POST | `/api/users` | Create user (400 on duplicate email) |
+| GET | `/api/users/{id}` | Get user by id |
+| PUT | `/api/users/{id}` | Partial update user |
+| DELETE | `/api/users/{id}` | Delete user (204) |
+| GET | `/api/users/email/{email}` | Lookup user by email |
+
+### Doctors
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/doctors` | List doctors; `?q=` name search, `?specialty=` filter |
+| POST | `/api/doctors` | Create doctor (`slotsJson` = JSON of morning/afternoon/evening slots) |
+| GET | `/api/doctors/{id}` | Get doctor by id |
+| PUT | `/api/doctors/{id}` | Update doctor |
+| DELETE | `/api/doctors/{id}` | Delete doctor (204) |
+
+### Appointments
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/appointments` | List appointments; `?patientId=` or `?doctorId=` filter |
+| POST | `/api/appointments` | Create appointment |
+| GET | `/api/appointments/{id}` | Get appointment by id |
+| PUT | `/api/appointments/{id}` | Update appointment (status, notes, etc.) |
+| DELETE | `/api/appointments/{id}` | Delete appointment (204) |
+
+### Prescriptions
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/prescriptions` | List prescriptions; `?patientId=` filter |
+| POST | `/api/prescriptions` | Create prescription |
+| GET | `/api/prescriptions/{id}` | Get prescription by id |
+| PUT | `/api/prescriptions/{id}` | Update prescription |
+| DELETE | `/api/prescriptions/{id}` | Delete prescription (204) |
+
+### Lab Reports
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/lab-reports` | List lab reports; `?patientId=` filter |
+| POST | `/api/lab-reports` | Create lab report (`valuesJson`, `aiSummaryJson` = JSON strings) |
+| GET | `/api/lab-reports/{id}` | Get lab report by id |
+| DELETE | `/api/lab-reports/{id}` | Delete lab report (204) |
+
+### Patient Queue
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/patient-queue` | List queue items; `?doctorId=` filter |
+| POST | `/api/patient-queue` | Add patient to queue |
+| GET | `/api/patient-queue/{id}` | Get queue item by id |
+| PUT | `/api/patient-queue/{id}` | Update queue item (status/room/waitTime) |
+| DELETE | `/api/patient-queue/{id}` | Remove from queue (204) |
 
 ### Example Request — Health Assistant
 

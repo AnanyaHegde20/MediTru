@@ -32,6 +32,55 @@ function apiUrl(path: string) {
   return path;
 }
 
+async function postJson(path: string, body: unknown) {
+  const res = await fetch(apiUrl(path), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
+  return res.json();
+}
+
+async function putJson(path: string, body: unknown) {
+  const res = await fetch(apiUrl(path), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`PUT ${path} failed: ${res.status}`);
+  return res.ok ? res.json().catch(() => null) : null;
+}
+
+function isServerId(id: string) {
+  return /^\d+$/.test(id);
+}
+
+function appointmentToPayload(apt: Appointment) {
+  const { id: _id, ...rest } = apt;
+  return rest;
+}
+
+function doctorToPayload(doc: Doctor) {
+  const { id: _id, slots, ...rest } = doc;
+  return {
+    ...rest,
+    slotsJson: JSON.stringify(slots ?? { morning: [], afternoon: [], evening: [] }),
+  };
+}
+
+function labReportToPayload(report: LabReport) {
+  const { id: _id, values, aiSummary, ...rest } = report;
+  return {
+    ...rest,
+    patientId: report.patientId ?? 'unknown',
+    valuesJson: JSON.stringify(values ?? []),
+    aiSummaryJson: JSON.stringify(
+      aiSummary ?? { overview: '', keyFindings: [], attentionItems: [], recommendations: [] }
+    ),
+  };
+}
+
 export const useDataStore = create<DataStore>((set, get) => ({
   doctors: [],
   appointments: [],
@@ -135,7 +184,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
     }
   },
 
-  bookAppointment: (apt) =>
+  bookAppointment: async (apt) => {
     set((state) => ({
       appointments: [apt, ...state.appointments],
       patientActivity: [
@@ -150,22 +199,62 @@ export const useDataStore = create<DataStore>((set, get) => ({
         },
         ...state.patientActivity,
       ],
-    })),
+    }));
+    try {
+      const created = await postJson('/api/appointments', appointmentToPayload(apt));
+      set((state) => ({
+        appointments: state.appointments.map((a) =>
+          a.id === apt.id ? { ...a, id: String(created.id) } : a
+        ),
+      }));
+    } catch (e) {
+      console.warn('Failed to persist appointment', e);
+    }
+  },
 
-  updateQueueStatus: (id, status) =>
+  updateQueueStatus: async (id, status) => {
     set((state) => ({
       patientQueue: state.patientQueue.map((item) =>
         item.id === id ? { ...item, status } : item
       ),
-    })),
+    }));
+    if (!isServerId(id)) return;
+    try {
+      await putJson(`/api/patient-queue/${id}`, { status });
+    } catch (e) {
+      console.warn('Failed to persist queue status', e);
+    }
+  },
 
-  addDoctor: (doc) =>
+  addDoctor: async (doc) => {
     set((state) => ({
       doctors: [doc, ...state.doctors],
-    })),
+    }));
+    try {
+      const created = await postJson('/api/doctors', doctorToPayload(doc));
+      set((state) => ({
+        doctors: state.doctors.map((d) =>
+          d.id === doc.id ? { ...d, id: String(created.id) } : d
+        ),
+      }));
+    } catch (e) {
+      console.warn('Failed to persist doctor', e);
+    }
+  },
 
-  addLabReport: (report) =>
+  addLabReport: async (report) => {
     set((state) => ({
       labReports: [report, ...state.labReports],
-    })),
+    }));
+    try {
+      const created = await postJson('/api/lab-reports', labReportToPayload(report));
+      set((state) => ({
+        labReports: state.labReports.map((r) =>
+          r.id === report.id ? { ...r, id: String(created.id) } : r
+        ),
+      }));
+    } catch (e) {
+      console.warn('Failed to persist lab report', e);
+    }
+  },
 }));

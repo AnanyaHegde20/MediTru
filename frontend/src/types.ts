@@ -77,6 +77,7 @@ export interface LabReportValue {
 
 export interface LabReport {
   id: string;
+  patientId?: string;
   name: string;
   category: 'Hematology' | 'Lipid' | 'Metabolic' | 'Endocrinology' | 'Cardiology' | 'Imaging';
   date: string;

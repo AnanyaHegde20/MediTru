@@ -58,6 +58,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
 
     const report: LabReport = {
       id: `lab_${Date.now()}`,
+      patientId: currentUser.id,
       name: newReportName,
       category: newReportCategory,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
