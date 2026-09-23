@@ -4,9 +4,12 @@ import com.meditru.entity.PatientQueue;
 import com.meditru.repository.PatientQueueRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class PatientQueueService {
+
+    private static final Set<String> STATUSES = Set.of("Waiting", "In Progress", "Done");
 
     private final PatientQueueRepository repo;
 
@@ -26,7 +29,13 @@ public class PatientQueueService {
 
     public PatientQueue update(Long id, PatientQueue updated) {
         PatientQueue item = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Queue item not found"));
-        if (updated.getStatus() != null) item.setStatus(updated.getStatus());
+        if (updated.getStatus() != null) {
+            String status = updated.getStatus().trim();
+            if (!STATUSES.contains(status)) {
+                throw new IllegalArgumentException("Unknown queue status: " + status);
+            }
+            item.setStatus(status);
+        }
         if (updated.getRoom() != null) item.setRoom(updated.getRoom());
         if (updated.getWaitTime() != null) item.setWaitTime(updated.getWaitTime());
         return repo.save(item);

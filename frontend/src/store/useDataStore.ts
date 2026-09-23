@@ -23,8 +23,11 @@ interface DataStore {
   fetchPrescriptions: (patientId?: string) => Promise<void>;
   fetchPatientQueue: (doctorId?: string) => Promise<void>;
 
-  bookAppointment: (apt: Appointment) => void;
+  bookAppointment: (apt: Appointment) => Promise<void>;
+  updateAppointmentStatus: (id: string, status: Appointment['status']) => Promise<void>;
   updateQueueStatus: (id: string, status: 'Waiting' | 'In Progress' | 'Done') => void;
+  requestRefill: (id: string) => Promise<void>;
+  updatePrescriptionStatus: (id: string, status: Prescription['status']) => Promise<void>;
   addDoctor: (doc: Doctor) => void;
   addLabReport: (report: LabReport) => void;
 }
@@ -184,11 +187,12 @@ export const useDataStore = create<DataStore>((set, get) => ({
   },
 
   bookAppointment: async (apt) => {
+    const activityId = `act_${Date.now()}`;
     set((state) => ({
       appointments: [apt, ...state.appointments],
       patientActivity: [
         {
-          id: `act_${Date.now()}`,
+          id: activityId,
           text: 'New consultation scheduled with',
           highlightName: apt.doctorName,
           detail: `(${apt.date} at ${apt.time})`,
@@ -203,11 +207,41 @@ export const useDataStore = create<DataStore>((set, get) => ({
       const created = await postJson('/api/appointments', appointmentToPayload(apt));
       set((state) => ({
         appointments: state.appointments.map((a) =>
-          a.id === apt.id ? { ...a, id: String(created.id) } : a
+          a.id === apt.id ? { ...a, id: String(created.id), status: created.status ?? a.status } : a
         ),
       }));
     } catch (e) {
+      set((state) => ({
+        appointments: state.appointments.filter((a) => a.id !== apt.id),
+        patientActivity: state.patientActivity.filter((act) => act.id !== activityId),
+      }));
       console.warn('Failed to persist appointment', e);
+      throw e;
+    }
+  },
+
+  updateAppointmentStatus: async (id, status) => {
+    const snapshot = get().appointments;
+    set((state) => ({
+      appointments: state.appointments.map((a) => (a.id === id ? { ...a, status } : a)),
+    }));
+    try {
+      const updated = await putJson(`/api/appointments/${id}`, { status });
+      set((state) => ({
+        appointments: state.appointments.map((a) =>
+          a.id === id
+            ? {
+                ...a,
+                ...(updated || {}),
+                id: updated?.id != null ? String(updated.id) : a.id,
+                status: updated?.status || status,
+              }
+            : a
+        ),
+      }));
+    } catch (e) {
+      set({ appointments: snapshot });
+      throw e;
     }
   },
 
@@ -222,6 +256,53 @@ export const useDataStore = create<DataStore>((set, get) => ({
       await putJson(`/api/patient-queue/${id}`, { status });
     } catch (e) {
       console.warn('Failed to persist queue status', e);
+    }
+  },
+
+  requestRefill: async (id) => {
+    const snapshot = get().prescriptions;
+    set((state) => ({
+      prescriptions: state.prescriptions.map((p) =>
+        p.id === id ? { ...p, status: 'Refill Requested' } : p
+      ),
+    }));
+    try {
+      const updated = await postJson(`/api/prescriptions/${id}/refill`, {});
+      set((state) => ({
+        prescriptions: state.prescriptions.map((p) =>
+          p.id === id
+            ? { ...p, ...(updated || {}), id: updated?.id != null ? String(updated.id) : p.id }
+            : p
+        ),
+      }));
+    } catch (e) {
+      set({ prescriptions: snapshot });
+      throw e;
+    }
+  },
+
+  updatePrescriptionStatus: async (id, status) => {
+    const snapshot = get().prescriptions;
+    set((state) => ({
+      prescriptions: state.prescriptions.map((p) => (p.id === id ? { ...p, status } : p)),
+    }));
+    try {
+      const updated = await putJson(`/api/prescriptions/${id}`, { status });
+      set((state) => ({
+        prescriptions: state.prescriptions.map((p) =>
+          p.id === id
+            ? {
+                ...p,
+                ...(updated || {}),
+                id: updated?.id != null ? String(updated.id) : p.id,
+                status: updated?.status || status,
+              }
+            : p
+        ),
+      }));
+    } catch (e) {
+      set({ prescriptions: snapshot });
+      throw e;
     }
   },
 

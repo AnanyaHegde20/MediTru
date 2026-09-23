@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { Calendar, Search, Stethoscope, User } from 'lucide-react';
 import { Appointment, UserProfile } from '../../types';
+import { useToast } from '../Toast';
 
 interface AppointmentsListViewProps {
   appointments: Appointment[];
   currentUser: UserProfile;
+  onUpdateStatus: (id: string, status: Appointment['status']) => Promise<void>;
 }
 
 const STATUS_STYLES: Record<Appointment['status'], string> = {
@@ -17,15 +19,62 @@ const STATUS_STYLES: Record<Appointment['status'], string> = {
 
 const STATUS_FILTERS = ['All', 'Confirmed', 'Pending', 'In Progress', 'Completed', 'Cancelled'] as const;
 
+interface RowAction {
+  label: string;
+  next: Appointment['status'];
+  danger?: boolean;
+}
+
 export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
   appointments,
   currentUser,
+  onUpdateStatus,
 }) => {
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>('All');
   const [query, setQuery] = useState('');
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   const showPatient = currentUser.role !== 'patient';
   const showDoctor = currentUser.role !== 'doctor';
+
+  const actionsFor = (apt: Appointment): RowAction[] => {
+    if (currentUser.role === 'doctor' || currentUser.role === 'admin') {
+      if (apt.status === 'Pending') {
+        return [
+          { label: 'Confirm', next: 'Confirmed' },
+          { label: 'Cancel', next: 'Cancelled', danger: true },
+        ];
+      }
+      if (apt.status === 'Confirmed') {
+        return [
+          { label: 'Start', next: 'In Progress' },
+          { label: 'Cancel', next: 'Cancelled', danger: true },
+        ];
+      }
+      if (apt.status === 'In Progress') {
+        return [{ label: 'Complete', next: 'Completed' }];
+      }
+      return [];
+    }
+    const owns = apt.patientId === currentUser.id;
+    if (owns && (apt.status === 'Pending' || apt.status === 'Confirmed')) {
+      return [{ label: 'Cancel', next: 'Cancelled', danger: true }];
+    }
+    return [];
+  };
+
+  const handleAction = async (apt: Appointment, action: RowAction) => {
+    setBusyId(apt.id);
+    try {
+      await onUpdateStatus(apt.id, action.next);
+      showToast(`Appointment marked as ${action.next}.`);
+    } catch {
+      showToast('Could not update appointment status.', 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -103,7 +152,8 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                   <th className="pb-3 pr-4 font-bold">Date</th>
                   <th className="pb-3 pr-4 font-bold">Time</th>
                   <th className="pb-3 pr-4 font-bold">Type</th>
-                  <th className="pb-3 font-bold">Status</th>
+                  <th className="pb-3 pr-4 font-bold">Status</th>
+                  <th className="pb-3 font-bold">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -140,7 +190,7 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                     <td className="py-3 pr-4 text-slate-600">{apt.date}</td>
                     <td className="py-3 pr-4 text-slate-600">{apt.time}</td>
                     <td className="py-3 pr-4 text-slate-500 text-xs">{apt.type}</td>
-                    <td className="py-3">
+                    <td className="py-3 pr-4">
                       <span
                         className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
                           STATUS_STYLES[apt.status] ?? 'text-slate-600 bg-slate-100'
@@ -148,6 +198,24 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                       >
                         {apt.status}
                       </span>
+                    </td>
+                    <td className="py-3">
+                      <div className="flex items-center gap-1.5">
+                        {actionsFor(apt).map((action) => (
+                          <button
+                            key={action.label}
+                            onClick={() => handleAction(apt, action)}
+                            disabled={busyId === apt.id}
+                            className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors disabled:opacity-50 cursor-pointer ${
+                              action.danger
+                                ? 'text-rose-700 bg-rose-50 hover:bg-rose-100'
+                                : 'text-blue-700 bg-blue-50 hover:bg-blue-100'
+                            }`}
+                          >
+                            {action.label}
+                          </button>
+                        ))}
+                      </div>
                     </td>
                   </tr>
                 ))}

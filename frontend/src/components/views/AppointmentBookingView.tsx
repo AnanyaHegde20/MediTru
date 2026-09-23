@@ -15,11 +15,12 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ActiveTab, Doctor, Appointment, UserProfile } from '../../types';
+import { useToast } from '../Toast';
 
 interface AppointmentBookingViewProps {
   doctors: Doctor[];
   currentUser: UserProfile;
-  onBookAppointment: (newAppointment: Appointment) => void;
+  onBookAppointment: (newAppointment: Appointment) => void | Promise<void>;
   onNavigateTab: (tab: ActiveTab) => void;
 }
 
@@ -37,6 +38,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
   const [consultReason, setConsultReason] = useState('Routine checkup & health review');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [bookedAppointmentInfo, setBookedAppointmentInfo] = useState<Appointment | null>(null);
+  const { showToast } = useToast();
 
   const specialties = [
     'All',
@@ -59,7 +61,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
     return matchesSpecialty && matchesSearch;
   });
 
-  const handleConfirmBooking = () => {
+  const handleConfirmBooking = async () => {
     const newApt: Appointment = {
       id: `apt_${Date.now()}`,
       patientId: currentUser.id,
@@ -71,14 +73,19 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
       doctorAvatar: selectedDoctor.avatar,
       date: `Oct ${selectedDay}, 2024`,
       time: selectedTimeSlot,
-      status: 'Confirmed',
+      status: 'Pending',
       type: `${selectedDoctor.specialty} Consultation`,
       duration: '30m',
       notes: consultReason,
       room: selectedDoctor.hospital.split(',')[0],
     };
 
-    onBookAppointment(newApt);
+    try {
+      await onBookAppointment(newApt);
+    } catch {
+      showToast('Could not save your appointment. Please try again.', 'error');
+      return;
+    }
     setBookedAppointmentInfo(newApt);
     setShowSuccessModal(true);
 
@@ -362,10 +369,10 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
               <CheckCircle2 className="w-6 h-6" />
             </div>
 
-            <h3 className="text-lg font-bold text-slate-900">Appointment Confirmed!</h3>
+            <h3 className="text-lg font-bold text-slate-900">Appointment Requested!</h3>
             <p className="text-xs text-slate-500 mt-1">
               Your appointment with <strong>{bookedAppointmentInfo.doctorName}</strong> has been
-              successfully scheduled.
+              requested and is awaiting confirmation.
             </p>
 
             <div className="my-4 p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-left text-xs space-y-1.5">

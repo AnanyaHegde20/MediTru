@@ -142,6 +142,7 @@ All other `/api/**` endpoints require a valid JWT. Role rules:
 - `DELETE /api/**` → ADMIN only
 - `/api/users` GET/POST → ADMIN only
 - `/api/prescriptions` POST/PUT, `/api/patient-queue` PUT, `/api/doctors` POST/PUT → DOCTOR or ADMIN
+- `POST /api/prescriptions/{id}/refill` → any authenticated user (owner checked in service)
 - everything else → any authenticated user
 
 **Demo accounts** (password `password`):
@@ -175,20 +176,25 @@ All other `/api/**` endpoints require a valid JWT. Role rules:
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/appointments` | List appointments; `?patientId=` or `?doctorId=` filter |
-| POST | `/api/appointments` | Create appointment |
+| POST | `/api/appointments` | Create appointment (status must be `Pending` or `Confirmed`, defaults to `Pending`) |
 | GET | `/api/appointments/{id}` | Get appointment by id |
-| PUT | `/api/appointments/{id}` | Update appointment (status, notes, etc.) |
+| PUT | `/api/appointments/{id}` | Update appointment; status changes are validated (see workflow below) |
 | DELETE | `/api/appointments/{id}` | Delete appointment (204) |
+
+**Appointment status workflow:** `Pending → Confirmed → In Progress → Completed`; `Cancelled` is allowed from `Pending` or `Confirmed`. Terminal states (`Completed`, `Cancelled`) cannot be left. Unknown statuses and invalid transitions return 400. Only doctors/admins can confirm, start, or complete; a patient can cancel their own appointment.
 
 ### Prescriptions
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/prescriptions` | List prescriptions; `?patientId=` filter |
-| POST | `/api/prescriptions` | Create prescription |
+| POST | `/api/prescriptions` | Create prescription (status must be `Active`, `Refill Requested`, or `Expired`; defaults to `Active`) |
 | GET | `/api/prescriptions/{id}` | Get prescription by id |
-| PUT | `/api/prescriptions/{id}` | Update prescription |
+| POST | `/api/prescriptions/{id}/refill` | Patient requests a refill on their own active prescription → `Refill Requested` |
+| PUT | `/api/prescriptions/{id}` | Update prescription (doctor/admin); status validated (see workflow below) |
 | DELETE | `/api/prescriptions/{id}` | Delete prescription (204) |
+
+**Prescription refill workflow:** patient requests a refill (`Active → Refill Requested`, requires refills remaining). A doctor approves it via `PUT { "status": "Active" }`, which decrements `refillsRemaining`. Either side can move a prescription to `Expired` from `Active`/`Refill Requested`.
 
 ### Lab Reports
 
@@ -206,7 +212,7 @@ All other `/api/**` endpoints require a valid JWT. Role rules:
 | GET | `/api/patient-queue` | List queue items; `?doctorId=` filter |
 | POST | `/api/patient-queue` | Add patient to queue |
 | GET | `/api/patient-queue/{id}` | Get queue item by id |
-| PUT | `/api/patient-queue/{id}` | Update queue item (status/room/waitTime) |
+| PUT | `/api/patient-queue/{id}` | Update queue item (status must be `Waiting`, `In Progress`, or `Done`) |
 | DELETE | `/api/patient-queue/{id}` | Remove from queue (204) |
 
 ### Example Request — Health Assistant

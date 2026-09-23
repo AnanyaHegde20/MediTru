@@ -95,6 +95,7 @@ function PatientRoutes() {
             setSelectedReport(rep);
           }}
           onQuickAskAI={quickAskAI}
+          onCancelAppointment={(id) => store.updateAppointmentStatus(id, 'Cancelled')}
         />
         </RouteErrorBoundary>
       } />
@@ -118,6 +119,8 @@ function PatientRoutes() {
           onSelectReport={setSelectedReport}
           onAskAIAboutReport={askAIAboutReport}
           onAddNewReport={store.addLabReport}
+          onRequestRefill={store.requestRefill}
+          onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
         />
         </RouteErrorBoundary>
       } />
@@ -131,6 +134,8 @@ function PatientRoutes() {
           onSelectReport={setSelectedReport}
           onAskAIAboutReport={askAIAboutReport}
           onAddNewReport={store.addLabReport}
+          onRequestRefill={store.requestRefill}
+          onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
         />
         </RouteErrorBoundary>
       } />
@@ -197,6 +202,7 @@ function DoctorRoutes() {
         <AppointmentsListView
           appointments={store.appointments}
           currentUser={currentUser}
+          onUpdateStatus={store.updateAppointmentStatus}
         />
         </RouteErrorBoundary>
       } />
@@ -219,6 +225,8 @@ function DoctorRoutes() {
           onSelectReport={() => {}}
           onAskAIAboutReport={() => {}}
           onAddNewReport={store.addLabReport}
+          onRequestRefill={store.requestRefill}
+          onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
         />
         </RouteErrorBoundary>
       } />
@@ -237,6 +245,8 @@ function DoctorRoutes() {
           onSelectReport={() => {}}
           onAskAIAboutReport={() => {}}
           onAddNewReport={store.addLabReport}
+          onRequestRefill={store.requestRefill}
+          onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
         />
         </RouteErrorBoundary>
       } />
@@ -284,6 +294,7 @@ function AdminRoutes() {
         <AppointmentsListView
           appointments={store.appointments}
           currentUser={currentUser}
+          onUpdateStatus={store.updateAppointmentStatus}
         />
         </RouteErrorBoundary>
       } />

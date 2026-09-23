@@ -27,7 +27,15 @@ interface MedicalRecordsViewProps {
   onSelectReport: (report: LabReport) => void;
   onAskAIAboutReport: (report: LabReport) => void;
   onAddNewReport: (report: LabReport) => void;
+  onRequestRefill: (id: string) => Promise<void>;
+  onApproveRefill: (id: string) => Promise<void>;
 }
+
+const RX_STATUS_STYLES: Record<Prescription['status'], string> = {
+  Active: 'bg-emerald-100 text-emerald-800',
+  'Refill Requested': 'bg-amber-100 text-amber-800',
+  Expired: 'bg-rose-100 text-rose-800',
+};
 
 export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
   currentUser,
@@ -37,6 +45,8 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
   onSelectReport,
   onAskAIAboutReport,
   onAddNewReport,
+  onRequestRefill,
+  onApproveRefill,
 }) => {
   const [activeCategoryTab, setActiveCategoryTab] = useState<
     'Lab Reports' | 'Prescriptions' | 'Visit History' | 'Imaging' | 'Vaccinations'
@@ -108,6 +118,24 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+  };
+
+  const handleRequestRefill = async (rx: Prescription) => {
+    try {
+      await onRequestRefill(rx.id);
+      showToast(`Refill requested for ${rx.medicationName}.`);
+    } catch {
+      showToast('Could not request refill.', 'error');
+    }
+  };
+
+  const handleApproveRefill = async (rx: Prescription) => {
+    try {
+      await onApproveRefill(rx.id);
+      showToast(`Refill approved for ${rx.medicationName}.`);
+    } catch {
+      showToast('Could not approve refill.', 'error');
+    }
   };
 
   const filteredReports = labReports.filter(
@@ -263,6 +291,11 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
 
             {activeCategoryTab === 'Prescriptions' && (
               <div className="space-y-3 pt-2">
+                {prescriptions.length === 0 && (
+                  <div className="py-8 text-center text-xs text-slate-400">
+                    No prescriptions on file.
+                  </div>
+                )}
                 {prescriptions.map((rx) => (
                   <div
                     key={rx.id}
@@ -275,9 +308,33 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                       <p className="text-xs text-slate-500 mt-0.5">{rx.instructions}</p>
                       <p className="text-[11px] text-slate-400 mt-1">Prescribed by {rx.doctorName} • Refills: {rx.refillsRemaining} remaining</p>
                     </div>
-                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
-                      {rx.status}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {currentUser.role === 'patient' &&
+                        rx.status === 'Active' &&
+                        rx.refillsRemaining > 0 && (
+                          <button
+                            onClick={() => handleRequestRefill(rx)}
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer"
+                          >
+                            Request Refill
+                          </button>
+                        )}
+                      {currentUser.role === 'doctor' && rx.status === 'Refill Requested' && (
+                        <button
+                          onClick={() => handleApproveRefill(rx)}
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer"
+                        >
+                          Approve Refill
+                        </button>
+                      )}
+                      <span
+                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+                          RX_STATUS_STYLES[rx.status] ?? 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {rx.status}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>

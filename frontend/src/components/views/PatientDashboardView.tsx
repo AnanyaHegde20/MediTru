@@ -13,8 +13,10 @@ import {
   ChevronRight,
   ExternalLink,
   Bot,
+  XCircle,
 } from 'lucide-react';
 import { ActiveTab, Appointment, LabReport, Prescription, UserProfile } from '../../types';
+import { useToast } from '../Toast';
 
 interface PatientDashboardViewProps {
   currentUser: UserProfile;
@@ -24,6 +26,7 @@ interface PatientDashboardViewProps {
   onNavigateTab: (tab: ActiveTab) => void;
   onSelectReport: (report: LabReport) => void;
   onQuickAskAI: (query: string) => void;
+  onCancelAppointment: (id: string) => Promise<void>;
 }
 
 export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
@@ -34,10 +37,25 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
   onNavigateTab,
   onSelectReport,
   onQuickAskAI,
+  onCancelAppointment,
 }) => {
   const [quickPrompt, setQuickPrompt] = useState('');
+  const { showToast } = useToast();
 
   const nextAppointment = appointments.find((a) => a.status === 'Confirmed') || appointments[0];
+
+  const canCancel = (apt: Appointment) =>
+    apt.patientId === currentUser.id &&
+    (apt.status === 'Pending' || apt.status === 'Confirmed');
+
+  const handleCancel = async (apt: Appointment) => {
+    try {
+      await onCancelAppointment(apt.id);
+      showToast('Appointment cancelled.');
+    } catch {
+      showToast('Could not cancel appointment.', 'error');
+    }
+  };
 
   const handleQuickSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,15 +229,26 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
                     </div>
                   </div>
 
-                  <span
-                    className={`badge-clean shrink-0 ${
-                      apt.status === 'Confirmed'
-                        ? 'badge-clean-info'
-                        : 'badge-clean-warning'
-                    }`}
-                  >
-                    {apt.status}
-                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span
+                      className={`badge-clean ${
+                        apt.status === 'Confirmed'
+                          ? 'badge-clean-info'
+                          : 'badge-clean-warning'
+                      }`}
+                    >
+                      {apt.status}
+                    </span>
+                    {canCancel(apt) && (
+                      <button
+                        onClick={() => handleCancel(apt)}
+                        title="Cancel appointment"
+                        className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}
