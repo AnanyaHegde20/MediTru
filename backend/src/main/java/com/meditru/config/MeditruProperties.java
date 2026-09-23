@@ -10,6 +10,7 @@ public class MeditruProperties {
     private String allowedOrigins = "http://localhost:3000";
     private Gemini gemini = new Gemini();
     private RateLimit rateLimit = new RateLimit();
+    private Jwt jwt = new Jwt();
 
     public String getAllowedOrigins() {
         return allowedOrigins;
@@ -33,6 +34,24 @@ public class MeditruProperties {
 
     public void setRateLimit(RateLimit rateLimit) {
         this.rateLimit = rateLimit;
+    }
+
+    public Jwt getJwt() {
+        return jwt;
+    }
+
+    public void setJwt(Jwt jwt) {
+        this.jwt = jwt;
+    }
+
+    public static class Jwt {
+        private String secret = "meditru-dev-secret-key-change-me-in-production-0123456789abcdef";
+        private long expirationMs = 86400000;
+
+        public String getSecret() { return secret; }
+        public void setSecret(String secret) { this.secret = secret; }
+        public long getExpirationMs() { return expirationMs; }
+        public void setExpirationMs(long expirationMs) { this.expirationMs = expirationMs; }
     }
 
     public static class Gemini {

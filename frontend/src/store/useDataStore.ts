@@ -7,6 +7,7 @@ import {
   PatientQueueItem,
   Prescription,
 } from '../types';
+import { apiFetch } from '../lib/api';
 
 interface DataStore {
   doctors: Doctor[];
@@ -33,9 +34,8 @@ function apiUrl(path: string) {
 }
 
 async function postJson(path: string, body: unknown) {
-  const res = await fetch(apiUrl(path), {
+  const res = await apiFetch(apiUrl(path), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
@@ -43,13 +43,12 @@ async function postJson(path: string, body: unknown) {
 }
 
 async function putJson(path: string, body: unknown) {
-  const res = await fetch(apiUrl(path), {
+  const res = await apiFetch(apiUrl(path), {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`PUT ${path} failed: ${res.status}`);
-  return res.ok ? res.json().catch(() => null) : null;
+  return res.json().catch(() => null);
 }
 
 function isServerId(id: string) {
@@ -91,7 +90,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
 
   fetchDoctors: async () => {
     try {
-      const res = await fetch(apiUrl('/api/doctors'));
+      const res = await apiFetch(apiUrl('/api/doctors'));
       if (res.ok) {
         const data = await res.json();
         const doctors = data.map((d: any) => ({
@@ -112,7 +111,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
       if (patientId) url += `patientId=${patientId}`;
       else if (doctorId) url += `doctorId=${doctorId}`;
       else url = '/api/appointments';
-      const res = await fetch(apiUrl(url));
+      const res = await apiFetch(apiUrl(url));
       if (res.ok) {
         const data = await res.json();
         const appointments = data.map((a: any) => ({
@@ -130,7 +129,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
   fetchLabReports: async (patientId) => {
     try {
       const url = patientId ? `/api/lab-reports?patientId=${patientId}` : '/api/lab-reports';
-      const res = await fetch(apiUrl(url));
+      const res = await apiFetch(apiUrl(url));
       if (res.ok) {
         const data = await res.json();
         const labReports = data.map((r: any) => ({
@@ -151,7 +150,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
   fetchPrescriptions: async (patientId) => {
     try {
       const url = patientId ? `/api/prescriptions?patientId=${patientId}` : '/api/prescriptions';
-      const res = await fetch(apiUrl(url));
+      const res = await apiFetch(apiUrl(url));
       if (res.ok) {
         const data = await res.json();
         const prescriptions = data.map((p: any) => ({
@@ -169,7 +168,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
   fetchPatientQueue: async (doctorId) => {
     try {
       const url = doctorId ? `/api/patient-queue?doctorId=${doctorId}` : '/api/patient-queue';
-      const res = await fetch(apiUrl(url));
+      const res = await apiFetch(apiUrl(url));
       if (res.ok) {
         const data = await res.json();
         const patientQueue = data.map((q: any) => ({

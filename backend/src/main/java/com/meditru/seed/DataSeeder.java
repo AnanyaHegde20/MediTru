@@ -5,6 +5,7 @@ import com.meditru.entity.User.UserRole;
 import com.meditru.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 
@@ -18,16 +19,19 @@ public class DataSeeder implements CommandLineRunner {
     private final LabReportRepository labReports;
     private final PrescriptionRepository prescriptions;
     private final PatientQueueRepository patientQueue;
+    private final PasswordEncoder passwordEncoder;
 
     public DataSeeder(UserRepository users, DoctorRepository doctors,
                       AppointmentRepository appointments, LabReportRepository labReports,
-                      PrescriptionRepository prescriptions, PatientQueueRepository patientQueue) {
+                      PrescriptionRepository prescriptions, PatientQueueRepository patientQueue,
+                      PasswordEncoder passwordEncoder) {
         this.users = users;
         this.doctors = doctors;
         this.appointments = appointments;
         this.labReports = labReports;
         this.prescriptions = prescriptions;
         this.patientQueue = patientQueue;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -35,7 +39,7 @@ public class DataSeeder implements CommandLineRunner {
         if (users.count() > 0) return;
 
         // ── Users ──────────────────────────────────────────
-        User patient = new User("Priya Sharma", "priya.sharma@example.com", "password", UserRole.patient);
+        User patient = new User("Priya Sharma", "priya.sharma@example.com", passwordEncoder.encode("password"), UserRole.patient);
         patient.setAvatar("https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80");
         patient.setBadge("Patient");
         patient.setAge(29);
@@ -46,13 +50,13 @@ public class DataSeeder implements CommandLineRunner {
         patient.setMedicalCondition("Mild Hypertension, Seasonal Rhinitis");
         users.save(patient);
 
-        User doctor = new User("Dr. Rajesh Kumar", "rajesh.kumar@medicare.health", "password", UserRole.doctor);
+        User doctor = new User("Dr. Rajesh Kumar", "rajesh.kumar@medicare.health", passwordEncoder.encode("password"), UserRole.doctor);
         doctor.setAvatar("https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80");
         doctor.setBadge("Senior Cardiologist");
         doctor.setPhone("+1 (555) 902-1144");
         users.save(doctor);
 
-        User admin = new User("Sarah Jenkins (Admin)", "admin@medicare.health", "password", UserRole.admin);
+        User admin = new User("Sarah Jenkins (Admin)", "admin@medicare.health", passwordEncoder.encode("password"), UserRole.admin);
         admin.setAvatar("https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80");
         admin.setBadge("System Administrator");
         admin.setPhone("+1 (555) 789-0011");

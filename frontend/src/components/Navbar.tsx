@@ -3,24 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import {
   Search,
   Bell,
-  Check,
   ChevronDown,
-  User,
-  Shield,
-  Stethoscope,
   X,
-  Menu,
+  LogOut,
 } from 'lucide-react';
-import { UserProfile, UserRole } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
 interface NavbarProps {
-  currentUser: UserProfile;
+  currentUser: import('../types').UserProfile;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
   const navigate = useNavigate();
-  const { handleRoleChange } = useAuth();
+  const { handleLogout } = useAuth();
   const [internalQuery, setInternalQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
@@ -57,10 +52,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
   };
 
-  const handleSwitchRole = (role: UserRole) => {
-    handleRoleChange(role);
-    navigate(`/${role}/dashboard`);
+  const handleSignOut = () => {
+    handleLogout();
     setShowRoleMenu(false);
+    navigate('/login');
   };
 
   const getSearchPlaceholder = () => {
@@ -202,68 +197,22 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
                 className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-200 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
               >
                 <div className="px-3 py-2 border-b border-slate-100">
-                  <p className="text-xs font-medium text-slate-400">Switch Demo Persona</p>
-                  <p className="text-xs font-semibold text-slate-900 truncate">
-                    Currently: {currentUser.name} ({currentUser.role})
-                  </p>
+                  <p className="text-xs font-medium text-slate-400">Signed in as</p>
+                  <p className="text-xs font-semibold text-slate-900 truncate">{currentUser.name}</p>
+                  <p className="text-[11px] text-slate-500 truncate">{currentUser.email}</p>
+                  <span className="inline-block mt-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold uppercase tracking-wide capitalize">
+                    {currentUser.role}
+                  </span>
                 </div>
 
-                <div className="p-1 space-y-1 mt-1">
+                <div className="p-1 mt-1">
                   <button
-                    id="switch-role-patient"
-                    onClick={() => handleSwitchRole('patient')}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                      currentUser.role === 'patient'
-                        ? 'bg-blue-50 text-blue-700 font-semibold'
-                        : 'text-slate-700 hover:bg-slate-50'
-                    }`}
+                    id="btn-navbar-signout"
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <User className="w-4 h-4 text-blue-600" />
-                      <div className="text-left">
-                        <div>Priya Sharma</div>
-                        <div className="text-[10px] text-slate-400">Patient Dashboard</div>
-                      </div>
-                    </div>
-                    {currentUser.role === 'patient' && <Check className="w-3.5 h-3.5" />}
-                  </button>
-
-                  <button
-                    id="switch-role-doctor"
-                    onClick={() => handleSwitchRole('doctor')}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                      currentUser.role === 'doctor'
-                        ? 'bg-blue-50 text-blue-700 font-semibold'
-                        : 'text-slate-700 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Stethoscope className="w-4 h-4 text-emerald-600" />
-                      <div className="text-left">
-                        <div>Dr. Rajesh Kumar</div>
-                        <div className="text-[10px] text-slate-400">Doctor Dashboard</div>
-                      </div>
-                    </div>
-                    {currentUser.role === 'doctor' && <Check className="w-3.5 h-3.5" />}
-                  </button>
-
-                  <button
-                    id="switch-role-admin"
-                    onClick={() => handleSwitchRole('admin')}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                      currentUser.role === 'admin'
-                        ? 'bg-blue-50 text-blue-700 font-semibold'
-                        : 'text-slate-700 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Shield className="w-4 h-4 text-indigo-600" />
-                      <div className="text-left">
-                        <div>Sarah Jenkins</div>
-                        <div className="text-[10px] text-slate-400">Admin & Analytics</div>
-                      </div>
-                    </div>
-                    {currentUser.role === 'admin' && <Check className="w-3.5 h-3.5" />}
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign out</span>
                   </button>
                 </div>
               </div>

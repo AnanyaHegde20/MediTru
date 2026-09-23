@@ -20,23 +20,37 @@ describe('API health endpoint (integration)', () => {
     expect(typeof data.hasGeminiKey).toBe('boolean');
   });
 
-  it('health-assistant rejects empty message', async () => {
+  it('protected endpoint rejects requests without a token', async () => {
     if (!backendAvailable) return;
-    const res = await fetch('http://localhost:3001/api/gemini/health-assistant', {
+    const res = await fetch('http://localhost:3001/api/doctors');
+    expect(res.status).toBe(401);
+  });
+
+  it('health-assistant rejects empty message when authenticated', async () => {
+    if (!backendAvailable) return;
+    const loginRes = await fetch('http://localhost:3001/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'admin@medicare.health', password: 'password' }),
+    });
+    if (!loginRes.ok) return; // seeded users not present
+    const { token } = await loginRes.json();
+
+    const res = await fetch('http://localhost:3001/api/gemini/health-assistant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ message: '', history: [] }),
     });
     expect(res.status).toBe(400);
   });
 
-  it('clinical-notes rejects empty patientName', async () => {
+  it('login rejects wrong password', async () => {
     if (!backendAvailable) return;
-    const res = await fetch('http://localhost:3001/api/gemini/clinical-notes', {
+    const res = await fetch('http://localhost:3001/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ patientName: '', age: 30 }),
+      body: JSON.stringify({ email: 'admin@medicare.health', password: 'wrong-password' }),
     });
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
   });
 });

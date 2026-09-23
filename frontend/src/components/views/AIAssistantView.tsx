@@ -18,6 +18,7 @@ import {
   Film,
 } from 'lucide-react';
 import { ActiveTab, ChatMessage, UserProfile } from '../../types';
+import { apiFetch } from '../../lib/api';
 
 interface AttachedFileItem {
   name: string;
@@ -112,9 +113,8 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     setIsTyping(true);
 
     try {
-      const response = await fetch('/api/gemini/health-assistant', {
+      const response = await apiFetch('/api/gemini/health-assistant', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: textToSend,
           reportContext: currentAttachments.length > 0

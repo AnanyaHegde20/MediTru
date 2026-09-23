@@ -11,6 +11,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useToast } from '../Toast';
+import { apiFetch } from '../../lib/api';
 
 interface ClinicalNotesModalProps {
   patientName?: string;
@@ -47,9 +48,8 @@ export const ClinicalNotesModal: React.FC<ClinicalNotesModalProps> = ({
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/gemini/clinical-notes', {
+      const response = await apiFetch('/api/gemini/clinical-notes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientName: patientInput,
           symptoms: symptomsInput,

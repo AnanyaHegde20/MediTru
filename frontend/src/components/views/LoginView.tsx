@@ -1,44 +1,67 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Mail, Lock, CheckCircle2, ArrowRight, ShieldCheck, Stethoscope, UserCog } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Mail, Lock, ArrowRight, ShieldCheck, Stethoscope, UserCog, User as UserIcon } from 'lucide-react';
 import { UserRole } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../Toast';
 
-const ROLE_CREDENTIALS: Record<UserRole, { email: string; password: string }> = {
-  patient: { email: 'priya.sharma@example.com', password: 'password123' },
-  doctor: { email: 'rajesh.kumar@medicare.health', password: 'doctorpass2024' },
-  admin: { email: 'admin@medicare.health', password: 'adminsecure99' },
+const DEMO_ACCOUNTS: Record<UserRole, { email: string; password: string; label: string }> = {
+  patient: { email: 'priya.sharma@example.com', password: 'password', label: 'Patient (Priya)' },
+  doctor: { email: 'rajesh.kumar@medicare.health', password: 'password', label: 'Doctor (Dr. Rajesh)' },
+  admin: { email: 'admin@medicare.health', password: 'password', label: 'Admin (Sarah)' },
 };
 
-interface LoginViewProps {
-  role?: UserRole;
-  onLogin: (role: UserRole) => void;
-}
+export const LoginView: React.FC = () => {
+  const [params] = useSearchParams();
+  const portalParam = params.get('as');
+  const portal: UserRole =
+    portalParam === 'doctor' || portalParam === 'admin' || portalParam === 'patient'
+      ? portalParam
+      : 'patient';
 
-export const LoginView: React.FC<LoginViewProps> = ({
-  role = 'patient',
-  onLogin,
-}) => {
-  const [email, setEmail] = useState(ROLE_CREDENTIALS[role].email);
-  const [password, setPassword] = useState(ROLE_CREDENTIALS[role].password);
-  const [isLoading, setIsLoading] = useState(false);
+  const { login, register } = useAuth();
+  const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      onLogin(role);
-    }, 450);
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState(DEMO_ACCOUNTS[portal].email);
+  const [password, setPassword] = useState(DEMO_ACCOUNTS[portal].password);
+  const [registerRole, setRegisterRole] = useState<UserRole>('patient');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const switchPortal = (role: UserRole) => {
+    setMode('login');
+    setEmail(DEMO_ACCOUNTS[role].email);
+    setPassword(DEMO_ACCOUNTS[role].password);
+    navigate(`/login?as=${role}`);
   };
 
-  const handleGoogleLogin = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      if (mode === 'login') {
+        const { error, user } = await login(email, password);
+        if (error) {
+          showToast(error, 'error');
+          return;
+        }
+        if (user) navigate(`/${user.role}/dashboard`);
+      } else {
+        const { error, user } = await register(name, email, password, registerRole);
+        if (error) {
+          showToast(error, 'error');
+          return;
+        }
+        if (user) {
+          showToast(`Welcome to MediTru, ${user.name}!`, 'success');
+          navigate(`/${user.role}/dashboard`);
+        }
+      }
+    } finally {
       setIsLoading(false);
-      onLogin(role);
-    }, 450);
+    }
   };
 
   return (
@@ -46,7 +69,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
       id="login-screen"
       className="min-h-screen w-full flex flex-col justify-center items-center px-4 py-8 relative bg-[#F8FAFC] overflow-hidden"
     >
-      {/* Subtle Background Pattern (Medical Cross / Grid) */}
       <div
         className="absolute inset-0 opacity-[0.035] pointer-events-none"
         style={{
@@ -56,9 +78,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
         }}
       />
 
-      {/* Main Login Card - Matches Figma Screen 1 */}
       <div className="w-full max-w-[420px] bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-slate-200/80 p-7 md:p-9 relative z-10">
-        {/* Brand Logo & Header */}
         <div className="text-center mb-7">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white mb-3 shadow-md shadow-blue-500/25">
             <svg
@@ -78,33 +98,52 @@ export const LoginView: React.FC<LoginViewProps> = ({
             MediTru
           </h1>
           <div
-            id={`login-role-badge-${role}`}
+            id={`login-role-badge-${mode === 'register' ? 'register' : portal}`}
             className="inline-flex items-center gap-1.5 mt-2.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-bold uppercase tracking-wider text-blue-700"
           >
-            {role === 'doctor' ? (
+            {mode === 'register' ? (
+              <UserIcon className="w-3 h-3" />
+            ) : portal === 'doctor' ? (
               <Stethoscope className="w-3 h-3" />
-            ) : role === 'admin' ? (
+            ) : portal === 'admin' ? (
               <UserCog className="w-3 h-3" />
             ) : (
               <ShieldCheck className="w-3 h-3" />
             )}
-            <span>{role} Portal</span>
+            <span>{mode === 'register' ? 'Create Account' : `${portal} Portal`}</span>
           </div>
           <p className="text-xs md:text-sm text-slate-500 mt-1.5 font-normal">
-            {role === 'doctor'
-              ? 'Sign in to manage patients, queue & clinical notes.'
-              : role === 'admin'
-                ? 'Sign in to oversee providers, KPIs & revenue.'
-                : 'Sign in to your appointments, records & AI health assistant.'}
+            {mode === 'register'
+              ? 'Create your account to get started.'
+              : portal === 'doctor'
+                ? 'Sign in to manage patients, queue & clinical notes.'
+                : portal === 'admin'
+                  ? 'Sign in to oversee providers, KPIs & revenue.'
+                  : 'Sign in to your appointments, records & AI health assistant.'}
           </p>
         </div>
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {mode === 'register' && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Full Name</label>
+              <div className="relative">
+                <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  id="register-name-input"
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="John Doe"
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                />
+              </div>
+            </div>
+          )}
+
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Email Address
-            </label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Email Address</label>
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
@@ -120,24 +159,14 @@ export const LoginView: React.FC<LoginViewProps> = ({
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-semibold text-slate-700">
-                Password
-              </label>
-              <button
-                type="button"
-                onClick={() => showToast('Password reset instructions sent to ' + email, 'info')}
-                className="text-xs font-medium text-blue-600 hover:text-blue-700"
-              >
-                Forgot password?
-              </button>
-            </div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Password</label>
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 id="login-password-input"
                 type="password"
                 required
+                minLength={mode === 'register' ? 6 : undefined}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
@@ -145,6 +174,22 @@ export const LoginView: React.FC<LoginViewProps> = ({
               />
             </div>
           </div>
+
+          {mode === 'register' && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Account Type</label>
+              <select
+                id="register-role-select"
+                value={registerRole}
+                onChange={(e) => setRegisterRole(e.target.value as UserRole)}
+                className="w-full px-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+              >
+                <option value="patient">Patient</option>
+                <option value="doctor">Doctor</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          )}
 
           <button
             id="btn-submit-signin"
@@ -156,85 +201,74 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
-                <span>Sign In as {role.charAt(0).toUpperCase() + role.slice(1)}</span>
+                <span>{mode === 'login' ? 'Sign In' : 'Create Account'}</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </>
             )}
           </button>
         </form>
 
-        {/* OR Divider */}
-        <div className="relative my-5">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200" />
-          </div>
-          <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
-            <span className="bg-white px-3 text-slate-400 font-semibold">OR</span>
-          </div>
-        </div>
-
-        {/* Google OAuth Button */}
-        <button
-          id="btn-google-signin"
-          type="button"
-          onClick={handleGoogleLogin}
-          className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs md:text-sm rounded-lg border border-slate-200 shadow-2xs transition-all flex items-center justify-center gap-2.5 cursor-pointer"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24">
-            <path
-              fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-            />
-          </svg>
-          <span>Sign in with Google</span>
-        </button>
-
-        {/* Footer Link */}
         <div className="text-center mt-5 text-xs text-slate-500">
-          Don't have an account?{' '}
-          <button
-            onClick={() => onLogin(role)}
-            className="text-blue-600 font-semibold hover:underline"
-          >
-            Create account
-          </button>
+          {mode === 'login' ? (
+            <>
+              Don't have an account?{' '}
+              <button
+                id="btn-switch-register"
+                onClick={() => {
+                  setMode('register');
+                  setPassword('');
+                  setName('');
+                }}
+                className="text-blue-600 font-semibold hover:underline"
+              >
+                Create account
+              </button>
+            </>
+          ) : (
+            <>
+              Already have an account?{' '}
+              <button
+                id="btn-switch-login"
+                onClick={() => {
+                  setMode('login');
+                  setEmail(DEMO_ACCOUNTS[portal].email);
+                  setPassword(DEMO_ACCOUNTS[portal].password);
+                }}
+                className="text-blue-600 font-semibold hover:underline"
+              >
+                Sign in
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Demo Credentials Quick Switch Pill Bar */}
       <div className="mt-5 text-center text-xs text-slate-400 flex items-center justify-center gap-3">
-        <span>Switch Portal:</span>
-        <Link
-          to="/patient"
-          className={`font-semibold hover:underline ${role === 'patient' ? 'text-blue-600 underline' : 'text-blue-600/70'}`}
-        >
-          Patient (Priya)
-        </Link>
-        <span>•</span>
-        <Link
-          to="/doctor"
-          className={`font-semibold hover:underline ${role === 'doctor' ? 'text-emerald-600 underline' : 'text-emerald-600/70'}`}
-        >
-          Doctor (Dr. Rajesh)
-        </Link>
-        <span>•</span>
-        <Link
-          to="/admin"
-          className={`font-semibold hover:underline ${role === 'admin' ? 'text-slate-800 underline' : 'text-slate-800/70'}`}
-        >
-          Admin (Sarah)
+        <span>Demo accounts (password: password):</span>
+        {(['patient', 'doctor', 'admin'] as UserRole[]).map((r) => (
+          <React.Fragment key={r}>
+            <button
+              onClick={() => switchPortal(r)}
+              className={`font-semibold hover:underline ${
+                portal === r && mode === 'login'
+                  ? r === 'patient'
+                    ? 'text-blue-600 underline'
+                    : r === 'doctor'
+                      ? 'text-emerald-600 underline'
+                      : 'text-slate-800 underline'
+                  : 'text-blue-600/70'
+              }`}
+            >
+              {DEMO_ACCOUNTS[r].label}
+            </button>
+            {r !== 'admin' && <span>•</span>}
+          </React.Fragment>
+        ))}
+      </div>
+
+      <div className="mt-3 text-center text-xs text-slate-400">
+        <Link to="/login" className="hover:text-slate-500">
+          Secure JWT login
         </Link>
       </div>
     </div>

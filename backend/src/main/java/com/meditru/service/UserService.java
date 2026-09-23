@@ -3,6 +3,7 @@ package com.meditru.service;
 import com.meditru.entity.User;
 import com.meditru.entity.User.UserRole;
 import com.meditru.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -10,9 +11,11 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository repo;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository repo) {
+    public UserService(UserRepository repo, PasswordEncoder passwordEncoder) {
         this.repo = repo;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<User> findAll() { return repo.findAll(); }
@@ -24,6 +27,9 @@ public class UserService {
     public User create(User user) {
         if (repo.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
+        }
+        if (user.getPassword() != null && !user.getPassword().startsWith("{bcrypt}")) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
         return repo.save(user);
     }

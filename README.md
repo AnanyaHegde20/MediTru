@@ -123,6 +123,25 @@ npx tsc --noEmit
 | POST | `/api/gemini/health-assistant` | AI health assistant (message + chat history + optional report context) |
 | POST | `/api/gemini/clinical-notes` | AI SOAP clinical notes generator |
 
+### Authentication (JWT)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | Login with email + password → `{ token, user }` (401 on bad credentials) |
+| POST | `/api/auth/register` | Create account `{ name, email, password, role }` → `{ token, user }` |
+| GET | `/api/auth/me` | Current user from `Authorization: Bearer <token>` header |
+
+All other `/api/**` endpoints require a valid JWT. Role rules:
+- `DELETE /api/**` → ADMIN only
+- `/api/users` GET/POST → ADMIN only
+- `/api/prescriptions` POST/PUT, `/api/patient-queue` PUT, `/api/doctors` POST/PUT → DOCTOR or ADMIN
+- everything else → any authenticated user
+
+**Demo accounts** (password `password`):
+- Patient: `priya.sharma@example.com`
+- Doctor: `rajesh.kumar@medicare.health`
+- Admin: `admin@medicare.health`
+
 ### Users
 
 | Method | Endpoint | Description |
@@ -213,6 +232,8 @@ POST /api/gemini/clinical-notes
 |----------|---------|-------------|
 | `GEMINI_API_KEY` | (empty) | Google Gemini API key |
 | `ALLOWED_ORIGINS` | `http://localhost:3000` | CORS allowed origins |
+| `JWT_SECRET` | dev secret | JWT signing secret (set a long random value in production) |
+| `JWT_EXPIRATION_MS` | `86400000` | Token lifetime in ms (default 24h) |
 
 ## Role-Based URLs
 

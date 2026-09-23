@@ -29,6 +29,8 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   const { currentUser, isSidebarCollapsed, toggleSidebar, handleLogout } = useAuth();
   const { showClinicalNotesModal, activePatientForNotes, closeClinicalNotes } = useClinicalNotes();
 
+  if (!currentUser) return null;
+
   return (
     <div id="medicare-app-root" className="min-h-screen bg-[#F8FAFC] flex text-slate-900 font-sans antialiased">
       <Sidebar
@@ -75,6 +77,8 @@ function PatientRoutes() {
     store.fetchLabReports(undefined);
     store.fetchPrescriptions(undefined);
   }, []);
+
+  if (!currentUser) return null;
 
   return (
     <Routes>
@@ -159,6 +163,8 @@ function DoctorRoutes() {
     store.fetchLabReports(undefined);
     store.fetchPrescriptions(undefined);
   }, []);
+
+  if (!currentUser) return null;
 
   return (
     <Routes>
@@ -253,6 +259,8 @@ function AdminRoutes() {
     store.fetchLabReports(undefined);
   }, []);
 
+  if (!currentUser) return null;
+
   return (
     <Routes>
       <Route index element={<Navigate to="dashboard" replace />} />
@@ -291,29 +299,69 @@ function AdminRoutes() {
   );
 }
 
-// Root: determines which role workspace to show
+// Root: guards routes behind auth, routes by role workspace
 function RootRouter() {
-  const { currentUser, handleLogin } = useAuth();
+  const { currentUser, authReady } = useAuth();
+
+  if (!authReady) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center text-slate-500 text-sm">
+        <span className="inline-block w-4 h-4 border-2 border-slate-300 border-t-blue-600 rounded-full animate-spin mr-2" />
+        Loading MediTru…
+      </div>
+    );
+  }
 
   return (
     <Routes>
-      <Route path="/login" element={<LoginView onLogin={handleLogin} />} />
-      <Route path="/patient/*" element={
-        <AppLayout>
-          <PatientRoutes />
-        </AppLayout>
-      } />
-      <Route path="/doctor/*" element={
-        <AppLayout>
-          <DoctorRoutes />
-        </AppLayout>
-      } />
-      <Route path="/admin/*" element={
-        <AppLayout>
-          <AdminRoutes />
-        </AppLayout>
-      } />
-      <Route path="*" element={<Navigate to={`/${currentUser.role}`} replace />} />
+      <Route
+        path="/login"
+        element={
+          currentUser ? <Navigate to={`/${currentUser.role}/dashboard`} replace /> : <LoginView />
+        }
+      />
+      <Route
+        path="/patient/*"
+        element={
+          currentUser?.role === 'patient' ? (
+            <AppLayout>
+              <PatientRoutes />
+            </AppLayout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/doctor/*"
+        element={
+          currentUser?.role === 'doctor' ? (
+            <AppLayout>
+              <DoctorRoutes />
+            </AppLayout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/admin/*"
+        element={
+          currentUser?.role === 'admin' ? (
+            <AppLayout>
+              <AdminRoutes />
+            </AppLayout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="*"
+        element={
+          <Navigate to={currentUser ? `/${currentUser.role}/dashboard` : '/login'} replace />
+        }
+      />
     </Routes>
   );
 }
