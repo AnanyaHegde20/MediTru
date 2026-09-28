@@ -118,6 +118,15 @@ cd frontend
 npx tsc --noEmit
 ```
 
+### End-to-End (Playwright)
+
+```bash
+cd frontend
+npm run e2e
+```
+
+Starts the backend (port 3001) and frontend dev server (port 3000) automatically via Playwright's `webServer`, then runs the specs in `frontend/e2e/` (login for all three roles, appointment booking, messaging, lab report upload). Uses the locally installed Chrome/Edge-channel Chrome — no browser download needed. Servers already running on those ports are reused outside CI.
+
 ## API Endpoints
 
 GET/POST/PUT/DELETE on resources use the H2 **file** database (`backend/data/`), so created doctors, appointments, queue updates etc. persist across restarts.
@@ -277,3 +286,4 @@ POST /api/gemini/clinical-notes
 GitHub Actions runs automatically on every push/PR to `main`:
 - Backend: compile + test (Java 17, Maven)
 - Frontend: install + typecheck + test + build (Node 20)
+- E2E: Playwright suite against a freshly started backend + frontend (report uploaded on failure)

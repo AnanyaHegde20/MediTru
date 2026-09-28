@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Search,
   Star,
@@ -32,7 +32,9 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
 }) => {
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDoctor, setSelectedDoctor] = useState<Doctor>(doctors[0]);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(
+    doctors[0] ?? null
+  );
   const [selectedDay, setSelectedDay] = useState<number>(24);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('10:00 AM');
   const [consultReason, setConsultReason] = useState('Routine checkup & health review');
@@ -50,6 +52,12 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
     'Pediatrics',
   ];
 
+  useEffect(() => {
+    if (!selectedDoctor && doctors.length > 0) {
+      setSelectedDoctor(doctors[0]);
+    }
+  }, [doctors, selectedDoctor]);
+
   const filteredDoctors = doctors.filter((doc) => {
     const matchesSpecialty =
       selectedSpecialty === 'All' ||
@@ -62,6 +70,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
   });
 
   const handleConfirmBooking = async () => {
+    if (!selectedDoctor) return;
     const newApt: Appointment = {
       id: `apt_${Date.now()}`,
       patientId: currentUser.id,
@@ -141,7 +150,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
         {/* Doctor Cards Grid (2 Cols on desktop) */}
         <div className="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredDoctors.map((doc) => {
-            const isSelected = selectedDoctor.id === doc.id;
+            const isSelected = selectedDoctor?.id === doc.id;
             return (
               <div
                 key={doc.id}
@@ -212,6 +221,12 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
             Book Appointment
           </h2>
 
+          {!selectedDoctor ? (
+            <p className="my-4 text-xs text-slate-400">
+              Select a doctor to pick a date and time.
+            </p>
+          ) : (
+            <>
           {/* Selected Doctor Badge */}
           <div className="my-4 p-3 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center gap-3">
             <img
@@ -351,6 +366,8 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
           >
             Confirm Booking
           </button>
+            </>
+          )}
         </div>
       </div>
 
