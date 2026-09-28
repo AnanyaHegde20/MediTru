@@ -24,23 +24,51 @@ public class AppointmentController {
     }
 
     @GetMapping
-    public List<Appointment> list(@RequestParam(required = false) String patientId,
-                                  @RequestParam(required = false) String doctorId) {
-        if (patientId != null) return service.findByPatient(patientId);
-        if (doctorId != null) return service.findByDoctor(doctorId);
-        return service.findAll();
+    public ResponseEntity<List<Appointment>> list(@RequestParam(required = false) String patientId,
+                                                  @RequestParam(required = false) String doctorId,
+                                                  Authentication authentication) {
+        try {
+            AuthUser actor = requireActor(authentication);
+            if ("patient".equals(actor.role())) {
+                return ResponseEntity.ok(service.findByPatient(actor.id()));
+            }
+            if (patientId != null) return ResponseEntity.ok(service.findByPatient(patientId));
+            if (doctorId != null) return ResponseEntity.ok(service.findByDoctor(doctorId));
+            return ResponseEntity.ok(service.findAll());
+        } catch (AuthService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of());
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Appointment> get(@PathVariable Long id) {
-        Appointment apt = service.findById(id);
-        return apt != null ? ResponseEntity.ok(apt) : ResponseEntity.notFound().build();
+    public ResponseEntity<Appointment> get(@PathVariable Long id, Authentication authentication) {
+        try {
+            AuthUser actor = requireActor(authentication);
+            Appointment apt = service.findById(id);
+            if (apt == null || !canAccess(apt, actor)) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(apt);
+        } catch (AuthService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody Appointment apt) {
+    public ResponseEntity<?> create(@RequestBody Appointment apt, Authentication authentication) {
         try {
+            AuthUser actor = requireActor(authentication);
+            String owner = apt.getPatientId() != null && !apt.getPatientId().isBlank()
+                    ? apt.getPatientId().trim()
+                    : actor.id();
+            if (!"admin".equals(actor.role()) && !"doctor".equals(actor.role())
+                    && !owner.equals(actor.id())) {
+                throw new IllegalArgumentException("You can only book appointments for yourself");
+            }
+            apt.setPatientId(owner);
             return ResponseEntity.ok(service.create(apt));
+        } catch (AuthService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -63,6 +91,11 @@ public class AppointmentController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private boolean canAccess(Appointment apt, AuthUser actor) {
+        if ("admin".equals(actor.role()) || "doctor".equals(actor.role())) return true;
+        return actor.id().equals(apt.getPatientId());
     }
 
     private AuthUser requireActor(Authentication authentication) {

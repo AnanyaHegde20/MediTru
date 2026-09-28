@@ -49,13 +49,13 @@ public class AuthService {
         if (users.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already exists");
         }
-        User.UserRole role;
-        try {
-            role = User.UserRole.valueOf(request.role() == null ? "patient" : request.role());
-        } catch (IllegalArgumentException e) {
-            role = User.UserRole.patient;
+        String requestedRole = request.role() == null ? "patient" : request.role().trim();
+        if (!requestedRole.equalsIgnoreCase("patient")) {
+            throw new IllegalArgumentException(
+                    "Only patients can self-register; doctor and admin accounts are created by an administrator");
         }
-        User user = new User(request.name().trim(), email, passwordEncoder.encode(request.password()), role);
+        User user = new User(request.name().trim(), email, passwordEncoder.encode(request.password()),
+                User.UserRole.patient);
         users.save(user);
         return buildResponse(user);
     }

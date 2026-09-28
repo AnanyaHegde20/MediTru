@@ -32,19 +32,51 @@ public class LabReportController {
     }
 
     @GetMapping
-    public List<LabReport> list(@RequestParam(required = false) String patientId) {
-        if (patientId != null) return service.findByPatient(patientId);
-        return service.findAll();
+    public ResponseEntity<List<LabReport>> list(@RequestParam(required = false) String patientId,
+                                                Authentication authentication) {
+        try {
+            AuthUser actor = requireActor(authentication);
+            if ("patient".equals(actor.role())) {
+                return ResponseEntity.ok(service.findByPatient(actor.id()));
+            }
+            if (patientId != null) return ResponseEntity.ok(service.findByPatient(patientId));
+            return ResponseEntity.ok(service.findAll());
+        } catch (AuthService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of());
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<LabReport> get(@PathVariable Long id) {
-        LabReport report = service.findById(id);
-        return report != null ? ResponseEntity.ok(report) : ResponseEntity.notFound().build();
+    public ResponseEntity<LabReport> get(@PathVariable Long id, Authentication authentication) {
+        try {
+            AuthUser actor = requireActor(authentication);
+            LabReport report = service.findById(id);
+            if (report == null || !canAccess(report, actor)) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(report);
+        } catch (AuthService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
     @PostMapping
-    public LabReport create(@RequestBody LabReport report) { return service.create(report); }
+    public ResponseEntity<?> create(@RequestBody LabReport report, Authentication authentication) {
+        try {
+            AuthUser actor = requireActor(authentication);
+            String owner = resolvePatientId(report.getPatientId(), actor);
+            if (!"admin".equals(actor.role()) && !"doctor".equals(actor.role())
+                    && !owner.equals(actor.id())) {
+                throw new IllegalArgumentException("You can only create reports for yourself");
+            }
+            report.setPatientId(owner);
+            return ResponseEntity.ok(service.create(report));
+        } catch (AuthService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
     @PostMapping("/upload")
     public ResponseEntity<?> upload(@RequestParam(value = "file", required = false) MultipartFile file,

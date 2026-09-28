@@ -45,6 +45,7 @@ class AppointmentWorkflowTest {
     private String doctorToken;
     private String adminToken;
     private String otherPatientToken;
+    private String patientId;
     private Long appointmentId;
 
     @BeforeEach
@@ -65,6 +66,7 @@ class AppointmentWorkflowTest {
         otherPatientToken = jwtService.generateToken(other);
         doctorToken = jwtService.generateToken(doctor);
         adminToken = jwtService.generateToken(admin);
+        patientId = String.valueOf(patient.getId());
 
         appointmentId = appointmentRepository.save(newPendingAppointment(
                 String.valueOf(patient.getId()), "Pat Patient")).getId();
@@ -184,7 +186,7 @@ class AppointmentWorkflowTest {
     @Test
     void createRejectsUnknownStartStatus() throws Exception {
         String body = objectMapper.writeValueAsString(Map.of(
-                "patientId", "1",
+                "patientId", patientId,
                 "patientName", "Pat",
                 "doctorId", "2",
                 "doctorName", "Dr. Stone",
@@ -204,7 +206,7 @@ class AppointmentWorkflowTest {
     @Test
     void createDefaultsToPending() throws Exception {
         String body = objectMapper.writeValueAsString(Map.of(
-                "patientId", "1",
+                "patientId", patientId,
                 "patientName", "Pat",
                 "doctorId", "2",
                 "doctorName", "Dr. Stone",
@@ -217,6 +219,25 @@ class AppointmentWorkflowTest {
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("Pending"));
+    }
+
+    @Test
+    void patientCannotCreateAppointmentForSomeoneElse() throws Exception {
+        String body = objectMapper.writeValueAsString(Map.of(
+                "patientId", "999",
+                "patientName", "Stranger",
+                "doctorId", "2",
+                "doctorName", "Dr. Stone",
+                "date", "Oct 24, 2026",
+                "time", "10:00 AM"));
+
+        mockMvc.perform(post("/api/appointments")
+                        .header("Authorization", "Bearer " + patientToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error")
+                        .value("You can only book appointments for yourself"));
     }
 
     @Test

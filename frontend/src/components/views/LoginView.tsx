@@ -27,9 +27,7 @@ export const LoginView: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState(DEMO_ACCOUNTS[portal].email);
   const [password, setPassword] = useState(DEMO_ACCOUNTS[portal].password);
-  const [registerRole, setRegisterRole] = useState<UserRole>('patient');
   const [isLoading, setIsLoading] = useState(false);
-
   const switchPortal = (role: UserRole) => {
     setMode('login');
     setEmail(DEMO_ACCOUNTS[role].email);
@@ -49,7 +47,7 @@ export const LoginView: React.FC = () => {
         }
         if (user) navigate(`/${user.role}/dashboard`);
       } else {
-        const { error, user } = await register(name, email, password, registerRole);
+        const { error, user } = await register(name, email, password);
         if (error) {
           showToast(error, 'error');
           return;
@@ -174,22 +172,6 @@ export const LoginView: React.FC = () => {
               />
             </div>
           </div>
-
-          {mode === 'register' && (
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Account Type</label>
-              <select
-                id="register-role-select"
-                value={registerRole}
-                onChange={(e) => setRegisterRole(e.target.value as UserRole)}
-                className="w-full px-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
-              >
-                <option value="patient">Patient</option>
-                <option value="doctor">Doctor</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-          )}
 
           <button
             id="btn-submit-signin"

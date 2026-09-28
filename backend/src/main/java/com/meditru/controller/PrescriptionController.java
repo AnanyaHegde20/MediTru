@@ -24,15 +24,32 @@ public class PrescriptionController {
     }
 
     @GetMapping
-    public List<Prescription> list(@RequestParam(required = false) String patientId) {
-        if (patientId != null) return service.findByPatient(patientId);
-        return service.findAll();
+    public ResponseEntity<List<Prescription>> list(@RequestParam(required = false) String patientId,
+                                                   Authentication authentication) {
+        try {
+            AuthUser actor = requireActor(authentication);
+            if ("patient".equals(actor.role())) {
+                return ResponseEntity.ok(service.findByPatient(actor.id()));
+            }
+            if (patientId != null) return ResponseEntity.ok(service.findByPatient(patientId));
+            return ResponseEntity.ok(service.findAll());
+        } catch (AuthService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of());
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Prescription> get(@PathVariable Long id) {
-        Prescription rx = service.findById(id);
-        return rx != null ? ResponseEntity.ok(rx) : ResponseEntity.notFound().build();
+    public ResponseEntity<Prescription> get(@PathVariable Long id, Authentication authentication) {
+        try {
+            AuthUser actor = requireActor(authentication);
+            Prescription rx = service.findById(id);
+            if (rx == null || !canAccess(rx, actor)) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(rx);
+        } catch (AuthService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
     @PostMapping
@@ -73,6 +90,11 @@ public class PrescriptionController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private boolean canAccess(Prescription rx, AuthUser actor) {
+        if ("admin".equals(actor.role()) || "doctor".equals(actor.role())) return true;
+        return actor.id().equals(rx.getPatientId());
     }
 
     private AuthUser requireActor(Authentication authentication) {

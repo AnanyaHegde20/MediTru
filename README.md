@@ -146,16 +146,18 @@ AI calls are hardened: 5s connect / 30s read timeouts, API key sent via the `x-g
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/auth/login` | Login with email + password → `{ token, user }` (401 on bad credentials) |
-| POST | `/api/auth/register` | Create account `{ name, email, password, role }` → `{ token, user }` |
+| POST | `/api/auth/register` | Create a **patient** account `{ name, email, password }` → `{ token, user }` (doctor/admin roles are rejected; admins create staff accounts via `/api/users`) |
 | GET | `/api/auth/me` | Current user from `Authorization: Bearer <token>` header |
 
 All other `/api/**` endpoints require a valid JWT. Role rules:
 - `DELETE /api/**` → ADMIN only
 - `/api/users` GET/POST → ADMIN only
 - `GET /api/patients` → DOCTOR or ADMIN
-- `/api/prescriptions` POST/PUT, `/api/patient-queue` PUT, `/api/doctors` POST/PUT → DOCTOR or ADMIN
+- `/api/prescriptions` POST/PUT, `/api/patient-queue` GET/POST/PUT, `/api/doctors` POST/PUT → DOCTOR or ADMIN
 - `POST /api/prescriptions/{id}/refill` → any authenticated user (owner checked in service)
 - everything else → any authenticated user
+
+**Ownership rules:** patients only ever see their own records — `GET /api/lab-reports`, `/api/prescriptions`, and `/api/appointments` are automatically scoped to the caller (a `patientId` query parameter from a patient is ignored), get-by-id on someone else's record returns 404, and creating a report/appointment for another patient returns 400. Doctors and admins read clinical data broadly (there is no `User`↔`Doctor` profile link to scope by).
 
 **Demo accounts** (password `password`):
 - Patient: `priya.sharma@example.com`

@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useState, useEffect } from 'react';
-import { UserProfile, UserRole } from '../types';
+import { UserProfile } from '../types';
 import { getToken, setToken } from '../lib/api';
 
 interface AuthResult {
@@ -12,7 +12,7 @@ interface AuthContextValue {
   authReady: boolean;
   isSidebarCollapsed: boolean;
   login: (email: string, password: string) => Promise<AuthResult>;
-  register: (name: string, email: string, password: string, role: UserRole) => Promise<AuthResult>;
+  register: (name: string, email: string, password: string) => Promise<AuthResult>;
   handleLogout: () => void;
   toggleSidebar: () => void;
 }
@@ -92,8 +92,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const register = useCallback(
-    async (name: string, email: string, password: string, role: UserRole): Promise<AuthResult> => {
-      const result = await postAuth('/api/auth/register', { name, email, password, role });
+    async (name: string, email: string, password: string): Promise<AuthResult> => {
+      const result = await postAuth('/api/auth/register', { name, email, password });
       if (result.user) setCurrentUser(result.user);
       return result;
     },
