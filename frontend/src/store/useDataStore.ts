@@ -38,6 +38,20 @@ interface DataStore {
     partnerName: string,
     opts?: { partnerRoleLabel?: string; partnerAvatar?: string }
   ) => Promise<MessageThreadItem>;
+  uploadLabReport: (
+    file: File,
+    meta: {
+      patientId: string;
+      name: string;
+      category: string;
+      date: string;
+      doctorName: string;
+      doctorSpecialty: string;
+      status: 'Normal' | 'Abnormal';
+      values: LabReport['values'];
+      aiSummary: LabReport['aiSummary'];
+    }
+  ) => Promise<LabReport>;
   addDoctor: (doc: Doctor) => void;
   addLabReport: (report: LabReport) => void;
 }
@@ -124,6 +138,18 @@ function upsertThread(
   return threads.some((t) => t.id === thread.id)
     ? threads.map((t) => (t.id === thread.id ? thread : t))
     : [thread, ...threads];
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeLabReport(r: any): LabReport {
+  return {
+    ...r,
+    id: String(r.id),
+    values: r.valuesJson ? JSON.parse(r.valuesJson) : [],
+    aiSummary: r.aiSummaryJson
+      ? JSON.parse(r.aiSummaryJson)
+      : { overview: '', keyFindings: [], attentionItems: [], recommendations: [] },
+  };
 }
 
 export const useDataStore = create<DataStore>((set, get) => ({
@@ -428,6 +454,34 @@ export const useDataStore = create<DataStore>((set, get) => ({
     const thread = normalizeThread(created);
     set((state) => ({ messageThreads: upsertThread(state.messageThreads, thread) }));
     return thread;
+  },
+
+  uploadLabReport: async (file, meta) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('patientId', meta.patientId);
+    form.append('name', meta.name);
+    form.append('category', meta.category);
+    form.append('date', meta.date);
+    form.append('doctorName', meta.doctorName);
+    form.append('doctorSpecialty', meta.doctorSpecialty);
+    form.append('status', meta.status);
+    form.append('valuesJson', JSON.stringify(meta.values));
+    form.append('aiSummaryJson', JSON.stringify(meta.aiSummary));
+
+    const res = await apiFetch(apiUrl('/api/lab-reports/upload'), {
+      method: 'POST',
+      body: form,
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.error || `Upload failed: ${res.status}`);
+    }
+    const report = normalizeLabReport(await res.json());
+    set((state) => ({
+      labReports: [report, ...state.labReports.filter((r) => r.id !== report.id)],
+    }));
+    return report;
   },
 
   addDoctor: async (doc) => {

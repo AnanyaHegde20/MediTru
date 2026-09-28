@@ -118,7 +118,7 @@ function PatientRoutes() {
           selectedReport={selectedReport}
           onSelectReport={setSelectedReport}
           onAskAIAboutReport={askAIAboutReport}
-          onAddNewReport={store.addLabReport}
+          onUploadFile={store.uploadLabReport}
           onRequestRefill={store.requestRefill}
           onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
         />
@@ -133,7 +133,7 @@ function PatientRoutes() {
           selectedReport={selectedReport}
           onSelectReport={setSelectedReport}
           onAskAIAboutReport={askAIAboutReport}
-          onAddNewReport={store.addLabReport}
+          onUploadFile={store.uploadLabReport}
           onRequestRefill={store.requestRefill}
           onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
         />
@@ -224,7 +224,7 @@ function DoctorRoutes() {
           selectedReport={null}
           onSelectReport={() => {}}
           onAskAIAboutReport={() => {}}
-          onAddNewReport={store.addLabReport}
+          onUploadFile={store.uploadLabReport}
           onRequestRefill={store.requestRefill}
           onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
         />
@@ -244,7 +244,7 @@ function DoctorRoutes() {
           selectedReport={null}
           onSelectReport={() => {}}
           onAskAIAboutReport={() => {}}
-          onAddNewReport={store.addLabReport}
+          onUploadFile={store.uploadLabReport}
           onRequestRefill={store.requestRefill}
           onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
         />

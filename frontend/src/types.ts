@@ -86,6 +86,7 @@ export interface LabReport {
   status: 'Normal' | 'Abnormal';
   fileSize: string;
   downloadUrl?: string;
+  fileName?: string;
   values: LabReportValue[];
   aiSummary: {
     overview: string;

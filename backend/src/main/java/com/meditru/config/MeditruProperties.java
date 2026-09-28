@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 public class MeditruProperties {
 
     private String allowedOrigins = "http://localhost:3000";
+    private String storageDir = "./data/uploads";
     private Gemini gemini = new Gemini();
     private RateLimit rateLimit = new RateLimit();
     private Jwt jwt = new Jwt();
@@ -18,6 +19,14 @@ public class MeditruProperties {
 
     public void setAllowedOrigins(String allowedOrigins) {
         this.allowedOrigins = allowedOrigins;
+    }
+
+    public String getStorageDir() {
+        return storageDir;
+    }
+
+    public void setStorageDir(String storageDir) {
+        this.storageDir = storageDir;
     }
 
     public Gemini getGemini() {

@@ -26,6 +26,15 @@ public class LabReport {
     private String fileSize;
     private String downloadUrl;
 
+    @Column(name = "file_name")
+    private String fileName;
+
+    @Column(name = "content_type")
+    private String contentType;
+
+    @Column(name = "size_bytes")
+    private Long sizeBytes;
+
     @Column(length = 10000)
     private String valuesJson;
 
@@ -60,6 +69,12 @@ public class LabReport {
     public void setFileSize(String fileSize) { this.fileSize = fileSize; }
     public String getDownloadUrl() { return downloadUrl; }
     public void setDownloadUrl(String downloadUrl) { this.downloadUrl = downloadUrl; }
+    public String getFileName() { return fileName; }
+    public void setFileName(String fileName) { this.fileName = fileName; }
+    public String getContentType() { return contentType; }
+    public void setContentType(String contentType) { this.contentType = contentType; }
+    public Long getSizeBytes() { return sizeBytes; }
+    public void setSizeBytes(Long sizeBytes) { this.sizeBytes = sizeBytes; }
     public String getValuesJson() { return valuesJson; }
     public void setValuesJson(String valuesJson) { this.valuesJson = valuesJson; }
     public String getAiSummaryJson() { return aiSummaryJson; }

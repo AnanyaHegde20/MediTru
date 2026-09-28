@@ -17,6 +17,7 @@ import {
   Search,
 } from 'lucide-react';
 import { LabReport, Prescription, UserProfile } from '../../types';
+import { apiFetch } from '../../lib/api';
 import { useToast } from '../Toast';
 
 interface MedicalRecordsViewProps {
@@ -26,7 +27,20 @@ interface MedicalRecordsViewProps {
   selectedReport: LabReport | null;
   onSelectReport: (report: LabReport) => void;
   onAskAIAboutReport: (report: LabReport) => void;
-  onAddNewReport: (report: LabReport) => void;
+  onUploadFile: (
+    file: File,
+    meta: {
+      patientId: string;
+      name: string;
+      category: string;
+      date: string;
+      doctorName: string;
+      doctorSpecialty: string;
+      status: 'Normal' | 'Abnormal';
+      values: LabReport['values'];
+      aiSummary: LabReport['aiSummary'];
+    }
+  ) => Promise<LabReport>;
   onRequestRefill: (id: string) => Promise<void>;
   onApproveRefill: (id: string) => Promise<void>;
 }
@@ -44,7 +58,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
   selectedReport,
   onSelectReport,
   onAskAIAboutReport,
-  onAddNewReport,
+  onUploadFile,
   onRequestRefill,
   onApproveRefill,
 }) => {
@@ -58,43 +72,99 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
   const [newReportDoctor, setNewReportDoctor] = useState('Dr. Alan Stone');
   const [newReportCategory, setNewReportCategory] = useState<'Hematology' | 'Lipid' | 'Metabolic'>('Hematology');
   const [isAbnormal, setIsAbnormal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const { showToast } = useToast();
 
   const activeReport = selectedReport || labReports[0];
 
-  const handleUploadSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newReportName.trim()) return;
-
-    const report: LabReport = {
-      id: `lab_${Date.now()}`,
-      patientId: currentUser.id,
-      name: newReportName,
-      category: newReportCategory,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      doctorName: newReportDoctor,
-      doctorSpecialty: 'Internal Medicine',
-      status: isAbnormal ? 'Abnormal' : 'Normal',
-      fileSize: '1.2 MB',
-      values: [
-        { parameter: 'Target Marker A', value: '110', unit: 'mg/dL', referenceRange: '70 - 100', status: isAbnormal ? 'High' : 'Normal' },
-        { parameter: 'Reference Marker B', value: '45', unit: 'U/L', referenceRange: '10 - 50', status: 'Normal' },
-      ],
-      aiSummary: {
-        overview: `Clinical evaluation for ${newReportName}.`,
-        keyFindings: ['Sample verified by laboratory automated diagnostic equipment.'],
-        attentionItems: isAbnormal ? ['Target marker exceeds nominal baseline. Follow-up consultation advised.'] : [],
-        recommendations: ['Routine follow-up in 6 months.'],
-      },
-    };
-
-    onAddNewReport(report);
-    onSelectReport(report);
-    setShowUploadModal(false);
-    setNewReportName('');
+  const pickFile = (file?: File | null) => {
+    if (!file) return;
+    const ext = file.name.includes('.')
+      ? (file.name.split('.').pop() as string).toLowerCase()
+      : '';
+    if (!['pdf', 'png', 'jpg', 'jpeg'].includes(ext)) {
+      showToast('Unsupported file type — PDF, PNG or JPG only.', 'error');
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      showToast('File is too large (max 25 MB).', 'error');
+      return;
+    }
+    setSelectedFile(file);
+    if (!newReportName.trim()) {
+      setNewReportName(file.name.replace(/\.[^.]+$/, ''));
+    }
   };
 
-  const handleDownloadReport = (report: LabReport) => {
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newReportName.trim()) return;
+    if (!selectedFile) {
+      showToast('Choose a file to upload.', 'error');
+      return;
+    }
+    setIsUploading(true);
+    try {
+      const report = await onUploadFile(selectedFile, {
+        patientId: currentUser.id,
+        name: newReportName.trim(),
+        category: newReportCategory,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        doctorName: newReportDoctor,
+        doctorSpecialty: 'Internal Medicine',
+        status: isAbnormal ? 'Abnormal' : 'Normal',
+        values: [
+          { parameter: 'Target Marker A', value: '110', unit: 'mg/dL', referenceRange: '70 - 100', status: isAbnormal ? 'High' : 'Normal' },
+          { parameter: 'Reference Marker B', value: '45', unit: 'U/L', referenceRange: '10 - 50', status: 'Normal' },
+        ],
+        aiSummary: {
+          overview: `Clinical evaluation for ${newReportName}.`,
+          keyFindings: ['Sample verified by laboratory automated diagnostic equipment.'],
+          attentionItems: isAbnormal ? ['Target marker exceeds nominal baseline. Follow-up consultation advised.'] : [],
+          recommendations: ['Routine follow-up in 6 months.'],
+        },
+      });
+      onSelectReport(report);
+      setShowUploadModal(false);
+      setNewReportName('');
+      setSelectedFile(null);
+      setIsAbnormal(false);
+      showToast(`Uploaded ${report.name} (${report.fileSize}).`, 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Upload failed.', 'error');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDownloadReport = async (report: LabReport) => {
+    const friendlyName = (ext: string) =>
+      `${report.name.toLowerCase().replace(/\s+/g, '_')}_record.${ext}`;
+
+    if (report.downloadUrl) {
+      try {
+        const res = await apiFetch(`/api/lab-reports/${report.id}/file`);
+        if (!res.ok) throw new Error(`download failed: ${res.status}`);
+        const blob = await res.blob();
+        const ext = report.fileName?.includes('.')
+          ? (report.fileName.split('.').pop() as string).toLowerCase()
+          : 'bin';
+        const url = URL.createObjectURL(blob);
+        const element = document.createElement('a');
+        element.href = url;
+        element.download = friendlyName(ext);
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+        URL.revokeObjectURL(url);
+        return;
+      } catch {
+        showToast('Could not download the stored file, exporting a text record instead.', 'error');
+      }
+    }
+
     const element = document.createElement('a');
     const content = `MEDICARE HEALTHCARE LABORATORY REPORT\n` +
       `======================================\n` +
@@ -114,7 +184,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
 
     const file = new Blob([content], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = `${report.name.toLowerCase().replace(/\s+/g, '_')}_record.txt`;
+    element.download = friendlyName('txt');
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -497,14 +567,51 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
             </p>
 
             <form onSubmit={handleUploadSubmit} className="space-y-4">
-              {/* Drag-and-drop simulated box */}
-              <div className="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-6 text-center bg-slate-50/50 transition-colors cursor-pointer">
+              {/* Real file picker with drag & drop */}
+              <input
+                id="lab-file-input"
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
+                className="hidden"
+                onChange={(e) => pickFile(e.target.files?.[0])}
+              />
+              <label
+                htmlFor="lab-file-input"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(true);
+                }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(false);
+                  pickFile(e.dataTransfer.files?.[0]);
+                }}
+                className={`block border-2 border-dashed rounded-2xl p-6 text-center bg-slate-50/50 transition-colors cursor-pointer ${
+                  isDragOver ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:border-blue-500'
+                }`}
+              >
                 <Upload className="w-8 h-8 mx-auto text-blue-600 mb-2" />
-                <div className="text-xs font-bold text-slate-800">
-                  Drag & drop medical PDF or browse files
-                </div>
-                <div className="text-[11px] text-slate-400 mt-1">Supports PDF, PNG, DICOM up to 25MB</div>
-              </div>
+                {selectedFile ? (
+                  <>
+                    <div className="text-xs font-bold text-slate-800 break-all">
+                      {selectedFile.name}
+                    </div>
+                    <div className="text-[11px] text-blue-600 mt-1 font-semibold">
+                      {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB — click to change
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-xs font-bold text-slate-800">
+                      Drag & drop medical file or click to browse
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-1">
+                      Supports PDF, PNG, JPG up to 25MB
+                    </div>
+                  </>
+                )}
+              </label>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -575,9 +682,13 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs"
+                  disabled={isUploading}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-75 text-white rounded-xl text-xs font-semibold shadow-xs cursor-pointer"
                 >
-                  Upload & Analyze
+                  {isUploading && (
+                    <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  )}
+                  <span>{isUploading ? 'Uploading…' : 'Upload & Analyze'}</span>
                 </button>
               </div>
             </form>

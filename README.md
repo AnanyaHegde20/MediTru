@@ -201,9 +201,13 @@ All other `/api/**` endpoints require a valid JWT. Role rules:
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/lab-reports` | List lab reports; `?patientId=` filter |
-| POST | `/api/lab-reports` | Create lab report (`valuesJson`, `aiSummaryJson` = JSON strings) |
-| GET | `/api/lab-reports/{id}` | Get lab report by id |
-| DELETE | `/api/lab-reports/{id}` | Delete lab report (204) |
+| POST | `/api/lab-reports` | Create report metadata only (`valuesJson`, `aiSummaryJson` = JSON strings) |
+| POST | `/api/lab-reports/upload` | **Multipart upload** `file` + metadata (`name`, `category`, `date`, `doctorName`, `status`, `valuesJson`, `aiSummaryJson`, optional `patientId`) → report with real `fileSize`, `fileName`, `downloadUrl` |
+| GET | `/api/lab-reports/{id}` | Get report by id |
+| GET | `/api/lab-reports/{id}/file` | Download the stored file (patients: own reports only; doctors/admins: any) |
+| DELETE | `/api/lab-reports/{id}` | Delete report **and its stored file** (204, admin) |
+
+**File storage:** uploads are saved to `backend/data/uploads/` (gitignored; inside the `meditru-data` Docker volume). Allowed types: `pdf`, `png`, `jpg`, `jpeg`; max size 25 MB. Reports created without a file (seeded/demo) return 404 on the file endpoint — the UI falls back to a generated `.txt` record.
 
 ### Patient Queue
 

@@ -18,11 +18,11 @@ export function authHeaders(): Record<string, string> {
 }
 
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const hasBody = init.body != null;
+  const hasJsonBody = typeof init.body === 'string';
   const res = await fetch(path, {
     ...init,
     headers: {
-      ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
+      ...(hasJsonBody ? { 'Content-Type': 'application/json' } : {}),
       ...authHeaders(),
       ...(init.headers || {}),
     },

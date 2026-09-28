@@ -243,4 +243,56 @@ describe('useDataStore', () => {
       'Partner name is required'
     );
   });
+
+  const uploadMeta = {
+    patientId: '1',
+    name: 'Lipid Panel',
+    category: 'Lipid',
+    date: 'Oct 22, 2024',
+    doctorName: 'Dr. Alan Stone',
+    doctorSpecialty: 'Cardiology',
+    status: 'Normal' as const,
+    values: [],
+    aiSummary: { overview: '', keyFindings: [], attentionItems: [], recommendations: [] },
+  };
+
+  it('uploads a lab report and adds it to state', async () => {
+    vi.stubGlobal(
+      'fetch',
+      okFetch({
+        id: 5,
+        patientId: '1',
+        name: 'Lipid Panel',
+        fileSize: '9 B',
+        downloadUrl: '/api/lab-reports/5/file',
+        fileName: 'abc.pdf',
+        valuesJson: '[]',
+        aiSummaryJson:
+          '{"overview":"","keyFindings":[],"attentionItems":[],"recommendations":[]}',
+      })
+    );
+    const file = new File(['%PDF-1.4'], 'panel.pdf', { type: 'application/pdf' });
+    const report = await useDataStore.getState().uploadLabReport(file, uploadMeta);
+    expect(report.id).toBe('5');
+    expect(report.downloadUrl).toBe('/api/lab-reports/5/file');
+    expect(useDataStore.getState().labReports).toHaveLength(1);
+  });
+
+  it('surfaces the server error when an upload fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 400,
+        json: async () => ({
+          error: 'Unsupported file type: exe (allowed: pdf, png, jpg, jpeg)',
+        }),
+      }))
+    );
+    const file = new File([new Uint8Array([1, 2, 3])], 'virus.exe');
+    await expect(useDataStore.getState().uploadLabReport(file, uploadMeta)).rejects.toThrow(
+      'Unsupported file type: exe'
+    );
+    expect(useDataStore.getState().labReports).toHaveLength(0);
+  });
 });
