@@ -19,11 +19,14 @@ public class DataSeeder implements CommandLineRunner {
     private final LabReportRepository labReports;
     private final PrescriptionRepository prescriptions;
     private final PatientQueueRepository patientQueue;
+    private final MessageThreadRepository messageThreads;
+    private final MessageRepository messages;
     private final PasswordEncoder passwordEncoder;
 
     public DataSeeder(UserRepository users, DoctorRepository doctors,
                       AppointmentRepository appointments, LabReportRepository labReports,
                       PrescriptionRepository prescriptions, PatientQueueRepository patientQueue,
+                      MessageThreadRepository messageThreads, MessageRepository messages,
                       PasswordEncoder passwordEncoder) {
         this.users = users;
         this.doctors = doctors;
@@ -31,12 +34,17 @@ public class DataSeeder implements CommandLineRunner {
         this.labReports = labReports;
         this.prescriptions = prescriptions;
         this.patientQueue = patientQueue;
+        this.messageThreads = messageThreads;
+        this.messages = messages;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) {
-        if (users.count() > 0) return;
+        if (users.count() > 0) {
+            seedThreads();
+            return;
+        }
 
         // ── Users ──────────────────────────────────────────
         User patient = new User("Priya Sharma", "priya.sharma@example.com", passwordEncoder.encode("password"), UserRole.patient);
@@ -273,5 +281,124 @@ public class DataSeeder implements CommandLineRunner {
         patientQueue.save(q3);
 
         System.out.println("MediTru DB seeded: 3 users, 6 doctors, 3 appointments, 2 lab reports, 3 prescriptions, 3 queue items");
+        seedThreads();
+    }
+
+    private void seedThreads() {
+        if (messageThreads.count() > 0) return;
+
+        String priyaAvatar = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80";
+        String stoneAvatar = "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80";
+        String adminAvatar = "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80";
+        String coordinatorAvatar = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80";
+        String vikramAvatar = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80";
+        String snehaAvatar = "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80";
+        String mercerAvatar = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80";
+
+        long now = System.currentTimeMillis();
+        long min = 60_000L;
+
+        // ── Patient inbox (Priya) ─────────────────────────
+        MessageThread t1 = saveThread("Lipid panel follow-up",
+                "1", "Priya Sharma", priyaAvatar, "Patient",
+                null, "Dr. Alan Stone", stoneAvatar, "Cardiologist");
+        Message t1m1 = saveMessage(t1, "1", "Priya Sharma",
+                "Hello Dr. Stone! I reviewed the lipid panel and noticed my HDL is up to 58 mg/dL. Should I continue the same dosage?",
+                now - 120 * min);
+        Message t1m2 = saveMessage(t1, "external", "Dr. Alan Stone",
+                "Hello Priya! Yes, your lipid panel looks steady. Keep up the morning walks and low-sodium diet. We will do a routine review next month.",
+                now - 115 * min);
+        t1.setUser1LastReadId(t1m1.getId());
+        t1.setUpdatedAt(t1m2.getCreatedAt());
+        messageThreads.save(t1);
+
+        MessageThread t2 = saveThread(null,
+                "1", "Priya Sharma", priyaAvatar, "Patient",
+                "2", "Dr. Rajesh Kumar", stoneAvatar, "Internal Medicine");
+        Message t2m1 = saveMessage(t2, "2", "Dr. Rajesh Kumar",
+                "Please remember to bring your BP log to next session.", now - 30 * 60 * min);
+        Message t2m2 = saveMessage(t2, "1", "Priya Sharma",
+                "Noted, doctor. I have recorded readings for the full week.", now - 29 * 60 * min);
+        t2.setUser1LastReadId(t2m2.getId());
+        t2.setUpdatedAt(t2m2.getCreatedAt());
+        messageThreads.save(t2);
+
+        MessageThread t3 = saveThread(null,
+                "1", "Priya Sharma", priyaAvatar, "Patient",
+                null, "MediTru Care Coordinator", coordinatorAvatar, "Clinical Staff");
+        Message t3m1 = saveMessage(t3, "external", "MediTru Care Coordinator",
+                "Your prescription refill for Lisinopril has been approved.", now - 5 * 24 * 60 * min);
+        Message t3m2 = saveMessage(t3, "1", "Priya Sharma",
+                "Thank you! When will it be ready for pickup?", now - 5 * 24 * 60 * min + 5 * min);
+        t3.setUser1LastReadId(t3m2.getId());
+        t3.setUpdatedAt(t3m2.getCreatedAt());
+        messageThreads.save(t3);
+
+        // ── Doctor inbox (Dr. Rajesh) ─────────────────────
+        MessageThread t4 = saveThread(null,
+                "2", "Dr. Rajesh Kumar", stoneAvatar, "Internal Medicine",
+                null, "Vikram Singh", vikramAvatar, "Patient • Coronary Monitoring");
+        Message t4m1 = saveMessage(t4, "external", "Vikram Singh",
+                "I felt mild chest tightness after climbing stairs today. Should I be concerned?", now - 6 * 60 * min);
+        Message t4m2 = saveMessage(t4, "2", "Dr. Rajesh Kumar",
+                "Monitor it and log the episodes. If it recurs at rest or worsens, come in immediately.", now - 5 * 60 * min);
+        t4.setUser1LastReadId(t4m2.getId());
+        t4.setUpdatedAt(t4m2.getCreatedAt());
+        messageThreads.save(t4);
+
+        MessageThread t5 = saveThread(null,
+                "2", "Dr. Rajesh Kumar", stoneAvatar, "Internal Medicine",
+                null, "Sneha Reddy", snehaAvatar, "Patient • Hypothyroidism");
+        Message t5m1 = saveMessage(t5, "2", "Dr. Rajesh Kumar",
+                "Your TSH report is attached in records. Levels are stable on 50mcg.", now - 48 * 60 * min);
+        Message t5m2 = saveMessage(t5, "external", "Sneha Reddy",
+                "Thank you doctor, feeling much better this month!", now - 47 * 60 * min);
+        t5.setUser1LastReadId(t5m2.getId());
+        t5.setUpdatedAt(t5m2.getCreatedAt());
+        messageThreads.save(t5);
+
+        // ── Admin inbox ───────────────────────────────────
+        MessageThread t6 = saveThread(null,
+                "3", "Sarah Jenkins (Admin)", adminAvatar, "System Administrator",
+                null, "Dr. Robert Mercer", mercerAvatar, "Cardiology Dept.");
+        Message t6m1 = saveMessage(t6, "external", "Dr. Robert Mercer",
+                "Two consults overlap in Room 304 tomorrow. Can we shift one to Telehealth?", now - 90 * min);
+        Message t6m2 = saveMessage(t6, "3", "Sarah Jenkins (Admin)",
+                "Approved — moving the 2 PM slot to Telehealth Room B.", now - 85 * min);
+        t6.setUser1LastReadId(t6m2.getId());
+        t6.setUpdatedAt(t6m2.getCreatedAt());
+        messageThreads.save(t6);
+
+        System.out.println("MediTru messages seeded: 6 threads, 12 messages");
+    }
+
+    private MessageThread saveThread(String subject,
+                                     String u1Id, String u1Name, String u1Avatar, String u1Label,
+                                     String u2Id, String u2Name, String u2Avatar, String u2Label) {
+        MessageThread t = new MessageThread();
+        t.setSubject(subject);
+        t.setUser1Id(u1Id);
+        t.setUser1Name(u1Name);
+        t.setUser1Avatar(u1Avatar);
+        t.setUser1RoleLabel(u1Label);
+        t.setUser2Id(u2Id);
+        t.setUser2Name(u2Name);
+        t.setUser2Avatar(u2Avatar);
+        t.setUser2RoleLabel(u2Label);
+        t.setUser1LastReadId(0L);
+        t.setUser2LastReadId(0L);
+        t.setUpdatedAt(System.currentTimeMillis());
+        return messageThreads.save(t);
+    }
+
+    private Message saveMessage(MessageThread thread, String senderId, String senderName,
+                                String text, long createdAt) {
+        Message m = new Message();
+        m.setThreadId(thread.getId());
+        m.setSenderId(senderId);
+        m.setSenderName(senderName);
+        m.setText(text);
+        m.setCreatedAt(createdAt);
+        return messages.save(m);
     }
 }

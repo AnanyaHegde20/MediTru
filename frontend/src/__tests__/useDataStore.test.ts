@@ -55,6 +55,7 @@ beforeEach(() => {
     prescriptions: [],
     patientQueue: [],
     patientActivity: [],
+    messageThreads: [],
   });
   vi.stubGlobal('fetch', failingFetch());
 });
@@ -151,5 +152,95 @@ describe('useDataStore', () => {
     const report = { id: 'r1', title: 'Blood Test', date: '2026-01-01', type: 'Blood Work' } as any;
     await Promise.resolve(useDataStore.getState().addLabReport(report));
     expect(useDataStore.getState().labReports).toHaveLength(1);
+  });
+
+  const serverThread = {
+    id: 11,
+    subject: null,
+    partnerName: 'Doc Doctor',
+    partnerRoleLabel: 'Doctor',
+    partnerAvatar: '',
+    updatedAt: 1700000000000,
+    unread: 2,
+    messages: [
+      { id: 1, senderId: '2', senderName: 'Doc Doctor', text: 'Hello', createdAt: 1700000000000 },
+    ],
+  };
+
+  it('fetches message threads and normalizes ids', async () => {
+    vi.stubGlobal('fetch', okFetch([serverThread]));
+    await useDataStore.getState().fetchMessageThreads();
+    const threads = useDataStore.getState().messageThreads;
+    expect(threads).toHaveLength(1);
+    expect(threads[0].id).toBe('11');
+    expect(threads[0].unread).toBe(2);
+    expect(threads[0].messages[0].id).toBe('1');
+    expect(threads[0].messages[0].createdAt).toBe(1700000000000);
+  });
+
+  it('marks a thread read when it is fetched individually', async () => {
+    vi.stubGlobal('fetch', okFetch({ ...serverThread, unread: 0 }));
+    useDataStore.setState({ messageThreads: [] });
+    await useDataStore.getState().fetchMessageThread('11');
+    expect(useDataStore.getState().messageThreads).toHaveLength(1);
+    expect(useDataStore.getState().messageThreads[0].unread).toBe(0);
+  });
+
+  it('sends a message and adopts the server message id', async () => {
+    vi.stubGlobal(
+      'fetch',
+      okFetch({ id: 99, senderId: '1', senderName: 'Pat Patient', text: 'Hi doctor', createdAt: 1700000005000 })
+    );
+    useDataStore.setState({
+      messageThreads: [{ ...serverThread, id: '11', unread: 0, messages: [] } as any],
+    });
+    await useDataStore.getState().sendMessage('11', 'Hi doctor', '1');
+    const msgs = useDataStore.getState().messageThreads[0].messages;
+    expect(msgs).toHaveLength(1);
+    expect(msgs[0].id).toBe('99');
+    expect(msgs[0].text).toBe('Hi doctor');
+  });
+
+  it('rolls back a failed message send', async () => {
+    vi.stubGlobal('fetch', failingFetch());
+    useDataStore.setState({
+      messageThreads: [{ ...serverThread, id: '11', unread: 0, messages: [] } as any],
+    });
+    await expect(useDataStore.getState().sendMessage('11', 'Hi', '1')).rejects.toThrow();
+    expect(useDataStore.getState().messageThreads[0].messages).toHaveLength(0);
+  });
+
+  it('creates a conversation thread', async () => {
+    vi.stubGlobal(
+      'fetch',
+      okFetch({ ...serverThread, id: 12, partnerName: 'New Partner', unread: 0, messages: [] })
+    );
+    const thread = await useDataStore.getState().createThread('New Partner');
+    expect(thread.id).toBe('12');
+    expect(useDataStore.getState().messageThreads).toHaveLength(1);
+    expect(useDataStore.getState().messageThreads[0].partnerName).toBe('New Partner');
+  });
+
+  it('reuses an existing thread instead of duplicating it', async () => {
+    vi.stubGlobal('fetch', okFetch({ ...serverThread, unread: 0, messages: [] }));
+    useDataStore.setState({
+      messageThreads: [{ ...serverThread, id: '11', unread: 0, messages: [] } as any],
+    });
+    await useDataStore.getState().createThread('Doc Doctor');
+    expect(useDataStore.getState().messageThreads).toHaveLength(1);
+  });
+
+  it('surfaces the server error when creating a thread fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 400,
+        json: async () => ({ error: 'Partner name is required' }),
+      }))
+    );
+    await expect(useDataStore.getState().createThread('   ')).rejects.toThrow(
+      'Partner name is required'
+    );
   });
 });

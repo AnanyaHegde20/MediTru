@@ -3,6 +3,8 @@ import {
   Appointment,
   Doctor,
   LabReport,
+  MessageItem,
+  MessageThreadItem,
   PatientActivityItem,
   PatientQueueItem,
   Prescription,
@@ -16,18 +18,26 @@ interface DataStore {
   prescriptions: Prescription[];
   patientQueue: PatientQueueItem[];
   patientActivity: PatientActivityItem[];
+  messageThreads: MessageThreadItem[];
 
   fetchDoctors: () => Promise<void>;
   fetchAppointments: (patientId?: string, doctorId?: string) => Promise<void>;
   fetchLabReports: (patientId?: string) => Promise<void>;
   fetchPrescriptions: (patientId?: string) => Promise<void>;
   fetchPatientQueue: (doctorId?: string) => Promise<void>;
+  fetchMessageThreads: () => Promise<void>;
+  fetchMessageThread: (id: string) => Promise<void>;
 
   bookAppointment: (apt: Appointment) => Promise<void>;
   updateAppointmentStatus: (id: string, status: Appointment['status']) => Promise<void>;
   updateQueueStatus: (id: string, status: 'Waiting' | 'In Progress' | 'Done') => void;
   requestRefill: (id: string) => Promise<void>;
   updatePrescriptionStatus: (id: string, status: Prescription['status']) => Promise<void>;
+  sendMessage: (threadId: string, text: string, senderId: string) => Promise<void>;
+  createThread: (
+    partnerName: string,
+    opts?: { partnerRoleLabel?: string; partnerAvatar?: string }
+  ) => Promise<MessageThreadItem>;
   addDoctor: (doc: Doctor) => void;
   addLabReport: (report: LabReport) => void;
 }
@@ -41,7 +51,10 @@ async function postJson(path: string, body: unknown) {
     method: 'POST',
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error || `POST ${path} failed: ${res.status}`);
+  }
   return res.json();
 }
 
@@ -83,6 +96,36 @@ function labReportToPayload(report: LabReport) {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeThread(t: any): MessageThreadItem {
+  return {
+    id: String(t.id),
+    subject: t.subject ?? null,
+    partnerName: t.partnerName ?? '',
+    partnerRoleLabel: t.partnerRoleLabel ?? '',
+    partnerAvatar: t.partnerAvatar ?? '',
+    updatedAt: Number(t.updatedAt ?? 0),
+    unread: Number(t.unread ?? 0),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    messages: (t.messages ?? []).map((m: any): MessageItem => ({
+      id: String(m.id),
+      senderId: String(m.senderId),
+      senderName: m.senderName ?? '',
+      text: m.text ?? '',
+      createdAt: Number(m.createdAt ?? 0),
+    })),
+  };
+}
+
+function upsertThread(
+  threads: MessageThreadItem[],
+  thread: MessageThreadItem
+): MessageThreadItem[] {
+  return threads.some((t) => t.id === thread.id)
+    ? threads.map((t) => (t.id === thread.id ? thread : t))
+    : [thread, ...threads];
+}
+
 export const useDataStore = create<DataStore>((set, get) => ({
   doctors: [],
   appointments: [],
@@ -90,6 +133,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
   prescriptions: [],
   patientQueue: [],
   patientActivity: [],
+  messageThreads: [],
 
   fetchDoctors: async () => {
     try {
@@ -183,6 +227,30 @@ export const useDataStore = create<DataStore>((set, get) => ({
       }
     } catch (e) {
       console.warn('Failed to fetch patient queue');
+    }
+  },
+
+  fetchMessageThreads: async () => {
+    try {
+      const res = await apiFetch(apiUrl('/api/messages/threads'));
+      if (res.ok) {
+        const data = await res.json();
+        set({ messageThreads: data.map(normalizeThread) });
+      }
+    } catch (e) {
+      console.warn('Failed to fetch message threads');
+    }
+  },
+
+  fetchMessageThread: async (id) => {
+    try {
+      const res = await apiFetch(apiUrl(`/api/messages/threads/${id}`));
+      if (res.ok) {
+        const thread = normalizeThread(await res.json());
+        set((state) => ({ messageThreads: upsertThread(state.messageThreads, thread) }));
+      }
+    } catch (e) {
+      console.warn('Failed to fetch message thread');
     }
   },
 
@@ -304,6 +372,62 @@ export const useDataStore = create<DataStore>((set, get) => ({
       set({ prescriptions: snapshot });
       throw e;
     }
+  },
+
+  sendMessage: async (threadId, text, senderId) => {
+    const tmpId = `tmp_${Date.now()}`;
+    const optimistic: MessageItem = {
+      id: tmpId,
+      senderId,
+      senderName: '',
+      text,
+      createdAt: Date.now(),
+    };
+    const snapshot = get().messageThreads;
+    set((state) => ({
+      messageThreads: state.messageThreads.map((t) =>
+        t.id === threadId
+          ? { ...t, messages: [...t.messages, optimistic], updatedAt: optimistic.createdAt }
+          : t
+      ),
+    }));
+    try {
+      const created = await postJson(`/api/messages/threads/${threadId}/messages`, { text });
+      set((state) => ({
+        messageThreads: state.messageThreads.map((t) =>
+          t.id === threadId
+            ? {
+                ...t,
+                messages: t.messages.map((m) =>
+                  m.id === tmpId
+                    ? {
+                        id: String(created.id),
+                        senderId: String(created.senderId),
+                        senderName: created.senderName ?? '',
+                        text: created.text,
+                        createdAt: Number(created.createdAt),
+                      }
+                    : m
+                ),
+              }
+            : t
+        ),
+      }));
+    } catch (e) {
+      set({ messageThreads: snapshot });
+      throw e;
+    }
+  },
+
+  createThread: async (partnerName, opts) => {
+    const created = await postJson('/api/messages/threads', {
+      partnerName,
+      ...(opts?.partnerRoleLabel ? { partnerRoleLabel: opts.partnerRoleLabel } : {}),
+      ...(opts?.partnerAvatar ? { partnerAvatar: opts.partnerAvatar } : {}),
+    });
+    const thread = normalizeThread(created);
+    set((state) => ({ messageThreads: upsertThread(state.messageThreads, thread) }));
+    return thread;
   },
 
   addDoctor: async (doc) => {

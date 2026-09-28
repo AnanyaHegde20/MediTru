@@ -173,3 +173,22 @@ export interface AdminKPIs {
   revenueThisMonth: number;
   revenueGrowth: string;
 }
+
+export interface MessageItem {
+  id: string;
+  senderId: string;
+  senderName: string;
+  text: string;
+  createdAt: number;
+}
+
+export interface MessageThreadItem {
+  id: string;
+  subject: string | null;
+  partnerName: string;
+  partnerRoleLabel: string;
+  partnerAvatar: string;
+  updatedAt: number;
+  unread: number;
+  messages: MessageItem[];
+}

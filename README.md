@@ -215,6 +215,17 @@ All other `/api/**` endpoints require a valid JWT. Role rules:
 | PUT | `/api/patient-queue/{id}` | Update queue item (status must be `Waiting`, `In Progress`, or `Done`) |
 | DELETE | `/api/patient-queue/{id}` | Remove from queue (204) |
 
+### Messages
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/messages/threads` | Threads for the signed-in user (admins see all), newest activity first; includes messages and per-viewer `unread` count |
+| GET | `/api/messages/threads/{id}` | Get one thread with messages; marks it read for the participant |
+| POST | `/api/messages/threads` | Start a conversation `{ partnerName, partnerRoleLabel?, partnerAvatar?, subject? }`; reuses the existing thread with that partner if there is one |
+| POST | `/api/messages/threads/{id}/messages` | Send a message `{ text }` (max 2000 chars) |
+
+**Visibility:** a thread is visible to its two participants and to admins (oversight). Non-participants get 400 on read/send. `partnerName` is matched against registered users first (linking real accounts); unknown names become external participants (e.g. demo clinical staff). Unread counts reset when a participant opens the thread.
+
 ### Example Request — Health Assistant
 
 ```json
