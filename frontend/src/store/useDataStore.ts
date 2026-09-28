@@ -36,6 +36,7 @@ interface DataStore {
   updateQueueStatus: (id: string, status: 'Waiting' | 'In Progress' | 'Done') => void;
   requestRefill: (id: string) => Promise<void>;
   updatePrescriptionStatus: (id: string, status: Prescription['status']) => Promise<void>;
+  createPrescription: (rx: Omit<Prescription, 'id'>) => Promise<Prescription>;
   sendMessage: (threadId: string, text: string, senderId: string) => Promise<void>;
   createThread: (
     partnerName: string,
@@ -242,6 +243,17 @@ export const useDataStore = create<DataStore>((set, get) => ({
     }
   },
 
+  createPrescription: async (rx) => {
+    const created = await postJson('/api/prescriptions', rx);
+    const normalized = {
+      ...created,
+      id: String(created.id),
+      status: created.status === 'Refill Requested' ? 'Refill Requested' : created.status,
+    };
+    set((state) => ({ prescriptions: [normalized, ...state.prescriptions] }));
+    return normalized;
+  },
+
   fetchPatients: async () => {
     try {
       const res = await apiFetch(apiUrl('/api/patients'));
@@ -260,7 +272,6 @@ export const useDataStore = create<DataStore>((set, get) => ({
       console.warn('Failed to fetch patients, using empty list');
     }
   },
-
   fetchPatientQueue: async (doctorId) => {
     try {
       const url = doctorId ? `/api/patient-queue?doctorId=${doctorId}` : '/api/patient-queue';

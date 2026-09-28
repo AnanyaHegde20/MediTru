@@ -207,6 +207,7 @@ function DoctorRoutes() {
     store.fetchLabReports(undefined);
     store.fetchPrescriptions(undefined);
     store.fetchMessageThreads();
+    store.fetchPatients();
   }, []);
 
   if (!currentUser) return null;
@@ -275,6 +276,8 @@ function DoctorRoutes() {
           onUploadFile={store.uploadLabReport}
           onRequestRefill={store.requestRefill}
           onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
+          patients={store.patients}
+          onCreatePrescription={store.createPrescription}
         />
         </RouteErrorBoundary>
       } />
@@ -303,6 +306,8 @@ function DoctorRoutes() {
           onUploadFile={store.uploadLabReport}
           onRequestRefill={store.requestRefill}
           onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
+          patients={store.patients}
+          onCreatePrescription={store.createPrescription}
         />
         </RouteErrorBoundary>
       } />

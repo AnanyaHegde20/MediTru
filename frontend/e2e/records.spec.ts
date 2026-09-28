@@ -40,4 +40,22 @@ test.describe('Medical records', () => {
       page.getByText('Unsupported file type')
     ).toBeVisible();
   });
+
+  test('doctor creates a prescription', async ({ page }) => {
+    await login(page, 'doctor');
+    await page.goto('/doctor/prescriptions');
+
+    await expect(page.locator('#medical-records-screen')).toBeVisible();
+    await page.click('#btn-new-prescription');
+
+    const medication = `E2E Rx ${Date.now()}`;
+    await page.selectOption('#input-rx-patient', { index: 1 });
+    await page.fill('#input-rx-medication', medication);
+    await page.fill('#input-rx-dosage', '10 mg');
+    await page.fill('#input-rx-frequency', 'Once daily');
+    await page.click('#btn-submit-prescription');
+
+    await expect(page.getByText(`Prescribed ${medication}`)).toBeVisible();
+    await expect(page.getByText(medication).first()).toBeVisible();
+  });
 });

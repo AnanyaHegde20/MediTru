@@ -43,6 +43,8 @@ interface MedicalRecordsViewProps {
   ) => Promise<LabReport>;
   onRequestRefill: (id: string) => Promise<void>;
   onApproveRefill: (id: string) => Promise<void>;
+  patients?: UserProfile[];
+  onCreatePrescription?: (rx: Omit<Prescription, 'id'>) => Promise<Prescription>;
 }
 
 const RX_STATUS_STYLES: Record<Prescription['status'], string> = {
@@ -61,6 +63,8 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
   onUploadFile,
   onRequestRefill,
   onApproveRefill,
+  patients = [],
+  onCreatePrescription,
 }) => {
   const [activeCategoryTab, setActiveCategoryTab] = useState<
     'Lab Reports' | 'Prescriptions' | 'Visit History' | 'Imaging' | 'Vaccinations'
@@ -68,6 +72,14 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showRxModal, setShowRxModal] = useState(false);
+  const [rxPatientId, setRxPatientId] = useState('');
+  const [rxMedication, setRxMedication] = useState('');
+  const [rxDosage, setRxDosage] = useState('');
+  const [rxFrequency, setRxFrequency] = useState('');
+  const [rxInstructions, setRxInstructions] = useState('');
+  const [rxRefills, setRxRefills] = useState(0);
+  const [isCreatingRx, setIsCreatingRx] = useState(false);
   const [newReportName, setNewReportName] = useState('');
   const [newReportDoctor, setNewReportDoctor] = useState('Dr. Alan Stone');
   const [newReportCategory, setNewReportCategory] = useState<'Hematology' | 'Lipid' | 'Metabolic'>('Hematology');
@@ -164,6 +176,58 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
     }
   };
 
+  const resetRxForm = () => {
+    setRxPatientId('');
+    setRxMedication('');
+    setRxDosage('');
+    setRxFrequency('');
+    setRxInstructions('');
+    setRxRefills(0);
+  };
+
+  const handleCreatePrescription = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onCreatePrescription) return;
+    if (!rxPatientId) {
+      showToast('Choose a patient.', 'error');
+      return;
+    }
+    if (!rxMedication.trim()) {
+      showToast('Medication name is required.', 'error');
+      return;
+    }
+    setIsCreatingRx(true);
+    try {
+      const created = await onCreatePrescription({
+        patientId: rxPatientId,
+        medicationName: rxMedication.trim(),
+        dosage: rxDosage.trim(),
+        frequency: rxFrequency.trim(),
+        doctorName: currentUser.name,
+        specialty: 'General Medicine',
+        startDate: new Date().toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        }),
+        endDate: '',
+        refillsRemaining: rxRefills,
+        totalRefills: rxRefills,
+        instructions: rxInstructions.trim(),
+        status: 'Active',
+        pharmacy: '',
+      });
+      setShowRxModal(false);
+      resetRxForm();
+      setActiveCategoryTab('Prescriptions');
+      showToast(`Prescribed ${created.medicationName}.`, 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Could not create prescription.', 'error');
+    } finally {
+      setIsCreatingRx(false);
+    }
+  };
+
   const filteredReports = labReports.filter(
     (r) =>
       r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -194,15 +258,27 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
           ))}
         </div>
 
-        {/* Upload Button */}
-        <button
-          id="btn-upload-record"
-          onClick={() => setShowUploadModal(true)}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer shrink-0"
-        >
-          <Upload className="w-4 h-4" />
-          <span>Upload New Record</span>
-        </button>
+        {/* Upload / New Prescription Buttons */}
+        <div className="flex items-center gap-2 shrink-0">
+          {currentUser.role === 'doctor' && onCreatePrescription && (
+            <button
+              id="btn-new-prescription"
+              onClick={() => setShowRxModal(true)}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>New Prescription</span>
+            </button>
+          )}
+          <button
+            id="btn-upload-record"
+            onClick={() => setShowUploadModal(true)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+          >
+            <Upload className="w-4 h-4" />
+            <span>Upload New Record</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Grid: Table on Left (2 Cols) & Document Preview + AI Summary Card on Right (1 Col) */}
@@ -645,6 +721,137 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                     <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   )}
                   <span>{isUploading ? 'Uploading…' : 'Upload & Analyze'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* New Prescription Modal */}
+      {showRxModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 relative">
+            <button
+              onClick={() => setShowRxModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h3 className="text-base font-bold text-slate-900 mb-1">New Prescription</h3>
+            <p className="text-xs text-slate-500 mb-4">
+              Prescribe medication for a registered patient.
+            </p>
+
+            <form onSubmit={handleCreatePrescription} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Patient</label>
+                <select
+                  id="input-rx-patient"
+                  required
+                  value={rxPatientId}
+                  onChange={(e) => setRxPatientId(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">
+                    {patients.length === 0 ? 'No patients registered yet' : 'Select a patient…'}
+                  </option>
+                  {patients.map((patient) => (
+                    <option key={patient.id} value={patient.id}>
+                      {patient.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Medication Name
+                </label>
+                <input
+                  id="input-rx-medication"
+                  type="text"
+                  required
+                  value={rxMedication}
+                  onChange={(e) => setRxMedication(e.target.value)}
+                  placeholder="e.g. Atorvastatin"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Dosage</label>
+                  <input
+                    id="input-rx-dosage"
+                    type="text"
+                    value={rxDosage}
+                    onChange={(e) => setRxDosage(e.target.value)}
+                    placeholder="e.g. 20 mg"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Frequency</label>
+                  <input
+                    id="input-rx-frequency"
+                    type="text"
+                    value={rxFrequency}
+                    onChange={(e) => setRxFrequency(e.target.value)}
+                    placeholder="e.g. Once daily"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Instructions
+                </label>
+                <textarea
+                  id="input-rx-instructions"
+                  value={rxInstructions}
+                  onChange={(e) => setRxInstructions(e.target.value)}
+                  placeholder="e.g. Take at bedtime with water"
+                  rows={2}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Refills Allowed
+                </label>
+                <input
+                  id="input-rx-refills"
+                  type="number"
+                  min={0}
+                  max={12}
+                  value={rxRefills}
+                  onChange={(e) => setRxRefills(Math.max(0, Number(e.target.value)))}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowRxModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  id="btn-submit-prescription"
+                  type="submit"
+                  disabled={isCreatingRx || patients.length === 0}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-75 text-white rounded-xl text-xs font-semibold shadow-xs cursor-pointer"
+                >
+                  {isCreatingRx && (
+                    <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  )}
+                  <span>{isCreatingRx ? 'Creating…' : 'Create Prescription'}</span>
                 </button>
               </div>
             </form>

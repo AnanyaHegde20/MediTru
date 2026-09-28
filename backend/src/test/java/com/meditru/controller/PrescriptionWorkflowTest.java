@@ -211,6 +211,52 @@ class PrescriptionWorkflowTest {
     }
 
     @Test
+    void doctorCreatesPrescription() throws Exception {
+        String body = objectMapper.writeValueAsString(Map.of(
+                "patientId", "1",
+                "medicationName", "Ibuprofen",
+                "dosage", "400 mg",
+                "frequency", "Twice daily",
+                "status", "Active"));
+
+        mockMvc.perform(post("/api/prescriptions")
+                        .header("Authorization", "Bearer " + doctorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.medicationName").value("Ibuprofen"))
+                .andExpect(jsonPath("$.status").value("Active"));
+    }
+
+    @Test
+    void doctorCreateRequiresPatient() throws Exception {
+        String body = objectMapper.writeValueAsString(Map.of(
+                "medicationName", "Ibuprofen",
+                "status", "Active"));
+
+        mockMvc.perform(post("/api/prescriptions")
+                        .header("Authorization", "Bearer " + doctorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Patient is required"));
+    }
+
+    @Test
+    void doctorCreateRequiresMedicationName() throws Exception {
+        String body = objectMapper.writeValueAsString(Map.of(
+                "patientId", "1",
+                "status", "Active"));
+
+        mockMvc.perform(post("/api/prescriptions")
+                        .header("Authorization", "Bearer " + doctorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Medication name is required"));
+    }
+
+    @Test
     void anonymousRefillIsRejected() throws Exception {
         mockMvc.perform(post("/api/prescriptions/" + prescriptionId + "/refill"))
                 .andExpect(status().isUnauthorized());

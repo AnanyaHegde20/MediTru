@@ -319,4 +319,78 @@ describe('useDataStore', () => {
     expect(patients[0].avatar).toBe('');
     expect(patients[0].medicalCondition).toBe('Stage 1 Hypertension');
   });
+
+  it('creates a prescription and adds it to the list', async () => {
+    vi.stubGlobal(
+      'fetch',
+      okFetch({
+        id: 9,
+        patientId: '1',
+        medicationName: 'Ibuprofen',
+        dosage: '400 mg',
+        frequency: 'Twice daily',
+        doctorName: 'Dr. Stone',
+        specialty: 'General Medicine',
+        startDate: 'Sep 28, 2026',
+        endDate: '',
+        refillsRemaining: 2,
+        totalRefills: 2,
+        instructions: 'Take with food',
+        status: 'Active',
+        pharmacy: '',
+      })
+    );
+
+    const created = await useDataStore.getState().createPrescription({
+      patientId: '1',
+      medicationName: 'Ibuprofen',
+      dosage: '400 mg',
+      frequency: 'Twice daily',
+      doctorName: 'Dr. Stone',
+      specialty: 'General Medicine',
+      startDate: 'Sep 28, 2026',
+      endDate: '',
+      refillsRemaining: 2,
+      totalRefills: 2,
+      instructions: 'Take with food',
+      status: 'Active',
+      pharmacy: '',
+    });
+
+    expect(created.id).toBe('9');
+    const prescriptions = useDataStore.getState().prescriptions;
+    expect(prescriptions).toHaveLength(1);
+    expect(prescriptions[0].medicationName).toBe('Ibuprofen');
+    expect(prescriptions[0].status).toBe('Active');
+  });
+
+  it('surfaces backend validation errors when creating a prescription', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 400,
+        json: async () => ({ error: 'Patient is required' }),
+      }))
+    );
+
+    await expect(
+      useDataStore.getState().createPrescription({
+        patientId: '',
+        medicationName: 'Ibuprofen',
+        dosage: '',
+        frequency: '',
+        doctorName: 'Dr. Stone',
+        specialty: 'General Medicine',
+        startDate: 'Sep 28, 2026',
+        endDate: '',
+        refillsRemaining: 0,
+        totalRefills: 0,
+        instructions: '',
+        status: 'Active',
+        pharmacy: '',
+      })
+    ).rejects.toThrow('Patient is required');
+    expect(useDataStore.getState().prescriptions).toHaveLength(0);
+  });
 });

@@ -38,6 +38,12 @@ public class PrescriptionService {
     }
 
     public Prescription create(Prescription rx) {
+        if (rx.getPatientId() == null || rx.getPatientId().isBlank()) {
+            throw new IllegalArgumentException("Patient is required");
+        }
+        if (rx.getMedicationName() == null || rx.getMedicationName().isBlank()) {
+            throw new IllegalArgumentException("Medication name is required");
+        }
         String status = rx.getStatus() == null || rx.getStatus().isBlank()
                 ? ACTIVE : rx.getStatus().trim();
         if (!STATUSES.contains(status)) {

@@ -98,6 +98,7 @@ export interface LabReport {
 
 export interface Prescription {
   id: string;
+  patientId: string;
   medicationName: string;
   dosage: string;
   frequency: string;
