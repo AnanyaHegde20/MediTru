@@ -4,10 +4,13 @@ import com.meditru.config.MeditruProperties;
 import com.meditru.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -16,14 +19,27 @@ public class GeminiService {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiService.class);
     private static final String GEMINI_API_URL =
-        "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s";
+        "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent";
+    private static final String API_KEY_HEADER = "x-goog-api-key";
 
     private final MeditruProperties properties;
     private final RestTemplate restTemplate;
 
+    @Autowired
     public GeminiService(MeditruProperties properties) {
+        this(properties, createRestTemplate());
+    }
+
+    GeminiService(MeditruProperties properties, RestTemplate restTemplate) {
         this.properties = properties;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = restTemplate;
+    }
+
+    private static RestTemplate createRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(5));
+        factory.setReadTimeout(Duration.ofSeconds(30));
+        return new RestTemplate(factory);
     }
 
     public boolean isConfigured() {
@@ -40,8 +56,6 @@ public class GeminiService {
 
         try {
             String prompt = PromptBuilder.buildHealthPrompt(message, reportContext, history);
-            String model = properties.getGemini().getModel();
-            String apiKey = properties.getGemini().getApiKey();
 
             Map<String, Object> requestBody = Map.of(
                 "contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))),
@@ -51,23 +65,21 @@ public class GeminiService {
                 "generationConfig", Map.of("temperature", 0.4)
             );
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            String url = GEMINI_API_URL.formatted(model, apiKey);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-
-            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, entity, Map.class);
+            ResponseEntity<Map> response = restTemplate.exchange(
+                GEMINI_API_URL.formatted(properties.getGemini().getModel()),
+                HttpMethod.POST,
+                new HttpEntity<>(requestBody, apiKeyHeader()),
+                Map.class
+            );
 
             String reply = extractText(response.getBody());
             if (reply == null || reply.isBlank()) {
-                reply = "I was unable to generate a clinical response at this moment. Please consult your physician.";
+                return buildHealthFallback(message);
             }
-
             return HealthAssistantResponse.success(reply);
         } catch (Exception e) {
-            log.error("[MediTru] Health assistant error: {}", e.getMessage());
-            throw new RuntimeException("Failed to generate health advice", e);
+            log.error("[MediTru] Health assistant unavailable ({}), serving fallback", e.toString());
+            return buildHealthFallback(message);
         }
     }
 
@@ -81,8 +93,6 @@ public class GeminiService {
                 request.patientName(), request.age(), request.symptoms(),
                 request.vitals(), request.consultationTranscript()
             );
-            String model = properties.getGemini().getModel();
-            String apiKey = properties.getGemini().getApiKey();
 
             Map<String, Object> requestBody = Map.of(
                 "contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))),
@@ -91,22 +101,29 @@ public class GeminiService {
                 ))
             );
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            String url = GEMINI_API_URL.formatted(model, apiKey);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-
-            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, entity, Map.class);
+            ResponseEntity<Map> response = restTemplate.exchange(
+                GEMINI_API_URL.formatted(properties.getGemini().getModel()),
+                HttpMethod.POST,
+                new HttpEntity<>(requestBody, apiKeyHeader()),
+                Map.class
+            );
 
             String notesText = extractText(response.getBody());
-            if (notesText == null) notesText = "";
-
+            if (notesText == null || notesText.isBlank()) {
+                return buildClinicalNotesFallback(request.patientName(), request.vitals());
+            }
             return ClinicalNotesResponse.success(notesText);
         } catch (Exception e) {
-            log.error("[MediTru] Clinical notes error: {}", e.getMessage());
-            throw new RuntimeException("Failed to generate clinical notes", e);
+            log.error("[MediTru] Clinical notes unavailable ({}), serving fallback", e.toString());
+            return buildClinicalNotesFallback(request.patientName(), request.vitals());
         }
+    }
+
+    private HttpHeaders apiKeyHeader() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(API_KEY_HEADER, properties.getGemini().getApiKey());
+        return headers;
     }
 
     @SuppressWarnings("unchecked")
@@ -134,6 +151,8 @@ public class GeminiService {
             • **Overview**: Common factors include hydration levels, sleep hygiene, and stress.
             • **Recommended Step**: Monitor symptoms for 24-48 hours. If fever >101°F or sharp localized pain occurs, seek medical evaluation.
             • **Next Step**: We suggest scheduling a routine follow-up with our General Medicine or Cardiology specialists.
+
+            I am an AI assistant and not a substitute for a licensed healthcare provider.
             """.formatted(truncated);
 
         return HealthAssistantResponse.fallback(reply,

@@ -139,6 +139,8 @@ GET/POST/PUT/DELETE on resources use the H2 **file** database (`backend/data/`),
 | POST | `/api/gemini/health-assistant` | AI health assistant (message + chat history + optional report context) |
 | POST | `/api/gemini/clinical-notes` | AI SOAP clinical notes generator |
 
+AI calls are hardened: 5s connect / 30s read timeouts, API key sent via the `x-goog-api-key` header (never in the URL or logs), prompt-injection guardrails in the system instructions, and graceful degradation — if the Gemini key is missing or the upstream call fails, the endpoints return HTTP 200 with `isFallback: true` and a canned response instead of a 500.
+
 ### Authentication (JWT)
 
 | Method | Endpoint | Description |
