@@ -3,26 +3,47 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
 import { MobileNav } from './components/MobileNav';
-import { MessagesView } from './components/MessagesView';
 import { RouteErrorBoundary } from './components/RouteErrorBoundary';
 
-import { LoginView } from './components/views/LoginView';
-import { PatientDashboardView } from './components/views/PatientDashboardView';
-import { DoctorDashboardView } from './components/views/DoctorDashboardView';
-import { AppointmentBookingView } from './components/views/AppointmentBookingView';
-import { AIAssistantView } from './components/views/AIAssistantView';
-import { MedicalRecordsView } from './components/views/MedicalRecordsView';
-import { AdminDashboardView } from './components/views/AdminDashboardView';
-import { PatientsDirectoryView } from './components/views/PatientsDirectoryView';
-import { AppointmentsListView } from './components/views/AppointmentsListView';
-import { SettingsView } from './components/views/SettingsView';
-
-import { ClinicalNotesModal } from './components/modals/ClinicalNotesModal';
+const MessagesView = React.lazy(() =>
+  import('./components/MessagesView').then((m) => ({ default: m.MessagesView })));
+const LoginView = React.lazy(() =>
+  import('./components/views/LoginView').then((m) => ({ default: m.LoginView })));
+const PatientDashboardView = React.lazy(() =>
+  import('./components/views/PatientDashboardView').then((m) => ({ default: m.PatientDashboardView })));
+const DoctorDashboardView = React.lazy(() =>
+  import('./components/views/DoctorDashboardView').then((m) => ({ default: m.DoctorDashboardView })));
+const AppointmentBookingView = React.lazy(() =>
+  import('./components/views/AppointmentBookingView').then((m) => ({ default: m.AppointmentBookingView })));
+const AIAssistantView = React.lazy(() =>
+  import('./components/views/AIAssistantView').then((m) => ({ default: m.AIAssistantView })));
+const MedicalRecordsView = React.lazy(() =>
+  import('./components/views/MedicalRecordsView').then((m) => ({ default: m.MedicalRecordsView })));
+const AdminDashboardView = React.lazy(() =>
+  import('./components/views/AdminDashboardView').then((m) => ({ default: m.AdminDashboardView })));
+const PatientsDirectoryView = React.lazy(() =>
+  import('./components/views/PatientsDirectoryView').then((m) => ({ default: m.PatientsDirectoryView })));
+const AppointmentsListView = React.lazy(() =>
+  import('./components/views/AppointmentsListView').then((m) => ({ default: m.AppointmentsListView })));
+const SettingsView = React.lazy(() =>
+  import('./components/views/SettingsView').then((m) => ({ default: m.SettingsView })));
+const ClinicalNotesModal = React.lazy(() =>
+  import('./components/modals/ClinicalNotesModal').then((m) => ({ default: m.ClinicalNotesModal })));
 
 import { useAuth } from './contexts/AuthContext';
 import { useClinicalNotes } from './contexts/ClinicalNotesContext';
 import { useAIAssistant } from './contexts/AIAssistantContext';
 import { useDataStore } from './store/useDataStore';
+import { ActiveTab } from './types';
+
+function RouteFallback() {
+  return (
+    <div className="min-h-[40vh] flex items-center justify-center text-slate-500 text-sm">
+      <span className="inline-block w-4 h-4 border-2 border-slate-300 border-t-blue-600 rounded-full animate-spin mr-2" />
+      Loading…
+    </div>
+  );
+}
 
 // Layout wrapper for authenticated views (sidebar + navbar + mobile nav)
 function AppLayout({ children }: { children: React.ReactNode }) {
@@ -48,18 +69,20 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         <Navbar currentUser={currentUser} />
 
         <main className="flex-1 p-4 md:p-7 max-w-7xl w-full mx-auto">
-          {children}
+          <React.Suspense fallback={<RouteFallback />}>{children}</React.Suspense>
         </main>
       </div>
 
       <MobileNav role={currentUser.role} />
 
-      {showClinicalNotesModal && (
-        <ClinicalNotesModal
-          patientName={activePatientForNotes}
-          onClose={closeClinicalNotes}
-        />
-      )}
+      <React.Suspense fallback={<RouteFallback />}>
+        {showClinicalNotesModal && (
+          <ClinicalNotesModal
+            patientName={activePatientForNotes}
+            onClose={closeClinicalNotes}
+          />
+        )}
+      </React.Suspense>
     </div>
   );
 }
@@ -68,8 +91,11 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 function PatientRoutes() {
   const { currentUser } = useAuth();
   const store = useDataStore();
+  const navigate = useNavigate();
   const { selectedReport, setSelectedReport, quickAskAI, askAIAboutReport, aiInitialQuery } = useAIAssistant();
   const { openClinicalNotes } = useClinicalNotes();
+
+  const goTab = (tab: ActiveTab) => navigate(`/patient/${tab}`);
 
   useEffect(() => {
     store.fetchDoctors();
@@ -90,11 +116,15 @@ function PatientRoutes() {
           appointments={store.appointments}
           labReports={store.labReports}
           prescriptions={store.prescriptions}
-          onNavigateTab={() => {}}
+          onNavigateTab={goTab}
           onSelectReport={(rep) => {
             setSelectedReport(rep);
+            navigate('/patient/records');
           }}
-          onQuickAskAI={quickAskAI}
+          onQuickAskAI={(query) => {
+            quickAskAI(query);
+            navigate('/patient/ai-assistant');
+          }}
           onCancelAppointment={(id) => store.updateAppointmentStatus(id, 'Cancelled')}
         />
         </RouteErrorBoundary>
@@ -105,7 +135,7 @@ function PatientRoutes() {
           doctors={store.doctors}
           currentUser={currentUser}
           onBookAppointment={store.bookAppointment}
-          onNavigateTab={() => {}}
+          onNavigateTab={goTab}
         />
         </RouteErrorBoundary>
       } />
@@ -117,7 +147,10 @@ function PatientRoutes() {
           prescriptions={store.prescriptions}
           selectedReport={selectedReport}
           onSelectReport={setSelectedReport}
-          onAskAIAboutReport={askAIAboutReport}
+          onAskAIAboutReport={(rep) => {
+            askAIAboutReport(rep);
+            navigate('/patient/ai-assistant');
+          }}
           onUploadFile={store.uploadLabReport}
           onRequestRefill={store.requestRefill}
           onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
@@ -132,7 +165,10 @@ function PatientRoutes() {
           prescriptions={store.prescriptions}
           selectedReport={selectedReport}
           onSelectReport={setSelectedReport}
-          onAskAIAboutReport={askAIAboutReport}
+          onAskAIAboutReport={(rep) => {
+            askAIAboutReport(rep);
+            navigate('/patient/ai-assistant');
+          }}
           onUploadFile={store.uploadLabReport}
           onRequestRefill={store.requestRefill}
           onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
@@ -143,7 +179,7 @@ function PatientRoutes() {
         <RouteErrorBoundary>
         <AIAssistantView
           currentUser={currentUser}
-          onNavigateTab={() => {}}
+          onNavigateTab={goTab}
           initialQuery={aiInitialQuery}
         />
         </RouteErrorBoundary>
@@ -161,7 +197,9 @@ function DoctorRoutes() {
   const store = useDataStore();
   const navigate = useNavigate();
   const { openClinicalNotes } = useClinicalNotes();
-  const { aiInitialQuery, setSelectedReport } = useAIAssistant();
+  const { aiInitialQuery, selectedReport, setSelectedReport, askAIAboutReport } = useAIAssistant();
+
+  const goTab = (tab: ActiveTab) => navigate(`/doctor/${tab}`);
 
   useEffect(() => {
     store.fetchAppointments(undefined, undefined);
@@ -183,7 +221,7 @@ function DoctorRoutes() {
           queue={store.patientQueue}
           activity={store.patientActivity}
           onOpenClinicalNotes={openClinicalNotes}
-          onNavigateTab={() => {}}
+          onNavigateTab={goTab}
           onUpdateQueueStatus={store.updateQueueStatus}
         />
         </RouteErrorBoundary>
@@ -214,7 +252,7 @@ function DoctorRoutes() {
         <RouteErrorBoundary>
         <AIAssistantView
           currentUser={currentUser}
-          onNavigateTab={() => {}}
+          onNavigateTab={goTab}
           initialQuery={aiInitialQuery}
         />
         </RouteErrorBoundary>
@@ -225,9 +263,12 @@ function DoctorRoutes() {
           currentUser={currentUser}
           labReports={store.labReports}
           prescriptions={store.prescriptions}
-          selectedReport={null}
-          onSelectReport={() => {}}
-          onAskAIAboutReport={() => {}}
+          selectedReport={selectedReport}
+          onSelectReport={setSelectedReport}
+          onAskAIAboutReport={(rep) => {
+            askAIAboutReport(rep);
+            navigate('/doctor/ai-assistant');
+          }}
           onUploadFile={store.uploadLabReport}
           onRequestRefill={store.requestRefill}
           onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
@@ -250,9 +291,12 @@ function DoctorRoutes() {
           currentUser={currentUser}
           labReports={store.labReports}
           prescriptions={store.prescriptions}
-          selectedReport={null}
-          onSelectReport={() => {}}
-          onAskAIAboutReport={() => {}}
+          selectedReport={selectedReport}
+          onSelectReport={setSelectedReport}
+          onAskAIAboutReport={(rep) => {
+            askAIAboutReport(rep);
+            navigate('/doctor/ai-assistant');
+          }}
           onUploadFile={store.uploadLabReport}
           onRequestRefill={store.requestRefill}
           onApproveRefill={(id) => store.updatePrescriptionStatus(id, 'Active')}
@@ -300,8 +344,6 @@ function AdminRoutes() {
           appointments={store.appointments}
           labReports={store.labReports}
           showViewChart={false}
-          onSelectReport={() => {}}
-          onNavigateToRecords={() => {}}
           onOpenClinicalNotes={openClinicalNotes}
         />
         </RouteErrorBoundary>
@@ -350,7 +392,13 @@ function RootRouter() {
       <Route
         path="/login"
         element={
-          currentUser ? <Navigate to={`/${currentUser.role}/dashboard`} replace /> : <LoginView />
+          currentUser ? (
+            <Navigate to={`/${currentUser.role}/dashboard`} replace />
+          ) : (
+            <React.Suspense fallback={<RouteFallback />}>
+              <LoginView />
+            </React.Suspense>
+          )
         }
       />
       <Route

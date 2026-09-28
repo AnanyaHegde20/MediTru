@@ -29,10 +29,19 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { mockAppointmentsTrend } from '../../data/mockData';
 import { Appointment, Doctor, UserProfile } from '../../types';
 import { useToast } from '../Toast';
 import { useDataStore } from '../../store/useDataStore';
+
+const appointmentsTrendData = [
+  { day: 'Day 1', appointments: 120, completed: 110 },
+  { day: 'Day 5', appointments: 135, completed: 128 },
+  { day: 'Day 10', appointments: 155, completed: 142 },
+  { day: 'Day 15', appointments: 148, completed: 140 },
+  { day: 'Day 20', appointments: 172, completed: 165 },
+  { day: 'Day 25', appointments: 168, completed: 159 },
+  { day: 'Day 30', appointments: 182, completed: 174 },
+];
 
 interface AdminDashboardViewProps {
   onAddDoctor: (doc: Doctor) => void;
@@ -245,7 +254,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
           <div className="h-64 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockAppointmentsTrend} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+              <LineChart data={appointmentsTrendData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="day" stroke="#94a3b8" fontSize={11} />
                 <YAxis stroke="#94a3b8" fontSize={11} />

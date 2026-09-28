@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Users,
   FileCheck2,
@@ -45,6 +45,19 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
   });
 
   const waitingCount = queue.filter((q) => q.status === 'Waiting').length;
+
+  const recentActivity = useMemo(() => {
+    const fromSchedule: PatientActivityItem[] = schedule.slice(0, 6).map((apt) => ({
+      id: `apt_${apt.id}`,
+      text: `${apt.status} appointment with`,
+      highlightName: apt.patientName,
+      detail: `(${apt.date} at ${apt.time})`,
+      timeAgo: apt.date,
+      patientAvatar: apt.patientAvatar,
+      type: 'appointment',
+    }));
+    return [...activity, ...fromSchedule].slice(0, 6);
+  }, [activity, schedule]);
 
   return (
     <div id="doctor-dashboard-content" className="space-y-6 animate-in fade-in duration-150">
@@ -288,7 +301,9 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
           </h3>
 
           <div className="space-y-2">
-            {activity.map((act) => (
+            {recentActivity.length === 0 ? (
+              <p className="text-xs text-slate-400 py-4 text-center">No recent activity yet.</p>
+            ) : recentActivity.map((act) => (
               <div
                 key={act.id}
                 className="flex items-start justify-between gap-3 text-xs text-slate-600 py-1.5 px-2 hover:bg-slate-50 rounded-lg transition-colors"

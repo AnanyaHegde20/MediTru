@@ -17,7 +17,7 @@ import {
   Search,
 } from 'lucide-react';
 import { LabReport, Prescription, UserProfile } from '../../types';
-import { apiFetch } from '../../lib/api';
+import { downloadLabReport } from '../../lib/labReportDownload';
 import { useToast } from '../Toast';
 
 interface MedicalRecordsViewProps {
@@ -139,56 +139,12 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
     }
   };
 
-  const handleDownloadReport = async (report: LabReport) => {
-    const friendlyName = (ext: string) =>
-      `${report.name.toLowerCase().replace(/\s+/g, '_')}_record.${ext}`;
-
-    if (report.downloadUrl) {
-      try {
-        const res = await apiFetch(`/api/lab-reports/${report.id}/file`);
-        if (!res.ok) throw new Error(`download failed: ${res.status}`);
-        const blob = await res.blob();
-        const ext = report.fileName?.includes('.')
-          ? (report.fileName.split('.').pop() as string).toLowerCase()
-          : 'bin';
-        const url = URL.createObjectURL(blob);
-        const element = document.createElement('a');
-        element.href = url;
-        element.download = friendlyName(ext);
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-        URL.revokeObjectURL(url);
-        return;
-      } catch {
-        showToast('Could not download the stored file, exporting a text record instead.', 'error');
-      }
-    }
-
-    const element = document.createElement('a');
-    const content = `MEDICARE HEALTHCARE LABORATORY REPORT\n` +
-      `======================================\n` +
-      `Report: ${report.name} (${report.category})\n` +
-      `Patient: ${currentUser.name}\n` +
-      `Date: ${report.date}\n` +
-      `Doctor: ${report.doctorName} (${report.doctorSpecialty})\n` +
-      `Status: ${report.status}\n\n` +
-      `TEST VALUES & PARAMETERS:\n` +
-      report.values.map(v => `• ${v.parameter}: ${v.value} ${v.unit} (Ref: ${v.referenceRange}) [${v.status}]`).join('\n') +
-      `\n\nAI SUMMARY & FINDINGS:\n` +
-      report.aiSummary.overview + '\n' +
-      report.aiSummary.keyFindings.map(k => `+ ${k}`).join('\n') +
-      (report.aiSummary.attentionItems.length > 0 ? '\n\nATTENTION:\n' + report.aiSummary.attentionItems.map(a => `! ${a}`).join('\n') : '') +
-      `\n\nRECOMMENDATIONS:\n` +
-      report.aiSummary.recommendations.map(r => `> ${r}`).join('\n');
-
-    const file = new Blob([content], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = friendlyName('txt');
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-  };
+  const handleDownloadReport = (report: LabReport) =>
+    downloadLabReport(report, {
+      patientName: currentUser.name,
+      onFallbackExport: () =>
+        showToast('Could not download the stored file, exporting a text record instead.', 'error'),
+    });
 
   const handleRequestRefill = async (rx: Prescription) => {
     try {

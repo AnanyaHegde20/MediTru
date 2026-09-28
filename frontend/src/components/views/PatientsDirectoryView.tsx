@@ -8,8 +8,8 @@ interface PatientsDirectoryViewProps {
   appointments: Appointment[];
   labReports: LabReport[];
   showViewChart: boolean;
-  onSelectReport: (report: LabReport | null) => void;
-  onNavigateToRecords: () => void;
+  onSelectReport?: (report: LabReport | null) => void;
+  onNavigateToRecords?: () => void;
   onOpenClinicalNotes: (patientName: string) => void;
 }
 
@@ -109,8 +109,8 @@ export const PatientsDirectoryView: React.FC<PatientsDirectoryViewProps> = ({
                         const report = labReports.find(
                           (r) => String(r.patientId) === String(p.id)
                         );
-                        onSelectReport(report ?? null);
-                        onNavigateToRecords();
+                        onSelectReport?.(report ?? null);
+                        onNavigateToRecords?.();
                       }}
                       className="text-[11px] font-semibold text-slate-600 hover:text-blue-600"
                     >

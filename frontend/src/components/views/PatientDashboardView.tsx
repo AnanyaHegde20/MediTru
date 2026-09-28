@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { ActiveTab, Appointment, LabReport, Prescription, UserProfile } from '../../types';
 import { useToast } from '../Toast';
+import { downloadLabReport } from '../../lib/labReportDownload';
 
 interface PatientDashboardViewProps {
   currentUser: UserProfile;
@@ -63,24 +64,13 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
     onQuickAskAI(quickPrompt);
   };
 
-  const handleDownloadMock = (reportName: string, e: React.MouseEvent) => {
+  const handleDownloadReport = async (report: LabReport, e: React.MouseEvent) => {
     e.stopPropagation();
-    const element = document.createElement('a');
-    const file = new Blob([
-      `MEDICARE CLINICAL LABORATORY REPORT\n` +
-      `====================================\n` +
-      `Patient Name: ${currentUser.name}\n` +
-      `Date: ${new Date().toLocaleDateString()}\n` +
-      `Report: ${reportName}\n` +
-      `Facility: MediTru Central Diagnostics\n\n` +
-      `Clinical Status: Verified by Medical Board\n` +
-      `Summary: All recorded values have been cross-checked with certified clinical reference standards.`
-    ], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = `${reportName.toLowerCase().replace(/\s+/g, '_')}_report.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    await downloadLabReport(report, {
+      patientName: currentUser.name,
+      onFallbackExport: () =>
+        showToast('Could not download the stored file, exporting a text record instead.', 'error'),
+    });
   };
 
   return (
@@ -299,7 +289,7 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
                     {report.status}
                   </span>
                   <button
-                    onClick={(e) => handleDownloadMock(report.name, e)}
+                    onClick={(e) => handleDownloadReport(report, e)}
                     title="Download Report"
                     className="p-1 text-slate-400 hover:text-blue-600 rounded"
                   >
