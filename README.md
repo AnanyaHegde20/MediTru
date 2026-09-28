@@ -152,6 +152,7 @@ AI calls are hardened: 5s connect / 30s read timeouts, API key sent via the `x-g
 All other `/api/**` endpoints require a valid JWT. Role rules:
 - `DELETE /api/**` → ADMIN only
 - `/api/users` GET/POST → ADMIN only
+- `GET /api/patients` → DOCTOR or ADMIN
 - `/api/prescriptions` POST/PUT, `/api/patient-queue` PUT, `/api/doctors` POST/PUT → DOCTOR or ADMIN
 - `POST /api/prescriptions/{id}/refill` → any authenticated user (owner checked in service)
 - everything else → any authenticated user
@@ -171,6 +172,12 @@ All other `/api/**` endpoints require a valid JWT. Role rules:
 | PUT | `/api/users/{id}` | Partial update user |
 | DELETE | `/api/users/{id}` | Delete user (204) |
 | GET | `/api/users/email/{email}` | Lookup user by email |
+
+### Patients
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/patients` | List registered patients for the directory (DOCTOR or ADMIN; passwords never serialized) |
 
 ### Doctors
 

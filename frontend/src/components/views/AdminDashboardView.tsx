@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Users,
   Stethoscope,
@@ -29,22 +29,23 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import {
-  mockAdminKPIs,
-  mockAppointmentsTrend,
-  mockSpecialtyDistribution,
-  mockStatusBreakdown,
-  mockRecentAdminActivity,
-} from '../../data/mockData';
-import { Doctor } from '../../types';
+import { mockAppointmentsTrend } from '../../data/mockData';
+import { Appointment, Doctor, UserProfile } from '../../types';
 import { useToast } from '../Toast';
+import { useDataStore } from '../../store/useDataStore';
 
 interface AdminDashboardViewProps {
   onAddDoctor: (doc: Doctor) => void;
+  patients: UserProfile[];
+  doctors: Doctor[];
+  appointments: Appointment[];
 }
 
 export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   onAddDoctor,
+  patients,
+  doctors,
+  appointments,
 }) => {
   const [showAddDoctorModal, setShowAddDoctorModal] = useState(false);
   const [docName, setDocName] = useState('');
@@ -52,6 +53,66 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const [docHospital, setDocHospital] = useState('MediTru Heart Institute, San Francisco');
   const [docFee, setDocFee] = useState(90);
   const { showToast } = useToast();
+  const { fetchPatients } = useDataStore();
+
+  useEffect(() => {
+    fetchPatients();
+  }, []);
+
+  const activeAppointments = appointments.filter((a) => a.status !== 'Cancelled');
+  const completedAppointments = appointments.filter((a) => a.status === 'Completed');
+  const pendingAppointments = appointments.filter((a) => a.status === 'Pending');
+  const revenue = completedAppointments.reduce((sum, a) => {
+    const doc = doctors.find((d) => d.id === a.doctorId);
+    return sum + (doc ? Number(doc.consultationFee) : 0);
+  }, 0);
+
+  const statusColors: Record<string, string> = {
+    Completed: '#10B981',
+    Confirmed: '#2563EB',
+    Pending: '#F59E0B',
+    'In Progress': '#6366F1',
+    Cancelled: '#EF4444',
+  };
+  const statusBreakdown = (() => {
+    if (appointments.length === 0) return [];
+    const counts = new Map<string, number>();
+    for (const a of appointments) counts.set(a.status, (counts.get(a.status) ?? 0) + 1);
+    return [...counts.entries()].map(([name, count]) => ({
+      name,
+      value: Math.round((count / appointments.length) * 100),
+      color: statusColors[name] ?? '#94A3B8',
+    }));
+  })();
+
+  const specialtyColors = ['#2563EB', '#10B981', '#6366F1', '#F59E0B', '#EC4899', '#8B5CF6'];
+  const specialtyDistribution = (() => {
+    const counts = new Map<string, number>();
+    for (const a of activeAppointments) {
+      const key = a.specialty || 'General';
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([specialty, count], index) => ({
+        specialty,
+        count,
+        fill: specialtyColors[index % specialtyColors.length],
+      }));
+  })();
+
+  const recentActivity = appointments
+    .slice(-5)
+    .reverse()
+    .map((a) => ({
+      id: a.id,
+      patient: a.patientName,
+      action: a.type || 'Consultation',
+      doctor: a.doctorName,
+      time: `${a.date} • ${a.time}`,
+      status: a.status,
+    }));
 
   const handleAddDoctorSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,11 +157,11 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-slate-900 tracking-tight">
-              {mockAdminKPIs.totalPatients.toLocaleString()}
+              {patients.length.toLocaleString()}
             </div>
             <div className="inline-flex items-center gap-1 mt-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
               <TrendingUp className="w-3 h-3" />
-              <span>{mockAdminKPIs.patientsGrowth}</span>
+              <span>Registered accounts</span>
             </div>
           </div>
         </div>
@@ -115,49 +176,49 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-slate-900 tracking-tight">
-              {mockAdminKPIs.totalDoctors}
+              {doctors.length}
             </div>
             <div className="inline-flex items-center gap-1 mt-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
               <ArrowUpRight className="w-3 h-3" />
-              <span>{mockAdminKPIs.doctorsGrowth}</span>
+              <span>On staff now</span>
             </div>
           </div>
         </div>
 
-        {/* KPI 3: Appointments Today */}
+        {/* KPI 3: Active Appointments */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-start justify-between">
-            <span className="text-xs font-semibold text-slate-600">Appointments Today</span>
+            <span className="text-xs font-semibold text-slate-600">Active Appointments</span>
             <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
               <Calendar className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-slate-900 tracking-tight">
-              {mockAdminKPIs.appointmentsToday}
+              {activeAppointments.length}
             </div>
             <div className="inline-flex items-center gap-1 mt-1 text-[11px] font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
               <TrendingUp className="w-3 h-3" />
-              <span>{mockAdminKPIs.appointmentsGrowth}</span>
+              <span>{pendingAppointments.length} pending</span>
             </div>
           </div>
         </div>
 
-        {/* KPI 4: Revenue This Month */}
+        {/* KPI 4: Consultation Revenue */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-start justify-between">
-            <span className="text-xs font-semibold text-slate-600">Revenue This Month</span>
+            <span className="text-xs font-semibold text-slate-600">Consultation Revenue</span>
             <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-slate-900 tracking-tight">
-              ${mockAdminKPIs.revenueThisMonth.toLocaleString()}
+              ${revenue.toLocaleString()}
             </div>
             <div className="inline-flex items-center gap-1 mt-1 text-[11px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
               <TrendingUp className="w-3 h-3" />
-              <span>{mockAdminKPIs.revenueGrowth}</span>
+              <span>{completedAppointments.length} completed consults</span>
             </div>
           </div>
         </div>
@@ -229,7 +290,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={mockStatusBreakdown}
+                  data={statusBreakdown}
                   cx="50%"
                   cy="50%"
                   innerRadius={50}
@@ -237,7 +298,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   paddingAngle={4}
                   dataKey="value"
                 >
-                  {mockStatusBreakdown.map((entry, index) => (
+                  {statusBreakdown.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -254,7 +315,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100">
-            {mockStatusBreakdown.map((item) => (
+            {statusBreakdown.map((item) => (
               <div key={item.name} className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-slate-600 text-[11px]">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
@@ -278,7 +339,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={mockSpecialtyDistribution} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+              <BarChart data={specialtyDistribution} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="specialty" stroke="#94a3b8" fontSize={9} />
                 <YAxis stroke="#94a3b8" fontSize={11} />
@@ -291,7 +352,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   }}
                 />
                 <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                  {mockSpecialtyDistribution.map((entry, index) => (
+                  {specialtyDistribution.map((entry, index) => (
                     <Cell key={`bar-${index}`} fill={entry.fill} />
                   ))}
                 </Bar>
@@ -304,7 +365,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-2">
             <h3 className="text-sm font-bold text-slate-900">Recent Healthcare Audit Activity</h3>
-            <span className="text-[11px] font-semibold text-slate-400">Live MongoDB Log Stream</span>
+            <span className="text-[11px] font-semibold text-slate-400">Live appointment ledger</span>
           </div>
 
           <div className="overflow-x-auto">
@@ -319,7 +380,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {mockRecentAdminActivity.map((item) => (
+                {recentActivity.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-2.5 px-2 font-bold text-slate-900">{item.patient}</td>
                     <td className="py-2.5 px-2 text-slate-600">{item.action}</td>

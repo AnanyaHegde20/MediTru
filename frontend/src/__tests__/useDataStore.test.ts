@@ -295,4 +295,28 @@ describe('useDataStore', () => {
     );
     expect(useDataStore.getState().labReports).toHaveLength(0);
   });
+
+  it('fetches the patient directory', async () => {
+    vi.stubGlobal(
+      'fetch',
+      okFetch([
+        {
+          id: 7,
+          name: 'Priya Sharma',
+          email: 'priya.sharma@example.com',
+          role: 'patient',
+          avatar: null,
+          badge: null,
+          age: 32,
+          medicalCondition: 'Stage 1 Hypertension',
+        },
+      ])
+    );
+    await useDataStore.getState().fetchPatients();
+    const patients = useDataStore.getState().patients;
+    expect(patients).toHaveLength(1);
+    expect(patients[0].id).toBe('7');
+    expect(patients[0].avatar).toBe('');
+    expect(patients[0].medicalCondition).toBe('Stage 1 Hypertension');
+  });
 });

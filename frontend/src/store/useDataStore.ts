@@ -8,6 +8,7 @@ import {
   PatientActivityItem,
   PatientQueueItem,
   Prescription,
+  UserProfile,
 } from '../types';
 import { apiFetch } from '../lib/api';
 
@@ -16,6 +17,7 @@ interface DataStore {
   appointments: Appointment[];
   labReports: LabReport[];
   prescriptions: Prescription[];
+  patients: UserProfile[];
   patientQueue: PatientQueueItem[];
   patientActivity: PatientActivityItem[];
   messageThreads: MessageThreadItem[];
@@ -24,6 +26,7 @@ interface DataStore {
   fetchAppointments: (patientId?: string, doctorId?: string) => Promise<void>;
   fetchLabReports: (patientId?: string) => Promise<void>;
   fetchPrescriptions: (patientId?: string) => Promise<void>;
+  fetchPatients: () => Promise<void>;
   fetchPatientQueue: (doctorId?: string) => Promise<void>;
   fetchMessageThreads: () => Promise<void>;
   fetchMessageThread: (id: string) => Promise<void>;
@@ -157,6 +160,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
   appointments: [],
   labReports: [],
   prescriptions: [],
+  patients: [],
   patientQueue: [],
   patientActivity: [],
   messageThreads: [],
@@ -235,6 +239,25 @@ export const useDataStore = create<DataStore>((set, get) => ({
       }
     } catch (e) {
       console.warn('Failed to fetch prescriptions');
+    }
+  },
+
+  fetchPatients: async () => {
+    try {
+      const res = await apiFetch(apiUrl('/api/patients'));
+      if (res.ok) {
+        const data = await res.json();
+        const patients = data.map((p: any) => ({
+          ...p,
+          id: String(p.id),
+          role: 'patient' as const,
+          avatar: p.avatar ?? '',
+          badge: p.badge ?? '',
+        }));
+        set({ patients });
+      }
+    } catch (e) {
+      console.warn('Failed to fetch patients, using empty list');
     }
   },
 

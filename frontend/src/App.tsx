@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
 import { MobileNav } from './components/MobileNav';
@@ -159,8 +159,9 @@ function PatientRoutes() {
 function DoctorRoutes() {
   const { currentUser } = useAuth();
   const store = useDataStore();
+  const navigate = useNavigate();
   const { openClinicalNotes } = useClinicalNotes();
-  const { aiInitialQuery } = useAIAssistant();
+  const { aiInitialQuery, setSelectedReport } = useAIAssistant();
 
   useEffect(() => {
     store.fetchAppointments(undefined, undefined);
@@ -190,9 +191,12 @@ function DoctorRoutes() {
       <Route path="patients" element={
         <RouteErrorBoundary>
         <PatientsDirectoryView
+          patients={store.patients}
+          appointments={store.appointments}
           labReports={store.labReports}
-          onSelectReport={() => {}}
-          onNavigateToRecords={() => {}}
+          showViewChart
+          onSelectReport={setSelectedReport}
+          onNavigateToRecords={() => navigate('/doctor/records')}
           onOpenClinicalNotes={openClinicalNotes}
         />
         </RouteErrorBoundary>
@@ -232,7 +236,12 @@ function DoctorRoutes() {
       } />
       <Route path="analytics" element={
         <RouteErrorBoundary>
-        <AdminDashboardView onAddDoctor={store.addDoctor} />
+        <AdminDashboardView
+          onAddDoctor={store.addDoctor}
+          patients={store.patients}
+          doctors={store.doctors}
+          appointments={store.appointments}
+        />
         </RouteErrorBoundary>
       } />
       <Route path="records" element={
@@ -276,13 +285,21 @@ function AdminRoutes() {
       <Route index element={<Navigate to="dashboard" replace />} />
       <Route path="dashboard" element={
         <RouteErrorBoundary>
-        <AdminDashboardView onAddDoctor={store.addDoctor} />
+        <AdminDashboardView
+          onAddDoctor={store.addDoctor}
+          patients={store.patients}
+          doctors={store.doctors}
+          appointments={store.appointments}
+        />
         </RouteErrorBoundary>
       } />
       <Route path="patients" element={
         <RouteErrorBoundary>
         <PatientsDirectoryView
+          patients={store.patients}
+          appointments={store.appointments}
           labReports={store.labReports}
+          showViewChart={false}
           onSelectReport={() => {}}
           onNavigateToRecords={() => {}}
           onOpenClinicalNotes={openClinicalNotes}
@@ -300,7 +317,12 @@ function AdminRoutes() {
       } />
       <Route path="analytics" element={
         <RouteErrorBoundary>
-        <AdminDashboardView onAddDoctor={store.addDoctor} />
+        <AdminDashboardView
+          onAddDoctor={store.addDoctor}
+          patients={store.patients}
+          doctors={store.doctors}
+          appointments={store.appointments}
+        />
         </RouteErrorBoundary>
       } />
       <Route path="messages" element={<RouteErrorBoundary><MessagesView currentUser={currentUser} /></RouteErrorBoundary>} />

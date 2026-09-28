@@ -20,6 +20,8 @@ public class UserService {
 
     public List<User> findAll() { return repo.findAll(); }
 
+    public List<User> findPatients() { return repo.findByRoleOrderByNameAsc(UserRole.patient); }
+
     public User findById(Long id) { return repo.findById(id).orElse(null); }
 
     public User findByEmail(String email) { return repo.findByEmail(email).orElse(null); }
