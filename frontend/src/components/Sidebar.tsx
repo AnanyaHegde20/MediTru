@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { UserRole, UserProfile } from '../types';
+import { useDataStore } from '../store/useDataStore';
 
 interface SidebarProps {
   currentUser: UserProfile;
@@ -23,7 +24,8 @@ interface SidebarProps {
   onToggleCollapse?: () => void;
 }
 
-function getNavItems(role: UserRole) {
+function getNavItems(role: UserRole, unreadMessages: number) {
+  const messagesCount = unreadMessages > 0 ? unreadMessages : undefined;
   switch (role) {
     case 'patient':
       return [
@@ -32,7 +34,7 @@ function getNavItems(role: UserRole) {
         { path: '/patient/records', label: 'My Records', icon: FileText },
         { path: '/patient/ai-assistant', label: 'AI Health Assistant', icon: Bot, badge: 'AI' },
         { path: '/patient/prescriptions', label: 'Prescriptions', icon: Pill },
-        { path: '/patient/messages', label: 'Messages', icon: MessageSquare, count: 4 },
+        { path: '/patient/messages', label: 'Messages', icon: MessageSquare, count: messagesCount },
         { path: '/patient/settings', label: 'Settings', icon: Settings },
       ];
     case 'doctor':
@@ -42,6 +44,7 @@ function getNavItems(role: UserRole) {
         { path: '/doctor/appointments', label: 'Appointments', icon: Calendar },
         { path: '/doctor/ai-assistant', label: 'AI Assistant', icon: Bot, badge: 'AI' },
         { path: '/doctor/prescriptions', label: 'Prescriptions', icon: Pill },
+        { path: '/doctor/messages', label: 'Messages', icon: MessageSquare, count: messagesCount },
         { path: '/doctor/analytics', label: 'Analytics', icon: BarChart3 },
         { path: '/doctor/settings', label: 'Settings', icon: Settings },
       ];
@@ -50,6 +53,7 @@ function getNavItems(role: UserRole) {
         { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/admin/patients', label: 'Patients Directory', icon: Users },
         { path: '/admin/appointments', label: 'Appointments', icon: Calendar },
+        { path: '/admin/messages', label: 'Messages', icon: MessageSquare, count: messagesCount },
         { path: '/admin/analytics', label: 'Analytics & KPIs', icon: BarChart3 },
         { path: '/admin/settings', label: 'System Settings', icon: Settings },
       ];
@@ -64,7 +68,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const navItems = getNavItems(currentUser.role);
+  const messageThreads = useDataStore((state) => state.messageThreads);
+  const fetchMessageThreads = useDataStore((state) => state.fetchMessageThreads);
+
+  useEffect(() => {
+    fetchMessageThreads();
+  }, [fetchMessageThreads]);
+
+  const unreadMessages = messageThreads.reduce((sum, thread) => sum + (thread.unread || 0), 0);
+  const navItems = getNavItems(currentUser.role, unreadMessages);
 
   const handleLogout = () => {
     onLogout?.();

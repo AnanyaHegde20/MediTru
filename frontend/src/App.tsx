@@ -206,6 +206,7 @@ function DoctorRoutes() {
     store.fetchPatientQueue(undefined);
     store.fetchLabReports(undefined);
     store.fetchPrescriptions(undefined);
+    store.fetchMessageThreads();
   }, []);
 
   if (!currentUser) return null;
@@ -220,6 +221,8 @@ function DoctorRoutes() {
           schedule={store.appointments}
           queue={store.patientQueue}
           activity={store.patientActivity}
+          labReports={store.labReports}
+          messageThreads={store.messageThreads}
           onOpenClinicalNotes={openClinicalNotes}
           onNavigateTab={goTab}
           onUpdateQueueStatus={store.updateQueueStatus}

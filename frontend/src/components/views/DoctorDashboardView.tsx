@@ -14,13 +14,23 @@ import {
   Activity,
   Plus,
 } from 'lucide-react';
-import { ActiveTab, Appointment, PatientActivityItem, PatientQueueItem, UserProfile } from '../../types';
+import {
+  ActiveTab,
+  Appointment,
+  LabReport,
+  MessageThreadItem,
+  PatientActivityItem,
+  PatientQueueItem,
+  UserProfile,
+} from '../../types';
 
 interface DoctorDashboardViewProps {
   currentUser: UserProfile;
   schedule: Appointment[];
   queue: PatientQueueItem[];
   activity: PatientActivityItem[];
+  labReports: LabReport[];
+  messageThreads: MessageThreadItem[];
   onOpenClinicalNotes: (patientName?: string) => void;
   onNavigateTab: (tab: ActiveTab) => void;
   onUpdateQueueStatus: (id: string, status: 'Waiting' | 'In Progress' | 'Done') => void;
@@ -31,6 +41,8 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
   schedule,
   queue,
   activity,
+  labReports,
+  messageThreads,
   onOpenClinicalNotes,
   onNavigateTab,
   onUpdateQueueStatus,
@@ -45,6 +57,13 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
   });
 
   const waitingCount = queue.filter((q) => q.status === 'Waiting').length;
+  const inProgressCount = queue.filter((q) => q.status === 'In Progress').length;
+  const nextWaitingPatient = queue.find((q) => q.status === 'Waiting');
+
+  const uniquePatients = useMemo(() => new Set(schedule.map((apt) => apt.patientId)).size, [schedule]);
+  const completedAppointments = schedule.filter((apt) => apt.status === 'Completed').length;
+  const abnormalReports = labReports.filter((report) => report.status === 'Abnormal').length;
+  const unreadMessages = messageThreads.reduce((sum, thread) => sum + (thread.unread || 0), 0);
 
   const recentActivity = useMemo(() => {
     const fromSchedule: PatientActivityItem[] = schedule.slice(0, 6).map((apt) => ({
@@ -72,30 +91,34 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
             </div>
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold text-slate-900 tracking-tight">12</div>
+            <div className="text-2xl font-bold text-slate-900 tracking-tight">{uniquePatients}</div>
             <div className="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" />
-              <span>4 Completed Today</span>
+              <span>{completedAppointments} Completed</span>
             </div>
           </div>
         </div>
 
-        {/* Stat 2: Pending Reports */}
+        {/* Stat 2: Reports To Review */}
         <div
           onClick={() => onNavigateTab('records')}
           className="card-minimal flex flex-col justify-between hover:border-slate-300 transition-all cursor-pointer group"
         >
           <div className="flex items-start justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Reports</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Reports To Review</span>
             <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
               <FileCheck2 className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold text-slate-900 tracking-tight">05</div>
-            <div className="text-xs text-rose-600 font-medium mt-1 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
-              <span>3 Urgently Pending</span>
+            <div className="text-2xl font-bold text-slate-900 tracking-tight">{abnormalReports}</div>
+            <div
+              className={`text-xs font-medium mt-1 flex items-center gap-1 ${
+                abnormalReports > 0 ? 'text-rose-600' : 'text-emerald-600'
+              }`}
+            >
+              {abnormalReports > 0 ? <AlertCircle className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
+              <span>{abnormalReports > 0 ? 'Flagged Abnormal' : 'All Reports Normal'}</span>
             </div>
           </div>
         </div>
@@ -112,25 +135,29 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
             </div>
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold text-slate-900 tracking-tight">08</div>
+            <div className="text-2xl font-bold text-slate-900 tracking-tight">{unreadMessages}</div>
             <div className="text-xs text-blue-600 font-medium mt-1">
-              <span>From Clinical Care Team</span>
+              <span>
+                {unreadMessages > 0
+                  ? `Across ${messageThreads.length} Conversation${messageThreads.length === 1 ? '' : 's'}`
+                  : 'No Unread Messages'}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Stat 4: Avg Consultation Time */}
+        {/* Stat 4: Patients Waiting */}
         <div className="card-minimal flex flex-col justify-between">
           <div className="flex items-start justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Avg Consultation</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Waiting Now</span>
             <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
               <Clock className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold text-slate-900 tracking-tight">18 min</div>
+            <div className="text-2xl font-bold text-slate-900 tracking-tight">{waitingCount}</div>
             <div className="text-xs text-amber-600 font-medium mt-1">
-              <span>-2m from last week</span>
+              <span>{inProgressCount} In Progress</span>
             </div>
           </div>
         </div>
@@ -198,9 +225,19 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Next patient in line: <strong className="text-slate-900 font-semibold">Rahul Sharma</strong> (11:15 AM)</span>
+            <span>
+              Next patient in line:{' '}
+              {nextWaitingPatient ? (
+                <>
+                  <strong className="text-slate-900 font-semibold">{nextWaitingPatient.patientName}</strong>{' '}
+                  ({nextWaitingPatient.waitTime})
+                </>
+              ) : (
+                <strong className="text-slate-400 font-medium">nobody waiting</strong>
+              )}
+            </span>
             <button
-              onClick={() => onOpenClinicalNotes('Priya Sharma')}
+              onClick={() => onOpenClinicalNotes(schedule[0]?.patientName)}
               className="text-xs font-semibold text-blue-600 hover:underline"
             >
               Draft Notes
