@@ -7,6 +7,7 @@ import {
   Bot,
   Pill,
   MessageSquare,
+  UserCog,
   Users,
   BarChart3,
 } from 'lucide-react';
@@ -40,6 +41,7 @@ function getTabs(role: UserRole) {
         { path: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
         { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
         { path: '/admin/patients', label: 'Users', icon: Users },
+        { path: '/admin/users', label: 'Accounts', icon: UserCog },
         { path: '/admin/appointments', label: 'Schedule', icon: Calendar },
         { path: '/admin/messages', label: 'Messages', icon: MessageSquare },
       ];

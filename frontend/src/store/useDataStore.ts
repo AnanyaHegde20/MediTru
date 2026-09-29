@@ -9,6 +9,7 @@ import {
   PatientQueueItem,
   Prescription,
   UserProfile,
+  UserRole,
 } from '../types';
 import { apiFetch } from '../lib/api';
 
@@ -18,6 +19,7 @@ interface DataStore {
   labReports: LabReport[];
   prescriptions: Prescription[];
   patients: UserProfile[];
+  users: UserProfile[];
   patientQueue: PatientQueueItem[];
   patientActivity: PatientActivityItem[];
   messageThreads: MessageThreadItem[];
@@ -27,9 +29,19 @@ interface DataStore {
   fetchLabReports: (patientId?: string) => Promise<void>;
   fetchPrescriptions: (patientId?: string) => Promise<void>;
   fetchPatients: () => Promise<void>;
+  fetchUsers: () => Promise<void>;
   fetchPatientQueue: (doctorId?: string) => Promise<void>;
   fetchMessageThreads: () => Promise<void>;
   fetchMessageThread: (id: string) => Promise<void>;
+
+  createUser: (input: {
+    name: string;
+    email: string;
+    password: string;
+    role: UserRole;
+  }) => Promise<UserProfile>;
+  updateUserRole: (id: string, role: UserRole) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
 
   bookAppointment: (apt: Appointment) => Promise<void>;
   updateAppointmentStatus: (id: string, status: Appointment['status']) => Promise<void>;
@@ -87,6 +99,18 @@ async function putJson(path: string, body: unknown) {
   return res.json().catch(() => null);
 }
 
+async function readErrorMessage(res: Response, fallback: string) {
+  const text = await res.text().catch(() => '');
+  if (!text.trim()) return fallback;
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed && typeof parsed.error === 'string') return parsed.error;
+  } catch {
+    return text.trim();
+  }
+  return fallback;
+}
+
 function isServerId(id: string) {
   return /^\d+$/.test(id);
 }
@@ -120,6 +144,25 @@ function normalizeDoctor(d: any): Doctor {
     }
   }
   return { ...d, id: String(d.id), slots };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeUser(u: any): UserProfile {
+  return {
+    ...u,
+    id: String(u.id),
+    avatar: u.avatar ?? '',
+    badge: u.badge ?? u.role,
+    allergies:
+      typeof u.allergies === 'string'
+        ? u.allergies
+            .split(',')
+            .map((item: string) => item.trim())
+            .filter(Boolean)
+        : Array.isArray(u.allergies)
+          ? u.allergies
+          : [],
+  };
 }
 
 function labReportToPayload(report: LabReport) {
@@ -182,6 +225,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
   labReports: [],
   prescriptions: [],
   patients: [],
+  users: [],
   patientQueue: [],
   patientActivity: [],
   messageThreads: [],
@@ -287,6 +331,52 @@ export const useDataStore = create<DataStore>((set, get) => ({
       console.warn('Failed to fetch patients, using empty list');
     }
   },
+
+  fetchUsers: async () => {
+    try {
+      const res = await apiFetch(apiUrl('/api/users'));
+      if (res.ok) {
+        const data = await res.json();
+        set({ users: data.map(normalizeUser) });
+      }
+    } catch (e) {
+      console.warn('Failed to fetch users, using empty list');
+    }
+  },
+
+  createUser: async (input) => {
+    const res = await apiFetch(apiUrl('/api/users'), {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+    if (!res.ok) {
+      throw new Error(await readErrorMessage(res, `POST /api/users failed: ${res.status}`));
+    }
+    const created = normalizeUser(await res.json());
+    set((state) => ({ users: [created, ...state.users] }));
+    return created;
+  },
+
+  updateUserRole: async (id, role) => {
+    const res = await apiFetch(apiUrl(`/api/users/${id}`), {
+      method: 'PUT',
+      body: JSON.stringify({ role }),
+    });
+    if (!res.ok) {
+      throw new Error(await readErrorMessage(res, `PUT /api/users/${id} failed: ${res.status}`));
+    }
+    const updated = normalizeUser(await res.json());
+    set((state) => ({ users: state.users.map((u) => (u.id === id ? updated : u)) }));
+  },
+
+  deleteUser: async (id) => {
+    const res = await apiFetch(apiUrl(`/api/users/${id}`), { method: 'DELETE' });
+    if (!res.ok) {
+      throw new Error(await readErrorMessage(res, `DELETE /api/users/${id} failed: ${res.status}`));
+    }
+    set((state) => ({ users: state.users.filter((u) => u.id !== id) }));
+  },
+
   fetchPatientQueue: async (doctorId) => {
     try {
       const url = doctorId ? `/api/patient-queue?doctorId=${doctorId}` : '/api/patient-queue';

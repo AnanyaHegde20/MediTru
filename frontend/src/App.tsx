@@ -27,6 +27,8 @@ const AppointmentsListView = React.lazy(() =>
   import('./components/views/AppointmentsListView').then((m) => ({ default: m.AppointmentsListView })));
 const SettingsView = React.lazy(() =>
   import('./components/views/SettingsView').then((m) => ({ default: m.SettingsView })));
+const UserManagementView = React.lazy(() =>
+  import('./components/views/UserManagementView').then((m) => ({ default: m.UserManagementView })));
 const ClinicalNotesModal = React.lazy(() =>
   import('./components/modals/ClinicalNotesModal').then((m) => ({ default: m.ClinicalNotesModal })));
 
@@ -331,6 +333,7 @@ function AdminRoutes() {
     store.fetchDoctors();
     store.fetchAppointments(undefined, undefined);
     store.fetchLabReports(undefined);
+    store.fetchUsers();
   }, []);
 
   if (!currentUser) return null;
@@ -357,6 +360,11 @@ function AdminRoutes() {
           showViewChart={false}
           onOpenClinicalNotes={openClinicalNotes}
         />
+        </RouteErrorBoundary>
+      } />
+      <Route path="users" element={
+        <RouteErrorBoundary>
+          <UserManagementView />
         </RouteErrorBoundary>
       } />
       <Route path="appointments" element={

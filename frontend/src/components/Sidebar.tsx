@@ -8,6 +8,7 @@ import {
   Pill,
   MessageSquare,
   Settings,
+  UserCog,
   Users,
   BarChart3,
   LogOut,
@@ -52,6 +53,7 @@ function getNavItems(role: UserRole, unreadMessages: number) {
       return [
         { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/admin/patients', label: 'Patients Directory', icon: Users },
+        { path: '/admin/users', label: 'User Accounts', icon: UserCog },
         { path: '/admin/appointments', label: 'Appointments', icon: Calendar },
         { path: '/admin/messages', label: 'Messages', icon: MessageSquare, count: messagesCount },
         { path: '/admin/analytics', label: 'Analytics & KPIs', icon: BarChart3 },

@@ -53,6 +53,8 @@ beforeEach(() => {
     appointments: [],
     labReports: [],
     prescriptions: [],
+    patients: [],
+    users: [],
     patientQueue: [],
     patientActivity: [],
     messageThreads: [],
@@ -500,5 +502,109 @@ describe('useDataStore', () => {
     expect(created.slots.morning).toContain('09:00 AM');
     expect(useDataStore.getState().doctors).toHaveLength(1);
     expect(useDataStore.getState().doctors[0].id).toBe('11');
+  });
+
+  it('fetches users and normalizes ids and allergies', async () => {
+    vi.stubGlobal(
+      'fetch',
+      okFetch([
+        {
+          id: 4,
+          name: 'Dr. Staff',
+          email: 'staff@test.com',
+          role: 'doctor',
+          avatar: null,
+          badge: null,
+          allergies: 'Penicillin, Dust',
+        },
+      ])
+    );
+    await useDataStore.getState().fetchUsers();
+    const users = useDataStore.getState().users;
+    expect(users).toHaveLength(1);
+    expect(users[0].id).toBe('4');
+    expect(users[0].avatar).toBe('');
+    expect(users[0].allergies).toEqual(['Penicillin', 'Dust']);
+  });
+
+  it('creates a user and adds it to the list', async () => {
+    vi.stubGlobal(
+      'fetch',
+      okFetch({ id: 12, name: 'Dr. New', email: 'new@test.com', role: 'doctor' })
+    );
+    const created = await useDataStore.getState().createUser({
+      name: 'Dr. New',
+      email: 'new@test.com',
+      password: 'secret123',
+      role: 'doctor',
+    });
+    expect(created.id).toBe('12');
+    expect(useDataStore.getState().users).toHaveLength(1);
+    expect(useDataStore.getState().users[0].role).toBe('doctor');
+  });
+
+  it('surfaces plain-text backend errors when creating a user fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 400,
+        text: async () => 'Email already exists',
+        json: async () => ({}),
+      }))
+    );
+    await expect(
+      useDataStore.getState().createUser({
+        name: 'Dup',
+        email: 'dup@test.com',
+        password: 'secret123',
+        role: 'patient',
+      })
+    ).rejects.toThrow('Email already exists');
+    expect(useDataStore.getState().users).toHaveLength(0);
+  });
+
+  it('updates a user role', async () => {
+    useDataStore.setState({
+      users: [
+        { id: '7', name: 'Plain Patient', email: 'plain@test.com', role: 'patient', avatar: '', badge: 'patient' },
+      ],
+    });
+    vi.stubGlobal('fetch', okFetch({ id: 7, name: 'Plain Patient', email: 'plain@test.com', role: 'doctor' }));
+    await useDataStore.getState().updateUserRole('7', 'doctor');
+    expect(useDataStore.getState().users[0].role).toBe('doctor');
+  });
+
+  it('deletes a user', async () => {
+    useDataStore.setState({
+      users: [
+        { id: '7', name: 'Plain Patient', email: 'plain@test.com', role: 'patient', avatar: '', badge: 'patient' },
+      ],
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: true, status: 204, json: async () => ({}) }))
+    );
+    await useDataStore.getState().deleteUser('7');
+    expect(useDataStore.getState().users).toHaveLength(0);
+  });
+
+  it('surfaces server errors when deleting a user fails', async () => {
+    useDataStore.setState({
+      users: [
+        { id: '7', name: 'Plain Patient', email: 'plain@test.com', role: 'patient', avatar: '', badge: 'patient' },
+      ],
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 403,
+        text: async () => '{"error":"Forbidden"}',
+        json: async () => ({ error: 'Forbidden' }),
+      }))
+    );
+    await expect(useDataStore.getState().deleteUser('7')).rejects.toThrow('Forbidden');
+    expect(useDataStore.getState().users).toHaveLength(1);
   });
 });

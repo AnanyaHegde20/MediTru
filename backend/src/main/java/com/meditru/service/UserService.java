@@ -38,8 +38,13 @@ public class UserService {
 
     public User update(Long id, User updated) {
         User user = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (updated.getEmail() != null && !updated.getEmail().equals(user.getEmail())) {
+            if (repo.existsByEmail(updated.getEmail())) {
+                throw new IllegalArgumentException("Email already exists");
+            }
+            user.setEmail(updated.getEmail());
+        }
         if (updated.getName() != null) user.setName(updated.getName());
-        if (updated.getEmail() != null) user.setEmail(updated.getEmail());
         if (updated.getAvatar() != null) user.setAvatar(updated.getAvatar());
         if (updated.getBadge() != null) user.setBadge(updated.getBadge());
         if (updated.getAge() != null) user.setAge(updated.getAge());
@@ -48,6 +53,7 @@ public class UserService {
         if (updated.getPhone() != null) user.setPhone(updated.getPhone());
         if (updated.getAllergies() != null) user.setAllergies(updated.getAllergies());
         if (updated.getMedicalCondition() != null) user.setMedicalCondition(updated.getMedicalCondition());
+        if (updated.getRole() != null) user.setRole(updated.getRole());
         return repo.save(user);
     }
 
