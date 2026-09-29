@@ -7,12 +7,25 @@ interface AuthResult {
   user: UserProfile | null;
 }
 
+export interface ProfileFields {
+  name?: string;
+  phone?: string;
+  avatar?: string;
+  badge?: string;
+  age?: number;
+  gender?: string;
+  bloodGroup?: string;
+  allergies?: string[];
+  medicalCondition?: string;
+}
+
 interface AuthContextValue {
   currentUser: UserProfile | null;
   authReady: boolean;
   isSidebarCollapsed: boolean;
   login: (email: string, password: string) => Promise<AuthResult>;
   register: (name: string, email: string, password: string) => Promise<AuthResult>;
+  updateProfile: (fields: ProfileFields) => Promise<AuthResult>;
   handleLogout: () => void;
   toggleSidebar: () => void;
 }
@@ -100,6 +113,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const updateProfile = useCallback(async (fields: ProfileFields): Promise<AuthResult> => {
+    try {
+      const token = getToken();
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(fields),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { error: data.error || 'Could not save profile.', user: null };
+      }
+      const user = mapAuthUser(data);
+      setCurrentUser(user);
+      return { error: null, user };
+    } catch {
+      return { error: 'Cannot reach the server. Is the backend running?', user: null };
+    }
+  }, []);
+
   const handleLogout = useCallback(() => {
     setToken(null);
     setCurrentUser(null);
@@ -117,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isSidebarCollapsed,
         login,
         register,
+        updateProfile,
         handleLogout,
         toggleSidebar,
       }}

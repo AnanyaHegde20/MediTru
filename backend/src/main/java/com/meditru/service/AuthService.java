@@ -2,8 +2,10 @@ package com.meditru.service;
 
 import com.meditru.dto.AuthResponse;
 import com.meditru.dto.AuthUser;
+import com.meditru.dto.ChangePasswordRequest;
 import com.meditru.dto.LoginRequest;
 import com.meditru.dto.RegisterRequest;
+import com.meditru.dto.UpdateProfileRequest;
 import com.meditru.entity.User;
 import com.meditru.repository.UserRepository;
 import com.meditru.security.JwtService;
@@ -64,6 +66,59 @@ public class AuthService {
         User user = users.findByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("Not authenticated"));
         return toAuthUser(user);
+    }
+
+    public AuthUser updateProfile(String email, UpdateProfileRequest request) {
+        User user = users.findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("Not authenticated"));
+        if (request == null) {
+            throw new IllegalArgumentException("Invalid profile data");
+        }
+        if (request.name() != null) {
+            if (request.name().isBlank()) {
+                throw new IllegalArgumentException("Name cannot be empty");
+            }
+            user.setName(request.name().trim());
+        }
+        if (request.phone() != null) user.setPhone(request.phone().trim());
+        if (request.avatar() != null) user.setAvatar(request.avatar().trim());
+        if (request.badge() != null) user.setBadge(request.badge().trim());
+        if (request.age() != null) {
+            if (request.age() < 0 || request.age() > 150) {
+                throw new IllegalArgumentException("Age must be between 0 and 150");
+            }
+            user.setAge(request.age());
+        }
+        if (request.gender() != null) user.setGender(request.gender().trim());
+        if (request.bloodGroup() != null) user.setBloodGroup(request.bloodGroup().trim());
+        if (request.allergies() != null) {
+            user.setAllergies(String.join(", ", request.allergies()));
+        }
+        if (request.medicalCondition() != null) {
+            user.setMedicalCondition(request.medicalCondition().trim());
+        }
+        users.save(user);
+        return toAuthUser(user);
+    }
+
+    public void changePassword(String email, ChangePasswordRequest request) {
+        if (request == null || request.currentPassword() == null || request.currentPassword().isBlank()
+                || request.newPassword() == null || request.newPassword().isBlank()) {
+            throw new IllegalArgumentException("Current and new password are required");
+        }
+        User user = users.findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("Not authenticated"));
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        if (request.newPassword().length() < 8) {
+            throw new IllegalArgumentException("New password must be at least 8 characters");
+        }
+        if (request.newPassword().equals(request.currentPassword())) {
+            throw new IllegalArgumentException("New password must differ from the current password");
+        }
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        users.save(user);
     }
 
     private AuthResponse buildResponse(User user) {
