@@ -250,4 +250,66 @@ class AppointmentWorkflowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.notes").value("Updated notes"));
     }
+
+    private String bookingBody(String time) throws Exception {
+        return objectMapper.writeValueAsString(Map.of(
+                "patientId", patientId,
+                "patientName", "Pat Patient",
+                "doctorId", "1",
+                "doctorName", "Dr. Stone",
+                "date", "Oct 24, 2026",
+                "time", time));
+    }
+
+    @Test
+    void bookingConflictingSlotIsRejected() throws Exception {
+        mockMvc.perform(post("/api/appointments")
+                        .header("Authorization", "Bearer " + patientToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookingBody("10:00 AM")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error")
+                        .value("That time slot is already booked. Please pick another time."));
+    }
+
+    @Test
+    void cancellingFreesTheSlotForRebooking() throws Exception {
+        putStatus(patientToken, "Cancelled").andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/appointments")
+                        .header("Authorization", "Bearer " + patientToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookingBody("10:00 AM")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("Pending"));
+    }
+
+    @Test
+    void reschedulingIntoOccupiedSlotIsRejected() throws Exception {
+        String created = mockMvc.perform(post("/api/appointments")
+                        .header("Authorization", "Bearer " + patientToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookingBody("11:00 AM")))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long otherId = objectMapper.readTree(created).get("id").asLong();
+
+        mockMvc.perform(put("/api/appointments/" + otherId)
+                        .header("Authorization", "Bearer " + patientToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("time", "10:00 AM"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error")
+                        .value("That time slot is already booked. Please pick another time."));
+    }
+
+    @Test
+    void statusOnlyUpdateStillWorksWhenSlotHasLegacyDuplicates() throws Exception {
+        // simulate data that pre-dates the conflict check: two rows in one slot
+        appointmentRepository.save(newPendingAppointment(patientId, "Pat Patient"));
+
+        putStatus(patientToken, "Cancelled")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("Cancelled"));
+    }
 }

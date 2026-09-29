@@ -16,6 +16,7 @@ import {
 import confetti from 'canvas-confetti';
 import { ActiveTab, Doctor, Appointment, UserProfile } from '../../types';
 import { useToast } from '../Toast';
+import { SLOT_PERIODS, hasPublishedSlots, resolveTimeSlot, visibleSlots } from '../../lib/bookingSlots';
 
 interface AppointmentBookingViewProps {
   doctors: Doctor[];
@@ -58,6 +59,11 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
     }
   }, [doctors, selectedDoctor]);
 
+  useEffect(() => {
+    if (!selectedDoctor) return;
+    setSelectedTimeSlot((prev) => resolveTimeSlot(prev, visibleSlots(selectedDoctor.slots)));
+  }, [selectedDoctor]);
+
   const filteredDoctors = doctors.filter((doc) => {
     const matchesSpecialty =
       selectedSpecialty === 'All' ||
@@ -68,6 +74,9 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
       doc.hospital.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSpecialty && matchesSearch;
   });
+
+  const slots = visibleSlots(selectedDoctor?.slots);
+  const published = hasPublishedSlots(selectedDoctor?.slots);
 
   const handleConfirmBooking = async () => {
     if (!selectedDoctor) return;
@@ -91,8 +100,13 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
 
     try {
       await onBookAppointment(newApt);
-    } catch {
-      showToast('Could not save your appointment. Please try again.', 'error');
+    } catch (e) {
+      showToast(
+        e instanceof Error
+          ? e.message
+          : 'Could not save your appointment. Please try again.',
+        'error'
+      );
       return;
     }
     setBookedAppointmentInfo(newApt);
@@ -293,55 +307,39 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
 
           {/* Time Slot Grid */}
           <div className="mt-5 space-y-3">
-            {/* Morning Slots */}
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                Morning
+            {SLOT_PERIODS.filter(
+              (period) => slots[period.key].length > 0
+            ).map((period) => (
+              <div key={period.key}>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  {period.label}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {slots[period.key].map((slot) => {
+                    const isActive = selectedTimeSlot === slot;
+                    return (
+                      <button
+                        key={slot}
+                        id={`time-slot-${slot.replace(/\s+/g, '-')}`}
+                        onClick={() => setSelectedTimeSlot(slot)}
+                        className={`py-1.5 px-2 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                          isActive
+                            ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-2xs'
+                            : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        {slot}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                {selectedDoctor.slots.morning.map((slot) => {
-                  const isActive = selectedTimeSlot === slot;
-                  return (
-                    <button
-                      key={slot}
-                      onClick={() => setSelectedTimeSlot(slot)}
-                      className={`py-1.5 px-2 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                        isActive
-                          ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-2xs'
-                          : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Afternoon Slots */}
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                Afternoon
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {selectedDoctor.slots.afternoon.map((slot) => {
-                  const isActive = selectedTimeSlot === slot;
-                  return (
-                    <button
-                      key={slot}
-                      onClick={() => setSelectedTimeSlot(slot)}
-                      className={`py-1.5 px-2 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                        isActive
-                          ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-2xs'
-                          : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            ))}
+            {!published && (
+              <p className="text-[11px] text-slate-400">
+                This doctor hasn&apos;t published availability &mdash; showing suggested times.
+              </p>
+            )}
           </div>
 
           {/* Reason / Symptoms notes */}

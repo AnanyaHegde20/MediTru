@@ -219,6 +219,7 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
               return (
                 <div
                   key={apt.id}
+                  id={`upcoming-apt-${apt.id}`}
                   className={`flex items-center p-3 rounded-lg border transition-colors ${
                     idx === 0
                       ? 'bg-slate-50/80 border-slate-200/80'

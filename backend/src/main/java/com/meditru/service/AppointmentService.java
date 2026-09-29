@@ -6,6 +6,7 @@ import com.meditru.repository.AppointmentRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -53,6 +54,7 @@ public class AppointmentService {
             throw new IllegalArgumentException("New appointments must start as Pending or Confirmed");
         }
         apt.setStatus(status);
+        assertSlotFree(apt, null);
         return repo.save(apt);
     }
 
@@ -73,13 +75,38 @@ public class AppointmentService {
                 applyStatusChange(apt, next, isOwner, privileged);
             }
         }
+        final String originalDate = apt.getDate();
+        final String originalTime = apt.getTime();
+        final String originalDoctor = apt.getDoctorId();
         if (updated.getDate() != null) apt.setDate(updated.getDate());
         if (updated.getTime() != null) apt.setTime(updated.getTime());
         if (updated.getType() != null) apt.setType(updated.getType());
         if (updated.getDuration() != null) apt.setDuration(updated.getDuration());
         if (updated.getNotes() != null) apt.setNotes(updated.getNotes());
         if (updated.getRoom() != null) apt.setRoom(updated.getRoom());
+        boolean slotChanged = !Objects.equals(originalDate, apt.getDate())
+                || !Objects.equals(originalTime, apt.getTime())
+                || !Objects.equals(originalDoctor, apt.getDoctorId());
+        if (slotChanged) {
+            assertSlotFree(apt, id);
+        }
         return repo.save(apt);
+    }
+
+    private void assertSlotFree(Appointment apt, Long excludeId) {
+        if (apt.getDoctorId() == null || apt.getDoctorId().isBlank()
+                || apt.getDate() == null || apt.getTime() == null) {
+            return;
+        }
+        boolean conflict = excludeId == null
+                ? repo.existsByDoctorIdAndDateAndTimeAndStatusNot(
+                        apt.getDoctorId(), apt.getDate(), apt.getTime(), CANCELLED)
+                : repo.existsByDoctorIdAndDateAndTimeAndStatusNotAndIdNot(
+                        apt.getDoctorId(), apt.getDate(), apt.getTime(), CANCELLED, excludeId);
+        if (conflict) {
+            throw new IllegalArgumentException(
+                    "That time slot is already booked. Please pick another time.");
+        }
     }
 
     private void applyStatusChange(Appointment apt, String next, boolean isOwner, boolean privileged) {
