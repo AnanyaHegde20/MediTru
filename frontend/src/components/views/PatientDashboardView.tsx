@@ -15,7 +15,7 @@ import {
   Bot,
   XCircle,
 } from 'lucide-react';
-import { ActiveTab, Appointment, LabReport, Prescription, UserProfile } from '../../types';
+import { ActiveTab, Appointment, LabReport, MessageThreadItem, Prescription, UserProfile } from '../../types';
 import { useToast } from '../Toast';
 import { downloadLabReport } from '../../lib/labReportDownload';
 
@@ -24,6 +24,7 @@ interface PatientDashboardViewProps {
   appointments: Appointment[];
   labReports: LabReport[];
   prescriptions: Prescription[];
+  messageThreads: MessageThreadItem[];
   onNavigateTab: (tab: ActiveTab) => void;
   onSelectReport: (report: LabReport) => void;
   onQuickAskAI: (query: string) => void;
@@ -35,6 +36,7 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
   appointments,
   labReports,
   prescriptions,
+  messageThreads,
   onNavigateTab,
   onSelectReport,
   onQuickAskAI,
@@ -44,6 +46,22 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
   const { showToast } = useToast();
 
   const nextAppointment = appointments.find((a) => a.status === 'Confirmed') || appointments[0];
+
+  const unreadMessages = messageThreads.reduce((sum, thread) => sum + thread.unread, 0);
+  const activePrescriptions = prescriptions.filter((rx) => rx.status === 'Active').length;
+  const pendingRefills = prescriptions.filter((rx) => rx.status === 'Refill Requested').length;
+  const nextAppointmentLabel = nextAppointment
+    ? `Next: ${nextAppointment.date.replace(/,\s*\d{4}$/, '')}`
+    : 'No upcoming';
+  const latestReportLabel = (() => {
+    let latest: { date: string; time: number } | null = null;
+    for (const report of labReports) {
+      const time = Date.parse(report.date);
+      if (Number.isNaN(time)) continue;
+      if (!latest || time > latest.time) latest = { date: report.date, time };
+    }
+    return latest ? `Last: ${latest.date.replace(/,\s*\d{4}$/, '')}` : 'No reports yet';
+  })();
 
   const canCancel = (apt: Appointment) =>
     apt.patientId === currentUser.id &&
@@ -113,7 +131,7 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
           </div>
           <span className="text-xs text-blue-600 font-medium mt-2 flex items-center gap-1">
             <Clock className="w-3 h-3" />
-            Next: Mar 24
+            {nextAppointmentLabel}
           </span>
         </div>
 
@@ -132,7 +150,9 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
           </div>
           <span className="text-xs text-emerald-600 font-medium mt-2 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" />
-            Active (2 Refills)
+            {activePrescriptions} Active
+            {pendingRefills > 0 &&
+              ` · ${pendingRefills} Refill${pendingRefills === 1 ? '' : 's'} Pending`}
           </span>
         </div>
 
@@ -150,7 +170,7 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
             </span>
           </div>
           <span className="text-xs text-slate-500 font-medium mt-2">
-            Last: 2 days ago
+            {latestReportLabel}
           </span>
         </div>
 
@@ -164,11 +184,15 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
               Messages
             </span>
             <span className="text-2xl font-bold text-slate-900 mt-1 block">
-              01
+              {unreadMessages < 10 ? `0${unreadMessages}` : unreadMessages}
             </span>
           </div>
-          <span className="text-xs text-amber-600 font-medium mt-2">
-            Unread (Care Team)
+          <span
+            className={`text-xs font-medium mt-2 ${
+              unreadMessages > 0 ? 'text-amber-600' : 'text-slate-500'
+            }`}
+          >
+            {unreadMessages > 0 ? 'Unread (Care Team)' : 'All caught up'}
           </span>
         </div>
       </div>

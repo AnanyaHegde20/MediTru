@@ -30,7 +30,8 @@ class HealthControllerTest {
         mockMvc.perform(get("/api/health"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("ok"))
-            .andExpect(jsonPath("$.hasGeminiKey").value(false));
+            .andExpect(jsonPath("$.hasGeminiKey").value(false))
+            .andExpect(jsonPath("$.database").value("up"));
     }
 
     @Test

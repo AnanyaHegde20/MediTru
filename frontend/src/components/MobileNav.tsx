@@ -28,10 +28,11 @@ function getTabs(role: UserRole) {
       ];
     case 'doctor':
       return [
-        { path: '/doctor/dashboard', label: 'Schedule', icon: LayoutDashboard },
+        { path: '/doctor/dashboard', label: 'Home', icon: LayoutDashboard },
         { path: '/doctor/patients', label: 'Patients', icon: Users },
         { path: '/doctor/appointments', label: 'Calendar', icon: Calendar },
         { path: '/doctor/ai-assistant', label: 'AI Scribe', icon: Bot },
+        { path: '/doctor/messages', label: 'Messages', icon: MessageSquare },
         { path: '/doctor/prescriptions', label: 'Rx', icon: Pill },
       ];
     case 'admin':
@@ -40,6 +41,7 @@ function getTabs(role: UserRole) {
         { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
         { path: '/admin/patients', label: 'Users', icon: Users },
         { path: '/admin/appointments', label: 'Schedule', icon: Calendar },
+        { path: '/admin/messages', label: 'Messages', icon: MessageSquare },
       ];
   }
 }
@@ -59,7 +61,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ role }) => {
             key={tab.path}
             to={tab.path}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all relative ${
+              `flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all relative ${
                 isActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
               }`
             }

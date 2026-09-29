@@ -33,15 +33,10 @@ import { Appointment, Doctor, UserProfile } from '../../types';
 import { useToast } from '../Toast';
 import { useDataStore } from '../../store/useDataStore';
 
-const appointmentsTrendData = [
-  { day: 'Day 1', appointments: 120, completed: 110 },
-  { day: 'Day 5', appointments: 135, completed: 128 },
-  { day: 'Day 10', appointments: 155, completed: 142 },
-  { day: 'Day 15', appointments: 148, completed: 140 },
-  { day: 'Day 20', appointments: 172, completed: 165 },
-  { day: 'Day 25', appointments: 168, completed: 159 },
-  { day: 'Day 30', appointments: 182, completed: 174 },
-];
+const parseDate = (date: string) => {
+  const time = Date.parse(date);
+  return Number.isNaN(time) ? 0 : time;
+};
 
 interface AdminDashboardViewProps {
   onAddDoctor: (doc: Doctor) => void;
@@ -71,6 +66,23 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const activeAppointments = appointments.filter((a) => a.status !== 'Cancelled');
   const completedAppointments = appointments.filter((a) => a.status === 'Completed');
   const pendingAppointments = appointments.filter((a) => a.status === 'Pending');
+  const appointmentsTrendData = (() => {
+    const byDate = new Map<string, { total: number; completed: number }>();
+    for (const a of appointments) {
+      const entry = byDate.get(a.date) ?? { total: 0, completed: 0 };
+      entry.total += 1;
+      if (a.status === 'Completed') entry.completed += 1;
+      byDate.set(a.date, entry);
+    }
+    return [...byDate.entries()]
+      .sort((a, b) => parseDate(a[0]) - parseDate(b[0]))
+      .slice(-7)
+      .map(([date, counts]) => ({
+        day: date.replace(/,\s*\d{4}$/, ''),
+        appointments: counts.total,
+        completed: counts.completed,
+      }));
+  })();
   const revenue = completedAppointments.reduce((sum, a) => {
     const doc = doctors.find((d) => d.id === a.doctorId);
     return sum + (doc ? Number(doc.consultationFee) : 0);
@@ -235,12 +247,12 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
       {/* Analytics Charts Grid - Matches Figma Screen 7 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart 1: Line Chart (Appointments Trend over 30 days) */}
+        {/* Chart 1: Line Chart (Appointments trend by date) */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
           <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-2">
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Appointments Over Last 30 Days</h3>
-              <p className="text-[11px] text-slate-400">Total Booked vs Completed Consultations</p>
+              <h3 className="text-sm font-bold text-slate-900">Appointments by Date</h3>
+              <p className="text-[11px] text-slate-400">Total booked vs completed consultations per day</p>
             </div>
             <div className="flex items-center gap-3 text-xs font-medium">
               <span className="flex items-center gap-1.5 text-blue-600">

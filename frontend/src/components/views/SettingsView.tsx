@@ -17,6 +17,25 @@ const PERIOD_LABELS: Record<SlotPeriod, string> = {
   evening: 'Evening',
 };
 
+interface HealthStatus {
+  status: string;
+  hasGeminiKey: boolean;
+  database: string;
+}
+
+const STATUS_STYLES = {
+  good: 'text-emerald-700 bg-emerald-100',
+  info: 'text-blue-700 bg-blue-100',
+  bad: 'text-rose-700 bg-rose-100',
+  neutral: 'text-slate-500 bg-slate-100',
+} as const;
+
+const statusPill = (kind: keyof typeof STATUS_STYLES, label: string) => (
+  <span className={`font-bold px-2 py-0.5 rounded-full text-[10px] ${STATUS_STYLES[kind]}`}>
+    {label}
+  </span>
+);
+
 function toDisplayTime(hhmm: string): string {
   const [hourStr, minute] = hhmm.split(':');
   let hour = Number(hourStr);
@@ -43,6 +62,28 @@ export const SettingsView: React.FC = () => {
   const [newTime, setNewTime] = useState('');
   const [newPeriod, setNewPeriod] = useState<SlotPeriod>('morning');
   const [isSaving, setIsSaving] = useState(false);
+  const [health, setHealth] = useState<HealthStatus | null>(null);
+  const [apiReachable, setApiReachable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/health');
+        if (!res.ok) throw new Error(`health check failed: ${res.status}`);
+        const data: HealthStatus = await res.json();
+        if (!cancelled) {
+          setApiReachable(true);
+          setHealth(data);
+        }
+      } catch {
+        if (!cancelled) setApiReachable(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (isDoctor) fetchDoctors();
@@ -127,16 +168,28 @@ export const SettingsView: React.FC = () => {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Clinical Integrations</h3>
             <div className="space-y-2 text-xs">
               <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
-                <span>Gemini 3.7 AI Health Engine</span>
-                <span className="text-emerald-700 bg-emerald-100 font-bold px-2 py-0.5 rounded-full text-[10px]">Active</span>
+                <span>Gemini AI Health Engine</span>
+                {!health
+                  ? statusPill('neutral', 'Checking…')
+                  : health.hasGeminiKey
+                    ? statusPill('good', 'Active')
+                    : statusPill('bad', 'Unavailable')}
               </div>
               <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
                 <span>REST API Integration</span>
-                <span className="text-blue-700 bg-blue-100 font-bold px-2 py-0.5 rounded-full text-[10px]">Connected</span>
+                {apiReachable === null
+                  ? statusPill('neutral', 'Checking…')
+                  : apiReachable
+                    ? statusPill('info', 'Connected')
+                    : statusPill('bad', 'Offline')}
               </div>
               <div className="flex items-center justify-between py-1.5">
                 <span>H2 Database – File Persistence</span>
-                <span className="text-emerald-700 bg-emerald-100 font-bold px-2 py-0.5 rounded-full text-[10px]">Persistent</span>
+                {!health
+                  ? statusPill('neutral', 'Checking…')
+                  : health.database === 'up'
+                    ? statusPill('good', 'Persistent')
+                    : statusPill('bad', 'Unavailable')}
               </div>
             </div>
           </div>

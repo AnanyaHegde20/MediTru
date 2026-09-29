@@ -102,6 +102,7 @@ function PatientRoutes() {
     store.fetchAppointments(undefined, undefined);
     store.fetchLabReports(undefined);
     store.fetchPrescriptions(undefined);
+    store.fetchMessageThreads();
   }, []);
 
   if (!currentUser) return null;
@@ -116,6 +117,7 @@ function PatientRoutes() {
           appointments={store.appointments}
           labReports={store.labReports}
           prescriptions={store.prescriptions}
+          messageThreads={store.messageThreads}
           onNavigateTab={goTab}
           onSelectReport={(rep) => {
             setSelectedReport(rep);
