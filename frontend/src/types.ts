@@ -42,6 +42,7 @@ export interface Doctor {
   bio: string;
   hospital: string;
   education: string;
+  email?: string;
   slots: {
     morning: string[];
     afternoon: string[];

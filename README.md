@@ -157,7 +157,7 @@ All other `/api/**` endpoints require a valid JWT. Role rules:
 - `POST /api/prescriptions/{id}/refill` → any authenticated user (owner checked in service)
 - everything else → any authenticated user
 
-**Ownership rules:** patients only ever see their own records — `GET /api/lab-reports`, `/api/prescriptions`, and `/api/appointments` are automatically scoped to the caller (a `patientId` query parameter from a patient is ignored), get-by-id on someone else's record returns 404, and creating a report/appointment for another patient returns 400. Doctors and admins read clinical data broadly (there is no `User`↔`Doctor` profile link to scope by).
+**Ownership rules:** patients only ever see their own records — `GET /api/lab-reports`, `/api/prescriptions`, and `/api/appointments` are automatically scoped to the caller (a `patientId` query parameter from a patient is ignored), get-by-id on someone else's record returns 404, and creating a report/appointment for another patient returns 400. Doctors and admins read clinical data broadly. Doctor availability is owned: `PUT /api/doctors/{id}` allows an admin to edit any profile, but a doctor only the profile whose `email` matches their account (anyone else gets 403).
 
 **Demo accounts** (password `password`):
 - Patient: `priya.sharma@example.com`
@@ -186,10 +186,12 @@ All other `/api/**` endpoints require a valid JWT. Role rules:
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/doctors` | List doctors; `?q=` name search, `?specialty=` filter |
-| POST | `/api/doctors` | Create doctor (`slotsJson` = JSON of morning/afternoon/evening slots) |
+| POST | `/api/doctors` | Create doctor (`slotsJson` = JSON of morning/afternoon/evening slots, max 2000 chars; name + specialty required; `email` links the profile to the doctor's login) |
 | GET | `/api/doctors/{id}` | Get doctor by id |
-| PUT | `/api/doctors/{id}` | Update doctor |
+| PUT | `/api/doctors/{id}` | Update doctor / availability — ADMIN for any profile, DOCTOR only for the profile matching their email (403 otherwise, 400 if `slotsJson` > 2000 chars) |
 | DELETE | `/api/doctors/{id}` | Delete doctor (204) |
+
+Doctors manage their published time slots from **Settings → My Availability** in the doctor workspace (chips per morning/afternoon/evening period); patients see the updated slots and `nextAvailable` when booking.
 
 ### Appointments
 

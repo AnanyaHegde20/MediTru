@@ -127,6 +127,16 @@ public class DataSeeder implements CommandLineRunner {
         d6.setSlotsJson("{\"morning\":[\"09:15 AM\",\"10:45 AM\"],\"afternoon\":[\"02:30 PM\",\"03:30 PM\",\"04:45 PM\"],\"evening\":[\"05:30 PM\"]}");
         doctors.save(d6);
 
+        Doctor d7 = new Doctor("Dr. Rajesh Kumar", "Cardiology", new BigDecimal("4.9"), 210, 16, new BigDecimal("120"));
+        d7.setEmail("rajesh.kumar@medicare.health");
+        d7.setNextAvailable("Tomorrow, 09:30 AM");
+        d7.setAvatar("https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80");
+        d7.setBio("Senior cardiologist leading the clinical consult team at MediTru, focused on preventive cardiology and chronic heart disease management.");
+        d7.setHospital("MediTru Central Hospital, San Francisco");
+        d7.setEducation("MD from All India Institute of Medical Sciences");
+        d7.setSlotsJson("{\"morning\":[\"09:00 AM\",\"10:30 AM\"],\"afternoon\":[\"02:00 PM\",\"03:30 PM\"],\"evening\":[\"05:30 PM\",\"06:30 PM\"]}");
+        doctors.save(d7);
+
         // ── Appointments (for patient) ─────────────────────
         String patientAvatar = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80";
         String stoneAvatar = "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80";

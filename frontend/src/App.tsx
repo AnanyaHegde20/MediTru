@@ -208,6 +208,7 @@ function DoctorRoutes() {
     store.fetchPrescriptions(undefined);
     store.fetchMessageThreads();
     store.fetchPatients();
+    store.fetchDoctors();
   }, []);
 
   if (!currentUser) return null;

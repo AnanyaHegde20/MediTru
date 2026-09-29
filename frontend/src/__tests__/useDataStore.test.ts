@@ -393,4 +393,112 @@ describe('useDataStore', () => {
     ).rejects.toThrow('Patient is required');
     expect(useDataStore.getState().prescriptions).toHaveLength(0);
   });
+
+  it('updates a doctor availability profile', async () => {
+    const doctor = {
+      id: '2',
+      name: 'Dr. Own',
+      specialty: 'Cardiology',
+      email: 'doc@example.com',
+      rating: 4.9,
+      reviewCount: 1,
+      experienceYears: 5,
+      consultationFee: 100,
+      nextAvailable: 'Tomorrow, 10:00 AM',
+      avatar: '',
+      bio: '',
+      hospital: '',
+      education: '',
+      slots: { morning: [], afternoon: [], evening: [] },
+    };
+    useDataStore.setState({ doctors: [doctor] });
+
+    vi.stubGlobal(
+      'fetch',
+      okFetch({
+        id: 2,
+        name: 'Dr. Own',
+        email: 'doc@example.com',
+        nextAvailable: 'Tomorrow, 07:47 PM',
+        slotsJson: JSON.stringify({ morning: [], afternoon: [], evening: ['07:47 PM'] }),
+      })
+    );
+
+    await useDataStore.getState().updateDoctor('2', {
+      ...doctor,
+      nextAvailable: 'Tomorrow, 07:47 PM',
+      slots: { morning: [], afternoon: [], evening: ['07:47 PM'] },
+    });
+
+    const updated = useDataStore.getState().doctors[0];
+    expect(updated.id).toBe('2');
+    expect(updated.slots.evening).toContain('07:47 PM');
+    expect(updated.nextAvailable).toBe('Tomorrow, 07:47 PM');
+  });
+
+  it('surfaces availability validation errors', async () => {
+    const doctor = {
+      id: '2',
+      name: 'Dr. Own',
+      specialty: 'Cardiology',
+      rating: 4.9,
+      reviewCount: 1,
+      experienceYears: 5,
+      consultationFee: 100,
+      nextAvailable: 'Tomorrow',
+      avatar: '',
+      bio: '',
+      hospital: '',
+      education: '',
+      slots: { morning: [], afternoon: [], evening: [] },
+    };
+    useDataStore.setState({ doctors: [doctor] });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 400,
+        text: async () => 'Availability data too large',
+        json: async () => ({}),
+      }))
+    );
+
+    await expect(useDataStore.getState().updateDoctor('2', doctor)).rejects.toThrow(
+      'Availability data too large'
+    );
+  });
+
+  it('creates a doctor availability profile', async () => {
+    vi.stubGlobal(
+      'fetch',
+      okFetch({
+        id: 11,
+        name: 'Dr. New',
+        email: 'new@example.com',
+        slotsJson: JSON.stringify({ morning: ['09:00 AM'], afternoon: [], evening: [] }),
+      })
+    );
+
+    const created = await useDataStore.getState().createDoctorProfile({
+      name: 'Dr. New',
+      email: 'new@example.com',
+      specialty: 'Neurology',
+      rating: 4.5,
+      reviewCount: 0,
+      experienceYears: 0,
+      consultationFee: 0,
+      nextAvailable: 'Tomorrow, 09:00 AM',
+      avatar: '',
+      bio: '',
+      hospital: '',
+      education: '',
+      slots: { morning: ['09:00 AM'], afternoon: [], evening: [] },
+    });
+
+    expect(created.id).toBe('11');
+    expect(created.slots.morning).toContain('09:00 AM');
+    expect(useDataStore.getState().doctors).toHaveLength(1);
+    expect(useDataStore.getState().doctors[0].id).toBe('11');
+  });
 });

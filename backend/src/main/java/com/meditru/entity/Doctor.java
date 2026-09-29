@@ -26,6 +26,7 @@ public class Doctor {
     private String bio;
     private String hospital;
     private String education;
+    private String email;
 
     @Column(length = 2000)
     private String slotsJson;
@@ -66,6 +67,8 @@ public class Doctor {
     public void setHospital(String hospital) { this.hospital = hospital; }
     public String getEducation() { return education; }
     public void setEducation(String education) { this.education = education; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
     public String getSlotsJson() { return slotsJson; }
     public void setSlotsJson(String slotsJson) { this.slotsJson = slotsJson; }
 }

@@ -57,6 +57,8 @@ interface DataStore {
     }
   ) => Promise<LabReport>;
   addDoctor: (doc: Doctor) => void;
+  createDoctorProfile: (doc: Omit<Doctor, 'id'>) => Promise<Doctor>;
+  updateDoctor: (id: string, doc: Doctor) => Promise<void>;
   addLabReport: (report: LabReport) => void;
 }
 
@@ -94,12 +96,30 @@ function appointmentToPayload(apt: Appointment) {
   return rest;
 }
 
-function doctorToPayload(doc: Doctor) {
+function doctorToPayload(doc: Omit<Doctor, 'id'> & { id?: string }) {
   const { id: _id, slots, ...rest } = doc;
   return {
     ...rest,
     slotsJson: JSON.stringify(slots ?? { morning: [], afternoon: [], evening: [] }),
   };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeDoctor(d: any): Doctor {
+  let slots: Doctor['slots'] = { morning: [], afternoon: [], evening: [] };
+  if (d.slotsJson) {
+    try {
+      const parsed = JSON.parse(d.slotsJson);
+      slots = {
+        morning: Array.isArray(parsed.morning) ? parsed.morning : [],
+        afternoon: Array.isArray(parsed.afternoon) ? parsed.afternoon : [],
+        evening: Array.isArray(parsed.evening) ? parsed.evening : [],
+      };
+    } catch {
+      // keep default empty slots if stored JSON is invalid
+    }
+  }
+  return { ...d, id: String(d.id), slots };
 }
 
 function labReportToPayload(report: LabReport) {
@@ -171,12 +191,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
       const res = await apiFetch(apiUrl('/api/doctors'));
       if (res.ok) {
         const data = await res.json();
-        const doctors = data.map((d: any) => ({
-          ...d,
-          id: String(d.id),
-          slots: d.slotsJson ? JSON.parse(d.slotsJson) : { morning: [], afternoon: [], evening: [] },
-        }));
-        set({ doctors });
+        set({ doctors: data.map(normalizeDoctor) });
       }
     } catch (e) {
       console.warn('Failed to fetch doctors, using empty list');
@@ -532,6 +547,42 @@ export const useDataStore = create<DataStore>((set, get) => ({
     } catch (e) {
       console.warn('Failed to persist doctor', e);
     }
+  },
+
+  createDoctorProfile: async (doc) => {
+    const created = await postJson('/api/doctors', doctorToPayload(doc));
+    const normalized = normalizeDoctor(created);
+    set((state) => ({ doctors: [normalized, ...state.doctors] }));
+    return normalized;
+  },
+
+  updateDoctor: async (id, doc) => {
+    const res = await apiFetch(apiUrl(`/api/doctors/${id}`), {
+      method: 'PUT',
+      body: JSON.stringify(doctorToPayload(doc)),
+    });
+    if (!res.ok) {
+      let message = `Could not save availability (${res.status})`;
+      try {
+        const text = await res.text();
+        if (text) {
+          try {
+            const parsed = JSON.parse(text);
+            message = parsed?.error || message;
+          } catch {
+            message = text;
+          }
+        }
+      } catch {
+        // keep default message when the body cannot be read
+      }
+      throw new Error(message);
+    }
+    const updated = await res.json().catch(() => null);
+    const normalized = updated ? normalizeDoctor(updated) : { ...doc, id };
+    set((state) => ({
+      doctors: state.doctors.map((d) => (d.id === id ? normalized : d)),
+    }));
   },
 
   addLabReport: async (report) => {

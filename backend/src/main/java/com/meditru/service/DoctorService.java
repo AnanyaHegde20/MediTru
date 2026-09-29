@@ -27,7 +27,15 @@ public class DoctorService {
         return repo.findBySpecialtyContainingIgnoreCase(specialty);
     }
 
-    public Doctor create(Doctor doctor) { return repo.save(doctor); }
+    public Doctor create(Doctor doctor) {
+        if (doctor.getName() == null || doctor.getName().isBlank()) {
+            throw new IllegalArgumentException("Doctor name is required");
+        }
+        if (doctor.getSpecialty() == null || doctor.getSpecialty().isBlank()) {
+            throw new IllegalArgumentException("Specialty is required");
+        }
+        return repo.save(doctor);
+    }
 
     public Doctor update(Long id, Doctor updated) {
         Doctor doc = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Doctor not found"));
@@ -42,7 +50,12 @@ public class DoctorService {
         if (updated.getBio() != null) doc.setBio(updated.getBio());
         if (updated.getHospital() != null) doc.setHospital(updated.getHospital());
         if (updated.getEducation() != null) doc.setEducation(updated.getEducation());
-        if (updated.getSlotsJson() != null) doc.setSlotsJson(updated.getSlotsJson());
+        if (updated.getSlotsJson() != null) {
+            if (updated.getSlotsJson().length() > 2000) {
+                throw new IllegalArgumentException("Availability data too large");
+            }
+            doc.setSlotsJson(updated.getSlotsJson());
+        }
         return repo.save(doc);
     }
 
