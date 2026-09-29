@@ -58,4 +58,17 @@ test.describe('Medical records', () => {
     await expect(page.getByText(`Prescribed ${medication}`)).toBeVisible();
     await expect(page.getByText(medication).first()).toBeVisible();
   });
+
+  test('patient downloads a prescription', async ({ page }) => {
+    await login(page, 'patient');
+    await page.goto('/patient/prescriptions');
+
+    await expect(page.locator('#medical-records-screen')).toBeVisible();
+    await page.click('#records-tab-prescriptions');
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('[id^="btn-download-rx-"]').first().click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/_prescription\.txt$/);
+  });
 });

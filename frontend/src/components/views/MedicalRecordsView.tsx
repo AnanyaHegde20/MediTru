@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { LabReport, Prescription, UserProfile } from '../../types';
 import { downloadLabReport } from '../../lib/labReportDownload';
+import { downloadPrescription } from '../../lib/prescriptionDownload';
 import { useToast } from '../Toast';
 
 interface MedicalRecordsViewProps {
@@ -411,6 +412,18 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                       <p className="text-[11px] text-slate-400 mt-1">Prescribed by {rx.doctorName} • Refills: {rx.refillsRemaining} remaining</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
+                      {currentUser.role === 'patient' && (
+                        <button
+                          id={`btn-download-rx-${rx.id}`}
+                          onClick={() =>
+                            downloadPrescription(rx, { patientName: currentUser.name })
+                          }
+                          title="Download Prescription"
+                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       {currentUser.role === 'patient' &&
                         rx.status === 'Active' &&
                         rx.refillsRemaining > 0 && (
