@@ -4,6 +4,8 @@ import com.meditru.dto.AuthUser;
 import com.meditru.entity.Appointment;
 import com.meditru.service.AppointmentService;
 import com.meditru.service.AuthService;
+import com.meditru.util.Csv;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -38,6 +40,36 @@ public class AppointmentController {
         } catch (AuthService.UnauthorizedException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of());
         }
+    }
+
+    @GetMapping(value = "/export", produces = "text/csv;charset=UTF-8")
+    public ResponseEntity<String> exportCsv(Authentication authentication) {
+        try {
+            requireActor(authentication);
+        } catch (AuthService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        StringBuilder csv = new StringBuilder();
+        csv.append(Csv.row("ID", "Patient ID", "Patient", "Doctor ID", "Doctor", "Specialty",
+                "Date", "Time", "Status", "Type", "Room", "Notes"));
+        for (Appointment apt : service.findAll()) {
+            csv.append(Csv.row(
+                    String.valueOf(apt.getId()),
+                    apt.getPatientId(),
+                    apt.getPatientName(),
+                    apt.getDoctorId(),
+                    apt.getDoctorName(),
+                    apt.getSpecialty(),
+                    apt.getDate(),
+                    apt.getTime(),
+                    apt.getStatus(),
+                    apt.getType(),
+                    apt.getRoom(),
+                    apt.getNotes()));
+        }
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"appointments.csv\"")
+                .body(csv.toString());
     }
 
     @GetMapping("/{id}")

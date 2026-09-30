@@ -2,6 +2,8 @@ package com.meditru.controller;
 
 import com.meditru.entity.User;
 import com.meditru.service.UserService;
+import com.meditru.util.Csv;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -16,6 +18,26 @@ public class UserController {
 
     @GetMapping
     public List<User> list() { return service.findAll(); }
+
+    @GetMapping(value = "/export", produces = "text/csv;charset=UTF-8")
+    public ResponseEntity<String> exportCsv() {
+        StringBuilder csv = new StringBuilder();
+        csv.append(Csv.row("ID", "Name", "Email", "Role", "Phone", "Age", "Gender", "Blood Group"));
+        for (User user : service.findAll()) {
+            csv.append(Csv.row(
+                    String.valueOf(user.getId()),
+                    user.getName(),
+                    user.getEmail(),
+                    user.getRole() != null ? user.getRole().name() : "",
+                    user.getPhone(),
+                    user.getAge() != null ? String.valueOf(user.getAge()) : "",
+                    user.getGender(),
+                    user.getBloodGroup()));
+        }
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"users.csv\"")
+                .body(csv.toString());
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> get(@PathVariable Long id) {

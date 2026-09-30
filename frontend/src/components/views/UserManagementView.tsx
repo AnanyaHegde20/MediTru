@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, ShieldCheck, Trash2, UserCog, X } from 'lucide-react';
+import { Download, Plus, ShieldCheck, Trash2, UserCog, X } from 'lucide-react';
 import { UserProfile, UserRole } from '../../types';
 import { useDataStore } from '../../store/useDataStore';
 import { useToast } from '../Toast';
+import { downloadCsv } from '../../lib/csvDownload';
 
 const ROLE_OPTIONS: UserRole[] = ['patient', 'doctor', 'admin'];
 
@@ -83,6 +84,15 @@ export const UserManagementView: React.FC = () => {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      await downloadCsv('/api/users/export', 'users.csv');
+      showToast('Users CSV exported.');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Could not export the CSV.', 'error');
+    }
+  };
+
   return (
     <div id="user-accounts-view" className="space-y-5 animate-in fade-in duration-150">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -92,15 +102,26 @@ export const UserManagementView: React.FC = () => {
             Manage who can sign in to MediTru and what they are allowed to do
           </p>
         </div>
-        <button
-          id="btn-create-user"
-          type="button"
-          onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors self-start md:self-auto cursor-pointer"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Create User</span>
-        </button>
+        <div className="flex items-center gap-2 self-start md:self-auto">
+          <button
+            id="btn-export-users-csv"
+            type="button"
+            onClick={handleExport}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export CSV</span>
+          </button>
+          <button
+            id="btn-create-user"
+            type="button"
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Create User</span>
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">

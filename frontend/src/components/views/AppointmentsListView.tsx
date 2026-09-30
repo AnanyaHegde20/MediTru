@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Calendar, Search, Stethoscope, User } from 'lucide-react';
+import { Calendar, Download, Search, Stethoscope, User } from 'lucide-react';
 import { Appointment, UserProfile } from '../../types';
 import { useToast } from '../Toast';
+import { downloadCsv } from '../../lib/csvDownload';
 
 interface AppointmentsListViewProps {
   appointments: Appointment[];
@@ -37,6 +38,15 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
 
   const showPatient = currentUser.role !== 'patient';
   const showDoctor = currentUser.role !== 'doctor';
+
+  const handleExport = async () => {
+    try {
+      await downloadCsv('/api/appointments/export', 'appointments.csv');
+      showToast('Appointments CSV exported.');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Could not export the CSV.', 'error');
+    }
+  };
 
   const actionsFor = (apt: Appointment): RowAction[] => {
     if (currentUser.role === 'doctor' || currentUser.role === 'admin') {
@@ -102,8 +112,21 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                 : 'All appointments across the platform'}
             </p>
           </div>
-          <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-            <Calendar className="w-4 h-4" />
+          <div className="flex items-center gap-2">
+            {currentUser.role === 'admin' && (
+              <button
+                id="btn-export-appointments-csv"
+                type="button"
+                onClick={handleExport}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Export CSV</span>
+              </button>
+            )}
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Calendar className="w-4 h-4" />
+            </div>
           </div>
         </div>
 
