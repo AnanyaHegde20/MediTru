@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -8,6 +8,8 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useDataStore } from '../store/useDataStore';
+import { buildNotifications, readSeenIds, writeSeenIds } from '../lib/notifications';
 
 interface NavbarProps {
   currentUser: import('../types').UserProfile;
@@ -19,37 +21,49 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
   const [internalQuery, setInternalQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
-  const [notifications, setNotifications] = useState([
-    {
-      id: '1',
-      title: 'Lipid Panel Ready',
-      desc: 'Dr. Alan Stone uploaded your latest lab results.',
-      time: '15m ago',
-      unread: true,
-      type: 'lab',
-    },
-    {
-      id: '2',
-      title: 'Appointment Reminder',
-      desc: 'Cardiology consultation tomorrow at 10:00 AM.',
-      time: '2h ago',
-      unread: true,
-      type: 'appointment',
-    },
-    {
-      id: '3',
-      title: 'Prescription Refill',
-      desc: 'Atorvastatin 20mg renewal approved.',
-      time: '1d ago',
-      unread: false,
-      type: 'rx',
-    },
-  ]);
+
+  const appointments = useDataStore((state) => state.appointments);
+  const labReports = useDataStore((state) => state.labReports);
+  const prescriptions = useDataStore((state) => state.prescriptions);
+  const messageThreads = useDataStore((state) => state.messageThreads);
+  const fetchAppointments = useDataStore((state) => state.fetchAppointments);
+  const fetchLabReports = useDataStore((state) => state.fetchLabReports);
+  const fetchPrescriptions = useDataStore((state) => state.fetchPrescriptions);
+  const fetchMessageThreads = useDataStore((state) => state.fetchMessageThreads);
+
+  const [seenIds, setSeenIds] = useState<string[]>(() => readSeenIds(currentUser.email ?? ''));
+
+  useEffect(() => {
+    fetchAppointments(undefined, undefined);
+    fetchLabReports();
+    fetchPrescriptions();
+    fetchMessageThreads();
+  }, [fetchAppointments, fetchLabReports, fetchPrescriptions, fetchMessageThreads]);
+
+  useEffect(() => {
+    setSeenIds(readSeenIds(currentUser.email ?? ''));
+  }, [currentUser.email]);
+
+  const notifications = useMemo(
+    () =>
+      buildNotifications(currentUser.role, currentUser, {
+        appointments,
+        labReports,
+        prescriptions,
+        messageThreads,
+      }).map((notification) => ({
+        ...notification,
+        unread: !seenIds.includes(notification.id),
+      })),
+    [currentUser, appointments, labReports, prescriptions, messageThreads, seenIds]
+  );
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
   const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+    const ids = notifications.map((n) => n.id);
+    writeSeenIds(currentUser.email ?? '', ids);
+    setSeenIds(ids);
   };
 
   const handleSignOut = () => {
@@ -116,7 +130,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
             >
               <Bell className="w-4 h-4 md:w-5 md:h-5" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white animate-pulse" />
+                <span
+                  id="notification-unread-dot"
+                  className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white animate-pulse"
+                />
               )}
             </button>
 
@@ -145,6 +162,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
                 </div>
 
                 <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto mt-2">
+                  {notifications.length === 0 && (
+                    <p className="py-6 text-center text-xs text-slate-400">
+                      You&apos;re all caught up.
+                    </p>
+                  )}
                   {notifications.map((n) => (
                     <div
                       key={n.id}
