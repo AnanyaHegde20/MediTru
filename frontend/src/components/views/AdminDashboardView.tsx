@@ -7,36 +7,13 @@ import {
   TrendingUp,
   UserPlus,
   FileSpreadsheet,
-  ShieldAlert,
-  Settings,
   ArrowUpRight,
-  Sparkles,
   Server,
   X,
-  CheckCircle2,
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
 import { Appointment, Doctor, UserProfile } from '../../types';
 import { useToast } from '../Toast';
 import { useDataStore } from '../../store/useDataStore';
-
-const parseDate = (date: string) => {
-  const time = Date.parse(date);
-  return Number.isNaN(time) ? 0 : time;
-};
 
 interface AdminDashboardViewProps {
   onAddDoctor: (doc: Doctor) => void;
@@ -66,62 +43,10 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const activeAppointments = appointments.filter((a) => a.status !== 'Cancelled');
   const completedAppointments = appointments.filter((a) => a.status === 'Completed');
   const pendingAppointments = appointments.filter((a) => a.status === 'Pending');
-  const appointmentsTrendData = (() => {
-    const byDate = new Map<string, { total: number; completed: number }>();
-    for (const a of appointments) {
-      const entry = byDate.get(a.date) ?? { total: 0, completed: 0 };
-      entry.total += 1;
-      if (a.status === 'Completed') entry.completed += 1;
-      byDate.set(a.date, entry);
-    }
-    return [...byDate.entries()]
-      .sort((a, b) => parseDate(a[0]) - parseDate(b[0]))
-      .slice(-7)
-      .map(([date, counts]) => ({
-        day: date.replace(/,\s*\d{4}$/, ''),
-        appointments: counts.total,
-        completed: counts.completed,
-      }));
-  })();
   const revenue = completedAppointments.reduce((sum, a) => {
     const doc = doctors.find((d) => d.id === a.doctorId);
     return sum + (doc ? Number(doc.consultationFee) : 0);
   }, 0);
-
-  const statusColors: Record<string, string> = {
-    Completed: '#10B981',
-    Confirmed: '#2563EB',
-    Pending: '#F59E0B',
-    'In Progress': '#6366F1',
-    Cancelled: '#EF4444',
-  };
-  const statusBreakdown = (() => {
-    if (appointments.length === 0) return [];
-    const counts = new Map<string, number>();
-    for (const a of appointments) counts.set(a.status, (counts.get(a.status) ?? 0) + 1);
-    return [...counts.entries()].map(([name, count]) => ({
-      name,
-      value: Math.round((count / appointments.length) * 100),
-      color: statusColors[name] ?? '#94A3B8',
-    }));
-  })();
-
-  const specialtyColors = ['#2563EB', '#10B981', '#6366F1', '#F59E0B', '#EC4899', '#8B5CF6'];
-  const specialtyDistribution = (() => {
-    const counts = new Map<string, number>();
-    for (const a of activeAppointments) {
-      const key = a.specialty || 'General';
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return [...counts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6)
-      .map(([specialty, count], index) => ({
-        specialty,
-        count,
-        fill: specialtyColors[index % specialtyColors.length],
-      }));
-  })();
 
   const recentActivity = appointments
     .slice(-5)
@@ -245,146 +170,9 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
         </div>
       </div>
 
-      {/* Analytics Charts Grid - Matches Figma Screen 7 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart 1: Line Chart (Appointments trend by date) */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-2">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Appointments by Date</h3>
-              <p className="text-[11px] text-slate-400">Total booked vs completed consultations per day</p>
-            </div>
-            <div className="flex items-center gap-3 text-xs font-medium">
-              <span className="flex items-center gap-1.5 text-blue-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Booked
-              </span>
-              <span className="flex items-center gap-1.5 text-emerald-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Completed
-              </span>
-            </div>
-          </div>
-
-          <div className="h-64 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={appointmentsTrendData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="day" stroke="#94a3b8" fontSize={11} />
-                <YAxis stroke="#94a3b8" fontSize={11} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '12px',
-                    border: '1px solid #e2e8f0',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                    fontSize: '12px',
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="appointments"
-                  stroke="#2563EB"
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: '#2563EB' }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="completed"
-                  stroke="#10B981"
-                  strokeWidth={2}
-                  strokeDasharray="4 4"
-                  dot={{ r: 3, fill: '#10B981' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Chart 2: Donut Chart (Appointment Status Breakdown) */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs flex flex-col justify-between">
-          <div className="pb-3 border-b border-slate-100">
-            <h3 className="text-sm font-bold text-slate-900">Appointment Status Breakdown</h3>
-            <p className="text-[11px] text-slate-400">Clinical session throughput distribution</p>
-          </div>
-
-          <div className="h-48 w-full flex items-center justify-center my-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={statusBreakdown}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={75}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {statusBreakdown.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
-                    fontSize: '11px',
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100">
-            {statusBreakdown.map((item) => (
-              <div key={item.name} className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-slate-600 text-[11px]">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                  {item.name}
-                </span>
-                <span className="font-bold text-slate-900">{item.value}%</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Bar Chart & Recent System Activity Table */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Bar Chart: Bookings by Specialty */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-          <div className="pb-3 border-b border-slate-100 mb-2">
-            <h3 className="text-sm font-bold text-slate-900">Top Specialties by Bookings</h3>
-            <p className="text-[11px] text-slate-400">Monthly patient volume per clinical specialty</p>
-          </div>
-
-          <div className="h-56 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={specialtyDistribution} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="specialty" stroke="#94a3b8" fontSize={9} />
-                <YAxis stroke="#94a3b8" fontSize={11} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
-                    fontSize: '11px',
-                  }}
-                />
-                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                  {specialtyDistribution.map((entry, index) => (
-                    <Cell key={`bar-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Recent Activity Table (2 Cols) */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-2">
+      {/* Recent System Activity Table */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-2">
             <h3 className="text-sm font-bold text-slate-900">Recent Healthcare Audit Activity</h3>
             <span className="text-[11px] font-semibold text-slate-400">Live appointment ledger</span>
           </div>
@@ -424,7 +212,6 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
             </table>
           </div>
         </div>
-      </div>
 
       {/* Admin Quick Actions Panel */}
       <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">

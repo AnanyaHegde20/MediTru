@@ -21,6 +21,10 @@ const MedicalRecordsView = React.lazy(() =>
   import('./components/views/MedicalRecordsView').then((m) => ({ default: m.MedicalRecordsView })));
 const AdminDashboardView = React.lazy(() =>
   import('./components/views/AdminDashboardView').then((m) => ({ default: m.AdminDashboardView })));
+const AdminAnalyticsView = React.lazy(() =>
+  import('./components/views/AdminAnalyticsView').then((m) => ({ default: m.AdminAnalyticsView })));
+const DoctorAnalyticsView = React.lazy(() =>
+  import('./components/views/DoctorAnalyticsView').then((m) => ({ default: m.DoctorAnalyticsView })));
 const PatientsDirectoryView = React.lazy(() =>
   import('./components/views/PatientsDirectoryView').then((m) => ({ default: m.PatientsDirectoryView })));
 const AppointmentsListView = React.lazy(() =>
@@ -290,11 +294,10 @@ function DoctorRoutes() {
       } />
       <Route path="analytics" element={
         <RouteErrorBoundary>
-        <AdminDashboardView
-          onAddDoctor={store.addDoctor}
-          patients={store.patients}
-          doctors={store.doctors}
+        <DoctorAnalyticsView
+          currentUser={currentUser}
           appointments={store.appointments}
+          doctors={store.doctors}
         />
         </RouteErrorBoundary>
       } />
@@ -385,11 +388,9 @@ function AdminRoutes() {
       } />
       <Route path="analytics" element={
         <RouteErrorBoundary>
-        <AdminDashboardView
-          onAddDoctor={store.addDoctor}
-          patients={store.patients}
-          doctors={store.doctors}
+        <AdminAnalyticsView
           appointments={store.appointments}
+          doctors={store.doctors}
         />
         </RouteErrorBoundary>
       } />
