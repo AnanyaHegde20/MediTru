@@ -46,7 +46,7 @@ function toDisplayTime(hhmm: string): string {
 }
 
 export const SettingsView: React.FC = () => {
-  const { currentUser, updateProfile } = useAuth();
+  const { currentUser, updateProfile, handleLogout } = useAuth();
   const doctors = useDataStore((state) => state.doctors);
   const fetchDoctors = useDataStore((state) => state.fetchDoctors);
   const updateDoctor = useDataStore((state) => state.updateDoctor);
@@ -253,7 +253,8 @@ export const SettingsView: React.FC = () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      showToast('Password updated.', 'success');
+      showToast('Password updated. Please sign in again.', 'success');
+      handleLogout();
     } catch {
       showToast('Cannot reach the server. Is the backend running?', 'error');
     } finally {

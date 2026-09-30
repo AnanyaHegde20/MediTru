@@ -118,6 +118,14 @@ public class AuthService {
             throw new IllegalArgumentException("New password must differ from the current password");
         }
         user.setPassword(passwordEncoder.encode(request.newPassword()));
+        user.bumpTokenVersion();
+        users.save(user);
+    }
+
+    public void revokeSessions(String email) {
+        User user = users.findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("Not authenticated"));
+        user.bumpTokenVersion();
         users.save(user);
     }
 

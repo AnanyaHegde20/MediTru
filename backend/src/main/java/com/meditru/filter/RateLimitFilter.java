@@ -20,10 +20,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private final ConcurrentHashMap<String, RateLimitEntry> rateLimitMap = new ConcurrentHashMap<>();
     private final int maxRequests;
+    private final int authMaxRequests;
     private final long windowMs;
 
     public RateLimitFilter(MeditruProperties properties) {
         this.maxRequests = properties.getRateLimit().getMaxRequests();
+        this.authMaxRequests = properties.getRateLimit().getAuthMaxRequests();
         this.windowMs = properties.getRateLimit().getWindowMs();
 
         // Cleanup expired entries every 5 minutes
@@ -43,7 +45,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String ip = getClientIp(request);
         long now = System.currentTimeMillis();
 
-        RateLimitEntry entry = rateLimitMap.compute(ip, (key, existing) -> {
+        boolean isCredentialEndpoint = isCredentialEndpoint(request.getRequestURI());
+        int limit = isCredentialEndpoint ? authMaxRequests : maxRequests;
+        String bucket = (isCredentialEndpoint ? "auth:" : "api:") + ip;
+
+        RateLimitEntry entry = rateLimitMap.compute(bucket, (key, existing) -> {
             if (existing == null || now > existing.resetAt) {
                 return new RateLimitEntry(1, now + windowMs);
             }
@@ -51,7 +57,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return existing;
         });
 
-        if (entry.count > maxRequests) {
+        if (entry.count > limit) {
             response.setStatus(429);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.getWriter().write(
@@ -63,6 +69,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isCredentialEndpoint(String uri) {
+        return "/api/auth/login".equals(uri) || "/api/auth/register".equals(uri);
     }
 
     private String getClientIp(HttpServletRequest request) {

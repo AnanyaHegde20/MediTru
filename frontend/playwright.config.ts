@@ -30,6 +30,8 @@ export default defineConfig({
         ...process.env,
         // Raise the rate limit so UI traffic does not trip the per-IP limiter
         MEDITRU_RATELIMIT_MAXREQUESTS: '100000',
+        // Same for the stricter login/register tier
+        MEDITRU_RATELIMIT_AUTHMAXREQUESTS: '100000',
       },
     },
     {

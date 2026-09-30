@@ -137,6 +137,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleLogout = useCallback(() => {
+    const token = getToken();
+    if (token) {
+      // Best-effort server-side revocation of the session
+      fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    }
     setToken(null);
     setCurrentUser(null);
   }, []);

@@ -29,6 +29,7 @@ public class JwtService {
                 .subject(user.getEmail())
                 .claim("role", user.getRole().name())
                 .claim("name", user.getName())
+                .claim("tv", user.tokenVersionValue())
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + expirationMs))
                 .signWith(key)
@@ -58,5 +59,10 @@ public class JwtService {
 
     public String extractRole(String token) {
         return parse(token).get("role", String.class);
+    }
+
+    public long extractTokenVersion(String token) {
+        Object value = parse(token).get("tv");
+        return value instanceof Number number ? number.longValue() : 0L;
     }
 }

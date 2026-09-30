@@ -77,6 +77,21 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not authenticated"));
+        }
+        try {
+            authService.revokeSessions(authentication.getName());
+            return ResponseEntity.ok(Map.of("message", "Logged out"));
+        } catch (AuthService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(Authentication authentication,
                                             @RequestBody ChangePasswordRequest request) {

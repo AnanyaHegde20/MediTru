@@ -37,6 +37,9 @@ public class User {
 
     private String medicalCondition;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private Long tokenVersion = 0L;
+
     public enum UserRole { patient, doctor, admin }
 
     public User() {}
@@ -74,4 +77,15 @@ public class User {
     public void setAllergies(String allergies) { this.allergies = allergies; }
     public String getMedicalCondition() { return medicalCondition; }
     public void setMedicalCondition(String medicalCondition) { this.medicalCondition = medicalCondition; }
+
+    public Long getTokenVersion() { return tokenVersion; }
+    public void setTokenVersion(Long tokenVersion) { this.tokenVersion = tokenVersion; }
+
+    public long tokenVersionValue() { return tokenVersion == null ? 0 : tokenVersion; }
+
+    public long bumpTokenVersion() {
+        long next = tokenVersionValue() + 1;
+        tokenVersion = next;
+        return next;
+    }
 }

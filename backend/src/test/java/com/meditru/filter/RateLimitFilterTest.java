@@ -69,4 +69,30 @@ class RateLimitFilterTest {
         filter.doFilterInternal(request, response, chain);
         assertEquals(200, response.getStatus());
     }
+
+    @Test
+    void credentialEndpointsUseTheStricterAuthLimit() throws Exception {
+        MeditruProperties props = new MeditruProperties();
+        MeditruProperties.RateLimit rateLimit = new MeditruProperties.RateLimit();
+        rateLimit.setMaxRequests(50);
+        rateLimit.setAuthMaxRequests(2);
+        rateLimit.setWindowMs(60000);
+        props.setRateLimit(rateLimit);
+        RateLimitFilter authFilter = new RateLimitFilter(props);
+
+        for (int i = 0; i < 3; i++) {
+            MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/login");
+            request.setRemoteAddr("10.1.2.3");
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            authFilter.doFilterInternal(request, response, new MockFilterChain());
+            assertEquals(i < 2 ? 200 : 429, response.getStatus());
+        }
+
+        // The general bucket is tracked separately
+        MockHttpServletRequest other = new MockHttpServletRequest("GET", "/api/health");
+        other.setRemoteAddr("10.1.2.3");
+        MockHttpServletResponse otherResponse = new MockHttpServletResponse();
+        authFilter.doFilterInternal(other, otherResponse, new MockFilterChain());
+        assertEquals(200, otherResponse.getStatus());
+    }
 }

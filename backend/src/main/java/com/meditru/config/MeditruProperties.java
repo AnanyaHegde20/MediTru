@@ -75,10 +75,13 @@ public class MeditruProperties {
 
     public static class RateLimit {
         private int maxRequests = 100;
+        private int authMaxRequests = 10;
         private long windowMs = 60000;
 
         public int getMaxRequests() { return maxRequests; }
         public void setMaxRequests(int maxRequests) { this.maxRequests = maxRequests; }
+        public int getAuthMaxRequests() { return authMaxRequests; }
+        public void setAuthMaxRequests(int authMaxRequests) { this.authMaxRequests = authMaxRequests; }
         public long getWindowMs() { return windowMs; }
         public void setWindowMs(long windowMs) { this.windowMs = windowMs; }
     }
