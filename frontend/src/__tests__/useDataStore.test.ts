@@ -81,6 +81,28 @@ describe('useDataStore', () => {
     expect(useDataStore.getState().doctors[0].name).toBe('Dr. Test');
   });
 
+  it('deletes a doctor after the server confirms', async () => {
+    vi.stubGlobal('fetch', okFetch({}));
+    const doc = { id: 'd1', name: 'Dr. Test', specialty: 'Cardiology', avatar: '', rating: 5, reviewCount: 0, experienceYears: 10, consultationFee: 100, nextAvailable: 'Tomorrow', bio: '', hospital: '', education: '', slots: { morning: [], afternoon: [], evening: [] } } as any;
+    useDataStore.setState({ doctors: [doc] });
+
+    await useDataStore.getState().deleteDoctor('d1');
+
+    expect(useDataStore.getState().doctors).toHaveLength(0);
+  });
+
+  it('keeps the doctor when the server rejects the delete', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false, status: 500, text: async () => 'server exploded' }))
+    );
+    const doc = { id: 'd1', name: 'Dr. Test', specialty: 'Cardiology', avatar: '', rating: 5, reviewCount: 0, experienceYears: 10, consultationFee: 100, nextAvailable: 'Tomorrow', bio: '', hospital: '', education: '', slots: { morning: [], afternoon: [], evening: [] } } as any;
+    useDataStore.setState({ doctors: [doc] });
+
+    await expect(useDataStore.getState().deleteDoctor('d1')).rejects.toThrow('server exploded');
+    expect(useDataStore.getState().doctors).toHaveLength(1);
+  });
+
   it('books an appointment and adopts the server id', async () => {
     vi.stubGlobal('fetch', okFetch({ id: 42, status: 'Pending' }));
     const apt = { ...sampleAppointment, id: 'apt_1', status: 'Pending' } as any;

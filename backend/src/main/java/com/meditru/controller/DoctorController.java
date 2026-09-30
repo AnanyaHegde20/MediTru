@@ -70,6 +70,9 @@ public class DoctorController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
+        if (service.findById(id) == null) {
+            return ResponseEntity.notFound().build();
+        }
         service.delete(id);
         return ResponseEntity.noContent().build();
     }

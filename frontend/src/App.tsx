@@ -29,6 +29,8 @@ const SettingsView = React.lazy(() =>
   import('./components/views/SettingsView').then((m) => ({ default: m.SettingsView })));
 const UserManagementView = React.lazy(() =>
   import('./components/views/UserManagementView').then((m) => ({ default: m.UserManagementView })));
+const DoctorsDirectoryView = React.lazy(() =>
+  import('./components/views/DoctorsDirectoryView').then((m) => ({ default: m.DoctorsDirectoryView })));
 const ClinicalNotesModal = React.lazy(() =>
   import('./components/modals/ClinicalNotesModal').then((m) => ({ default: m.ClinicalNotesModal })));
 
@@ -365,6 +367,11 @@ function AdminRoutes() {
       <Route path="users" element={
         <RouteErrorBoundary>
           <UserManagementView />
+        </RouteErrorBoundary>
+      } />
+      <Route path="doctors" element={
+        <RouteErrorBoundary>
+          <DoctorsDirectoryView />
         </RouteErrorBoundary>
       } />
       <Route path="appointments" element={

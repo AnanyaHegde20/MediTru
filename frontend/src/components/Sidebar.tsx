@@ -14,6 +14,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Stethoscope,
 } from 'lucide-react';
 import { UserRole, UserProfile } from '../types';
 import { useDataStore } from '../store/useDataStore';
@@ -54,6 +55,7 @@ function getNavItems(role: UserRole, unreadMessages: number) {
         { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/admin/patients', label: 'Patients Directory', icon: Users },
         { path: '/admin/users', label: 'User Accounts', icon: UserCog },
+        { path: '/admin/doctors', label: 'Doctor Directory', icon: Stethoscope },
         { path: '/admin/appointments', label: 'Appointments', icon: Calendar },
         { path: '/admin/messages', label: 'Messages', icon: MessageSquare, count: messagesCount },
         { path: '/admin/analytics', label: 'Analytics & KPIs', icon: BarChart3 },

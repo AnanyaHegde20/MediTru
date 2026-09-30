@@ -10,6 +10,7 @@ import {
   UserCog,
   Users,
   BarChart3,
+  Stethoscope,
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -42,6 +43,7 @@ function getTabs(role: UserRole) {
         { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
         { path: '/admin/patients', label: 'Users', icon: Users },
         { path: '/admin/users', label: 'Accounts', icon: UserCog },
+        { path: '/admin/doctors', label: 'Doctors', icon: Stethoscope },
         { path: '/admin/appointments', label: 'Schedule', icon: Calendar },
         { path: '/admin/messages', label: 'Messages', icon: MessageSquare },
       ];
@@ -54,7 +56,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ role }) => {
   return (
     <nav
       id="mobile-bottom-nav"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1.5 shadow-lg flex justify-around items-center"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1.5 shadow-lg flex overflow-x-auto items-center scrollbar-none"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -63,7 +65,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ role }) => {
             key={tab.path}
             to={tab.path}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all relative ${
+              `flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all relative shrink-0 ${
                 isActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
               }`
             }

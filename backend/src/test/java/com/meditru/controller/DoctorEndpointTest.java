@@ -17,11 +17,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.Map;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -198,5 +202,31 @@ class DoctorEndpointTest {
                         .content(objectMapper.writeValueAsString(Map.of("name", "Dr. No Spec"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Specialty is required"));
+    }
+
+    @Test
+    void adminDeletesDoctorProfile() throws Exception {
+        mockMvc.perform(delete("/api/doctors/" + otherDoctorId)
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNoContent());
+
+        assertFalse(doctorRepository.existsById(otherDoctorId));
+        assertTrue(doctorRepository.existsById(ownDoctorId));
+    }
+
+    @Test
+    void doctorCannotDeleteProfiles() throws Exception {
+        mockMvc.perform(delete("/api/doctors/" + otherDoctorId)
+                        .header("Authorization", "Bearer " + doctorToken))
+                .andExpect(status().isForbidden());
+
+        assertTrue(doctorRepository.existsById(otherDoctorId));
+    }
+
+    @Test
+    void deletingUnknownDoctorReturnsNotFound() throws Exception {
+        mockMvc.perform(delete("/api/doctors/999999")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNotFound());
     }
 }

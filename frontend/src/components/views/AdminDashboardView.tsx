@@ -480,6 +480,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   Doctor Full Name
                 </label>
                 <input
+                  id="input-add-doctor-name"
                   type="text"
                   required
                   value={docName}
@@ -495,6 +496,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     Specialty
                   </label>
                   <select
+                    id="select-add-doctor-specialty"
                     value={docSpecialty}
                     onChange={(e) => setDocSpecialty(e.target.value)}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none"
@@ -542,6 +544,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   Cancel
                 </button>
                 <button
+                  id="btn-submit-add-doctor"
                   type="submit"
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs"
                 >

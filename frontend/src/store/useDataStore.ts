@@ -71,6 +71,7 @@ interface DataStore {
   addDoctor: (doc: Doctor) => void;
   createDoctorProfile: (doc: Omit<Doctor, 'id'>) => Promise<Doctor>;
   updateDoctor: (id: string, doc: Doctor) => Promise<void>;
+  deleteDoctor: (id: string) => Promise<void>;
   addLabReport: (report: LabReport) => void;
 }
 
@@ -673,6 +674,14 @@ export const useDataStore = create<DataStore>((set, get) => ({
     set((state) => ({
       doctors: state.doctors.map((d) => (d.id === id ? normalized : d)),
     }));
+  },
+
+  deleteDoctor: async (id) => {
+    const res = await apiFetch(apiUrl(`/api/doctors/${id}`), { method: 'DELETE' });
+    if (!res.ok && res.status !== 404) {
+      throw new Error(await readErrorMessage(res, 'Could not delete the doctor.'));
+    }
+    set((state) => ({ doctors: state.doctors.filter((d) => d.id !== id) }));
   },
 
   addLabReport: async (report) => {
