@@ -4,6 +4,7 @@ import com.meditru.dto.AuthUser;
 import com.meditru.dto.PageEnvelope;
 import com.meditru.entity.Appointment;
 import com.meditru.service.AppointmentService;
+import com.meditru.service.AuditLogService;
 import com.meditru.service.AuthService;
 import com.meditru.util.Csv;
 import com.meditru.util.Filters;
@@ -14,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/appointments")
@@ -21,10 +23,12 @@ public class AppointmentController {
 
     private final AppointmentService service;
     private final AuthService authService;
+    private final AuditLogService auditLog;
 
-    public AppointmentController(AppointmentService service, AuthService authService) {
+    public AppointmentController(AppointmentService service, AuthService authService, AuditLogService auditLog) {
         this.service = service;
         this.authService = authService;
+        this.auditLog = auditLog;
     }
 
     @GetMapping
@@ -116,7 +120,11 @@ public class AppointmentController {
                 throw new IllegalArgumentException("You can only book appointments for yourself");
             }
             apt.setPatientId(owner);
-            return ResponseEntity.ok(service.create(apt));
+            Appointment created = service.create(apt);
+            auditLog.record(actor.email(), actor.role(), "APPOINTMENT_BOOKED",
+                    "appointment", String.valueOf(created.getId()),
+                    created.getPatientName() + " with " + created.getDoctorName() + " on " + created.getDate());
+            return ResponseEntity.ok(created);
         } catch (AuthService.UnauthorizedException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
@@ -129,7 +137,15 @@ public class AppointmentController {
                                     Authentication authentication) {
         try {
             AuthUser actor = requireActor(authentication);
-            return ResponseEntity.ok(service.update(id, apt, actor));
+            Appointment before = service.findById(id);
+            String oldStatus = before != null ? before.getStatus() : null;
+            Appointment updated = service.update(id, apt, actor);
+            if (oldStatus != null && !Objects.equals(oldStatus, updated.getStatus())) {
+                auditLog.record(actor.email(), actor.role(), "APPOINTMENT_STATUS_CHANGED",
+                        "appointment", String.valueOf(id),
+                        oldStatus + " \u2192 " + updated.getStatus());
+            }
+            return ResponseEntity.ok(updated);
         } catch (AuthService.UnauthorizedException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {

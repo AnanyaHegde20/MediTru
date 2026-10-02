@@ -3,6 +3,7 @@ package com.meditru.controller;
 import com.meditru.dto.AuthUser;
 import com.meditru.dto.PageEnvelope;
 import com.meditru.entity.LabReport;
+import com.meditru.service.AuditLogService;
 import com.meditru.service.AuthService;
 import com.meditru.service.LabReportService;
 import com.meditru.util.Filters;
@@ -27,10 +28,12 @@ public class LabReportController {
 
     private final LabReportService service;
     private final AuthService authService;
+    private final AuditLogService auditLog;
 
-    public LabReportController(LabReportService service, AuthService authService) {
+    public LabReportController(LabReportService service, AuthService authService, AuditLogService auditLog) {
         this.service = service;
         this.authService = authService;
+        this.auditLog = auditLog;
     }
 
     @GetMapping
@@ -85,7 +88,10 @@ public class LabReportController {
                 throw new IllegalArgumentException("You can only create reports for yourself");
             }
             report.setPatientId(owner);
-            return ResponseEntity.ok(service.create(report));
+            LabReport created = service.create(report);
+            auditLog.record(actor.email(), actor.role(), "LAB_UPLOADED",
+                    "lab_report", String.valueOf(created.getId()), created.getName());
+            return ResponseEntity.ok(created);
         } catch (AuthService.UnauthorizedException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
@@ -121,7 +127,10 @@ public class LabReportController {
             metadata.setValuesJson(valuesJson);
             metadata.setAiSummaryJson(aiSummaryJson);
 
-            return ResponseEntity.ok(service.upload(file, metadata));
+            LabReport stored = service.upload(file, metadata);
+            auditLog.record(actor.email(), actor.role(), "LAB_UPLOADED",
+                    "lab_report", String.valueOf(stored.getId()), stored.getName());
+            return ResponseEntity.ok(stored);
         } catch (AuthService.UnauthorizedException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
@@ -173,6 +182,9 @@ public class LabReportController {
                         .body(Map.of("error", "You are not allowed to delete this report"));
             }
             service.delete(id);
+            auditLog.record(actor.email(), actor.role(), "LAB_DELETED",
+                    "lab_report", String.valueOf(id),
+                    report != null ? report.getName() : "Report " + id);
             return ResponseEntity.noContent().build();
         } catch (AuthService.UnauthorizedException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));

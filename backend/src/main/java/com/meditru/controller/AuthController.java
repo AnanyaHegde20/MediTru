@@ -6,6 +6,7 @@ import com.meditru.dto.ChangePasswordRequest;
 import com.meditru.dto.LoginRequest;
 import com.meditru.dto.RegisterRequest;
 import com.meditru.dto.UpdateProfileRequest;
+import com.meditru.service.AuditLogService;
 import com.meditru.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,16 +20,23 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final AuditLogService auditLog;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, AuditLogService auditLog) {
         this.authService = authService;
+        this.auditLog = auditLog;
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            return ResponseEntity.ok(authService.login(request));
+            AuthResponse response = authService.login(request);
+            auditLog.record(request.email(), response.user().role(), "LOGIN_SUCCESS",
+                    "session", null, "Signed in");
+            return ResponseEntity.ok(response);
         } catch (AuthService.UnauthorizedException e) {
+            auditLog.record(request.email(), "-", "LOGIN_FAILED",
+                    "session", null, "Invalid credentials");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
@@ -39,7 +47,10 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
-            return ResponseEntity.ok(authService.register(request));
+            AuthResponse response = authService.register(request);
+            auditLog.record(request.email(), "patient", "REGISTERED",
+                    "user", String.valueOf(response.user().id()), "Self-registered as patient");
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

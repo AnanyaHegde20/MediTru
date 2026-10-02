@@ -2,6 +2,7 @@ package com.meditru.controller;
 
 import com.meditru.dto.AuthUser;
 import com.meditru.entity.Prescription;
+import com.meditru.service.AuditLogService;
 import com.meditru.service.AuthService;
 import com.meditru.service.PrescriptionService;
 import org.springframework.http.HttpStatus;
@@ -17,10 +18,12 @@ public class PrescriptionController {
 
     private final PrescriptionService service;
     private final AuthService authService;
+    private final AuditLogService auditLog;
 
-    public PrescriptionController(PrescriptionService service, AuthService authService) {
+    public PrescriptionController(PrescriptionService service, AuthService authService, AuditLogService auditLog) {
         this.service = service;
         this.authService = authService;
+        this.auditLog = auditLog;
     }
 
     @GetMapping
@@ -65,7 +68,11 @@ public class PrescriptionController {
     public ResponseEntity<?> refill(@PathVariable Long id, Authentication authentication) {
         try {
             AuthUser actor = requireActor(authentication);
-            return ResponseEntity.ok(service.requestRefill(id, actor));
+            Prescription updated = service.requestRefill(id, actor);
+            auditLog.record(actor.email(), actor.role(), "REFILL_REQUESTED",
+                    "prescription", String.valueOf(id),
+                    "Refill requested for " + updated.getMedicationName());
+            return ResponseEntity.ok(updated);
         } catch (AuthService.UnauthorizedException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {

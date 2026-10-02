@@ -2,6 +2,7 @@ package com.meditru.controller;
 
 import com.meditru.dto.AuthUser;
 import com.meditru.entity.Doctor;
+import com.meditru.service.AuditLogService;
 import com.meditru.service.AuthService;
 import com.meditru.service.DoctorService;
 import org.springframework.http.HttpStatus;
@@ -18,10 +19,12 @@ public class DoctorController {
 
     private final DoctorService service;
     private final AuthService authService;
+    private final AuditLogService auditLog;
 
-    public DoctorController(DoctorService service, AuthService authService) {
+    public DoctorController(DoctorService service, AuthService authService, AuditLogService auditLog) {
         this.service = service;
         this.authService = authService;
+        this.auditLog = auditLog;
     }
 
     @GetMapping
@@ -39,9 +42,15 @@ public class DoctorController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody Doctor doctor) {
+    public ResponseEntity<?> create(@RequestBody Doctor doctor, Authentication authentication) {
         try {
-            return ResponseEntity.ok(service.create(doctor));
+            AuthUser actor = requireActor(authentication);
+            Doctor created = service.create(doctor);
+            auditLog.record(actor.email(), actor.role(), "DOCTOR_CREATED",
+                    "doctor", String.valueOf(created.getId()), "Added " + created.getName());
+            return ResponseEntity.ok(created);
+        } catch (AuthService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -69,11 +78,15 @@ public class DoctorController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (service.findById(id) == null) {
+    public ResponseEntity<Void> delete(@PathVariable Long id, Authentication authentication) {
+        Doctor existing = service.findById(id);
+        if (existing == null) {
             return ResponseEntity.notFound().build();
         }
+        AuthUser actor = requireActor(authentication);
         service.delete(id);
+        auditLog.record(actor.email(), actor.role(), "DOCTOR_DELETED",
+                "doctor", String.valueOf(id), "Removed " + existing.getName());
         return ResponseEntity.noContent().build();
     }
 

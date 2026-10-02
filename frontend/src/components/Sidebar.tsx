@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Stethoscope,
+  History,
 } from 'lucide-react';
 import { UserRole, UserProfile } from '../types';
 import { useDataStore } from '../store/useDataStore';
@@ -59,6 +60,7 @@ function getNavItems(role: UserRole, unreadMessages: number) {
         { path: '/admin/appointments', label: 'Appointments', icon: Calendar },
         { path: '/admin/messages', label: 'Messages', icon: MessageSquare, count: messagesCount },
         { path: '/admin/analytics', label: 'Analytics & KPIs', icon: BarChart3 },
+        { path: '/admin/audit', label: 'Audit Log', icon: History },
         { path: '/admin/settings', label: 'System Settings', icon: Settings },
       ];
   }
