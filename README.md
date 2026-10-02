@@ -1,6 +1,6 @@
 # MediTru — Modern Healthcare Management Platform
 
-MediTru is a full-stack web application for managing healthcare workflows. It provides separate **Patient**, **Doctor**, and **Admin** workspaces with appointment booking, medical records, prescriptions, an AI Health Assistant, and AI-generated clinical notes (SOAP) for doctors.
+MediTru is a full-stack web application for managing healthcare workflows. It provides separate **Patient**, **Doctor**, and **Admin** workspaces with appointment booking, medical records, prescriptions, an AI Health Assistant, AI-generated clinical notes (SOAP) for doctors, a live notification bell backed by server-side appointment reminders, dedicated analytics views, and CSV exports.
 
 - **Frontend:** React 19 + Vite + Tailwind CSS (`frontend/`)
 - **Backend:** Java 17 + Spring Boot 3.4 + Google Gemini API (`backend/`)
@@ -17,9 +17,15 @@ MediTru/
 │   └── src/main/java/com/meditru/
 │       ├── MediTruApplication.java
 │       ├── controller/   # REST controllers
-│       ├── service/      # Gemini API service
+│       ├── service/      # Business services (auth, appointments, Gemini, notifications, …)
+│       ├── entity/       # JPA entities
+│       ├── repository/   # Spring Data repositories
+│       ├── security/     # JWT issuing/validation + auth filter
 │       ├── filter/       # Rate limiting, security headers, logging
-│       ├── config/       # CORS, properties
+│       ├── config/       # CORS, scheduling, properties
+│       ├── seed/         # Demo data seeder
+│       ├── advice/       # Global exception handling
+│       ├── util/         # CSV helpers, validators
 │       └── dto/          # Request/response records
 ├── frontend/   # React + Vite app (port 3000)
 │   ├── Dockerfile
@@ -125,7 +131,7 @@ cd frontend
 npm run e2e
 ```
 
-Starts the backend (port 3001) and frontend dev server (port 3000) automatically via Playwright's `webServer`, then runs the specs in `frontend/e2e/` (login for all three roles, appointment booking, messaging, lab report upload). Uses the locally installed Chrome/Edge-channel Chrome — no browser download needed. Servers already running on those ports are reused outside CI.
+Starts the backend (port 3001) and frontend dev server (port 3000) automatically via Playwright's `webServer`, then runs the specs in `frontend/e2e/` (login for all three roles, appointment booking including conflict prevention, messaging, lab report upload, notification bell, analytics, CSV export, session revocation, password reset, and error toasts). Uses the locally installed Chrome/Edge-channel Chrome — no browser download needed. Servers already running on those ports are reused outside CI.
 
 ## API Endpoints
 
@@ -148,14 +154,23 @@ AI calls are hardened: 5s connect / 30s read timeouts, API key sent via the `x-g
 | POST | `/api/auth/login` | Login with email + password → `{ token, user }` (401 on bad credentials) |
 | POST | `/api/auth/register` | Create a **patient** account `{ name, email, password }` → `{ token, user }` (doctor/admin roles are rejected; admins create staff accounts via `/api/users`) |
 | GET | `/api/auth/me` | Current user from `Authorization: Bearer <token>` header |
+| PUT | `/api/auth/me` | Partial profile update (name, avatar, phone, allergies, …) |
+| POST | `/api/auth/change-password` | Change own password `{ currentPassword, newPassword }` (min 8 chars) → `{"message":"Password updated"}`; revokes every existing session, so the user must sign in again |
+| POST | `/api/auth/logout` | Revoke all sessions for the token's user → `{"message":"Logged out"}` (401 when unauthenticated) |
 
 All other `/api/**` endpoints require a valid JWT. Role rules:
 - `DELETE /api/**` → ADMIN only
-- `/api/users` GET/POST → ADMIN only
-- `GET /api/patients` → DOCTOR or ADMIN
+- `/api/users` GET/POST/PUT → ADMIN only, including `POST /api/users/{id}/reset-password`
+- `GET /api/appointments/export`, `GET /api/users/export` → ADMIN only (CSV downloads)
+- `/api/patients` → DOCTOR or ADMIN
 - `/api/prescriptions` POST/PUT, `/api/patient-queue` GET/POST/PUT, `/api/doctors` POST/PUT → DOCTOR or ADMIN
 - `POST /api/prescriptions/{id}/refill` → any authenticated user (owner checked in service)
+- `/api/notifications` → any authenticated user (scoped to the caller)
 - everything else → any authenticated user
+
+**Session revocation:** JWTs carry a per-user token version. Logging out (`POST /api/auth/logout`), changing your own password, or an admin resetting a password bumps that version, so every previously issued token is rejected with 401 immediately — even if it has not expired yet. Deleted users' tokens are rejected too.
+
+**Rate limiting:** API requests are limited per IP (`meditru.rate-limit.max-requests`, default 100 per `meditru.rate-limit.window-ms`). Credential endpoints (`/api/auth/login`, `/api/auth/register`) use a stricter bucket (`meditru.rate-limit.auth-max-requests`, default 10). Exceeding a limit returns 429 with `{"error": …}`; the frontend surfaces throttled background requests as a toast.
 
 **Ownership rules:** patients only ever see their own records — `GET /api/lab-reports`, `/api/prescriptions`, and `/api/appointments` are automatically scoped to the caller (a `patientId` query parameter from a patient is ignored), get-by-id on someone else's record returns 404, and creating a report/appointment for another patient returns 400. Doctors and admins read clinical data broadly. Doctor availability is owned: `PUT /api/doctors/{id}` allows an admin to edit any profile, but a doctor only the profile whose `email` matches their account (anyone else gets 403).
 
@@ -174,6 +189,8 @@ All other `/api/**` endpoints require a valid JWT. Role rules:
 | PUT | `/api/users/{id}` | Partial update user |
 | DELETE | `/api/users/{id}` | Delete user (204) |
 | GET | `/api/users/email/{email}` | Lookup user by email |
+| POST | `/api/users/{id}/reset-password` | Admin sets a new password `{ password }` (min 8 chars); 404 for unknown users, 400 for short passwords. Revokes the user's sessions — they must sign in with the new password |
+| GET | `/api/users/export` | Download all users as CSV (no password column) |
 
 ### Patients
 
@@ -202,8 +219,11 @@ Doctors manage their published time slots from **Settings → My Availability** 
 | GET | `/api/appointments/{id}` | Get appointment by id |
 | PUT | `/api/appointments/{id}` | Update appointment; status changes are validated (see workflow below) |
 | DELETE | `/api/appointments/{id}` | Delete appointment (204) |
+| GET | `/api/appointments/export` | Download all appointments as CSV (ADMIN) |
 
 **Appointment status workflow:** `Pending → Confirmed → In Progress → Completed`; `Cancelled` is allowed from `Pending` or `Confirmed`. Terminal states (`Completed`, `Cancelled`) cannot be left. Unknown statuses and invalid transitions return 400. Only doctors/admins can confirm, start, or complete; a patient can cancel their own appointment.
+
+**Double-booking prevention:** creating an appointment always checks that the doctor has no other non-cancelled appointment at the same date + time; updating one performs the same check only when the slot changed. Conflicts return 400 with `{"error": "That time slot is already booked. Please pick another time."}`. The booking UI only offers the doctor's published slots.
 
 ### Prescriptions
 
@@ -252,6 +272,15 @@ Doctors manage their published time slots from **Settings → My Availability** 
 
 **Visibility:** a thread is visible to its two participants and to admins (oversight). Non-participants get 400 on read/send. `partnerName` is matched against registered users first (linking real accounts); unknown names become external participants (e.g. demo clinical staff). Unread counts reset when a participant opens the thread.
 
+### Notifications
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/notifications` | Appointment reminders for the signed-in user, newest first; runs a reconciliation scan first so the list is always current |
+| POST | `/api/notifications/read-all` | Mark every notification for the caller as read → `{"message":"All notifications marked read"}` |
+
+Reminders are generated **server-side**: a scheduled scan (`@Scheduled`, every `meditru.notifications.scan-interval-ms`, default 60s) reconciles a `notifications` table against the appointments table — patients get a row for each of their `Pending`/`Confirmed` appointments ("Appointment Reminder"), the appointment's doctor gets one for `Pending` ("Appointment Request", matched by doctor name to a doctor account), and admins get one per platform-wide `Pending` appointment ("Pending Appointment"). Rows disappear automatically when an appointment is cancelled/completed/deleted. Read state is stored per user on the server, so "Mark all read" survives reloads and different devices; the bell merges these with client-side activity (lab reports, refill requests, new messages).
+
 ### Example Request — Health Assistant
 
 ```json
@@ -284,6 +313,11 @@ POST /api/gemini/clinical-notes
 | `ALLOWED_ORIGINS` | `http://localhost:3000` | CORS allowed origins |
 | `JWT_SECRET` | dev secret | JWT signing secret (set a long random value in production) |
 | `JWT_EXPIRATION_MS` | `86400000` | Token lifetime in ms (default 24h) |
+| `MEDITRU_RATELIMIT_MAXREQUESTS` | `100` | General API requests allowed per IP per window |
+| `MEDITRU_RATELIMIT_WINDOWMS` | `60000` | Rate-limit window in ms |
+| `MEDITRU_RATELIMIT_AUTHMAXREQUESTS` | `10` | Requests for `/api/auth/login` + `/api/auth/register` per window |
+| `MEDITRU_NOTIFICATIONS_SCANINTERVALMS` | `60000` | Delay between scheduled notification scans (ms) |
+| `MEDITRU_NOTIFICATIONS_SCANINITIALDELAYMS` | `15000` | Delay before the first scheduled scan after boot (ms) |
 
 ## Role-Based URLs
 
@@ -292,7 +326,18 @@ POST /api/gemini/clinical-notes
 | `/login` | Login page |
 | `/patient/*` | Patient portal |
 | `/doctor/*` | Doctor portal |
+| `/doctor/analytics` | Doctor visits & earnings analytics |
 | `/admin/*` | Admin console |
+| `/admin/analytics` | Platform revenue, trends, and specialty analytics |
+| `/admin/doctors` | Admin doctor directory (edit / delete) |
+
+## Frontend Behavior
+
+- **Notification bell** (top navbar): merges server-side appointment reminders with lab-report, refill, and message activity; the red unread dot reflects server read state plus locally-seen client items, and **Mark all read** persists both.
+- **Error toasts:** failed background GETs (after one automatic retry) and throttled requests show a global error toast; mutations surface their own error messages. Duplicate toasts for the same message are suppressed for 4 seconds.
+- **Session safety:** changing your password in **Settings** signs you out everywhere (you must sign in again); an admin resetting your password does the same.
+- **Analytics:** admins and doctors get dedicated analytics views (appointments trend, status/specialty breakdown, revenue by doctor / visits & earnings) separate from the dashboard ledgers.
+- **CSV exports:** admin-only download buttons on the appointments list and user accounts pages.
 
 ## CI/CD
 
