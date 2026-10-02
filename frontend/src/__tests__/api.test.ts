@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch, API_ERROR_EVENT, resetApiErrorDebounce } from '../lib/api';
 
 const okResponse = { ok: true, status: 200 };
@@ -107,5 +107,60 @@ describe('apiFetch retry and error UX', () => {
 
     window.removeEventListener(API_ERROR_EVENT, handler);
     expect(handler).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('API health endpoint (integration)', () => {
+  let backendAvailable = false;
+
+  beforeAll(async () => {
+    try {
+      const res = await fetch('http://localhost:3001/api/health');
+      backendAvailable = res.ok;
+    } catch {
+      backendAvailable = false;
+    }
+  });
+
+  it('backend health check returns ok', async () => {
+    if (!backendAvailable) return;
+    const res = await fetch('http://localhost:3001/api/health');
+    const data = await res.json();
+    expect(data.status).toBe('ok');
+    expect(typeof data.hasGeminiKey).toBe('boolean');
+  });
+
+  it('protected endpoint rejects requests without a token', async () => {
+    if (!backendAvailable) return;
+    const res = await fetch('http://localhost:3001/api/doctors');
+    expect(res.status).toBe(401);
+  });
+
+  it('health-assistant rejects empty message when authenticated', async () => {
+    if (!backendAvailable) return;
+    const loginRes = await fetch('http://localhost:3001/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'admin@medicare.health', password: 'password' }),
+    });
+    if (!loginRes.ok) return; // seeded users not present
+    const { token } = await loginRes.json();
+
+    const res = await fetch('http://localhost:3001/api/gemini/health-assistant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ message: '', history: [] }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('login rejects wrong password', async () => {
+    if (!backendAvailable) return;
+    const res = await fetch('http://localhost:3001/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'admin@medicare.health', password: 'wrong-password' }),
+    });
+    expect(res.status).toBe(401);
   });
 });
