@@ -1,5 +1,6 @@
-import React, { createContext, useCallback, useContext, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { CheckCircle2, Info, X, AlertCircle } from "lucide-react";
+import { API_ERROR_EVENT } from "../lib/api";
 
 type ToastType = "success" | "info" | "error";
 
@@ -32,6 +33,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent).detail as { message?: string } | undefined;
+      if (detail?.message) {
+        showToast(detail.message, "error");
+      }
+    };
+    window.addEventListener(API_ERROR_EVENT, handler);
+    return () => window.removeEventListener(API_ERROR_EVENT, handler);
+  }, [showToast]);
+
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
@@ -40,6 +52,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
+            id="app-toast"
+            data-toast-type={toast.type}
             className="pointer-events-auto bg-white border border-slate-200 shadow-lg rounded-xl px-4 py-3 flex items-center gap-3 min-w-[280px] max-w-sm animate-in fade-in slide-in-from-bottom-2"
           >
             {toast.type === "success" ? (
