@@ -26,6 +26,7 @@ public class User {
     private UserRole role;
 
     private String avatar;
+    private String avatarFileName;
     private String badge;
     private Integer age;
     private String gender;
@@ -63,6 +64,8 @@ public class User {
     public void setRole(UserRole role) { this.role = role; }
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }
+    public String getAvatarFileName() { return avatarFileName; }
+    public void setAvatarFileName(String avatarFileName) { this.avatarFileName = avatarFileName; }
     public String getBadge() { return badge; }
     public void setBadge(String badge) { this.badge = badge; }
     public Integer getAge() { return age; }

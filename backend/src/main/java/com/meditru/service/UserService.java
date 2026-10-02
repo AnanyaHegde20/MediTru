@@ -1,21 +1,42 @@
 package com.meditru.service;
 
+import com.meditru.config.MeditruProperties;
+import com.meditru.entity.Doctor;
 import com.meditru.entity.User;
 import com.meditru.entity.User.UserRole;
+import com.meditru.repository.DoctorRepository;
 import com.meditru.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class UserService {
 
+    private static final Set<String> ALLOWED_AVATAR_TYPES = Set.of("png", "jpg", "jpeg", "webp");
+    private static final long MAX_AVATAR_BYTES = 2L * 1024 * 1024;
+
     private final UserRepository repo;
     private final PasswordEncoder passwordEncoder;
+    private final MeditruProperties properties;
+    private final DoctorRepository doctorRepository;
 
-    public UserService(UserRepository repo, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository repo, PasswordEncoder passwordEncoder,
+                       MeditruProperties properties, DoctorRepository doctorRepository) {
         this.repo = repo;
         this.passwordEncoder = passwordEncoder;
+        this.properties = properties;
+        this.doctorRepository = doctorRepository;
     }
 
     public List<User> findAll() { return repo.findAll(); }
@@ -70,4 +91,58 @@ public class UserService {
     }
 
     public long countByRole(UserRole role) { return repo.countByRole(role); }
+
+    public User saveAvatar(Long id, MultipartFile file) {
+        User user = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("A file is required");
+        }
+        String originalName = file.getOriginalFilename() == null ? "" : file.getOriginalFilename();
+        String extension = originalName.contains(".")
+                ? originalName.substring(originalName.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT)
+                : "";
+        if (!ALLOWED_AVATAR_TYPES.contains(extension)) {
+            throw new IllegalArgumentException("Unsupported file type: " + extension
+                    + " (allowed: png, jpg, jpeg, webp)");
+        }
+        if (file.getSize() > MAX_AVATAR_BYTES) {
+            throw new IllegalArgumentException("File is too large (max 2 MB)");
+        }
+
+        Path avatarsDir = Path.of(properties.getStorageDir()).resolve("avatars");
+        try {
+            if (user.getAvatarFileName() != null && !user.getAvatarFileName().isBlank()) {
+                Files.deleteIfExists(avatarsDir.resolve(user.getAvatarFileName()).normalize());
+            }
+            Files.createDirectories(avatarsDir);
+            String storedName = UUID.randomUUID() + "." + extension;
+            Files.copy(file.getInputStream(), avatarsDir.resolve(storedName),
+                    StandardCopyOption.REPLACE_EXISTING);
+            user.setAvatarFileName(storedName);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not store the uploaded photo", e);
+        }
+        user.setAvatar("/api/users/" + id + "/avatar?v=" + System.currentTimeMillis());
+        User saved = repo.save(user);
+
+        Doctor doctor = doctorRepository.findByEmailIgnoreCase(saved.getEmail());
+        if (doctor != null) {
+            doctor.setAvatar(saved.getAvatar());
+            doctorRepository.save(doctor);
+        }
+        return saved;
+    }
+
+    public Path resolveAvatarFile(Long id) {
+        User user = repo.findById(id).orElse(null);
+        if (user == null || user.getAvatarFileName() == null || user.getAvatarFileName().isBlank()) {
+            return null;
+        }
+        Path avatarsDir = Path.of(properties.getStorageDir()).resolve("avatars").normalize();
+        Path path = avatarsDir.resolve(user.getAvatarFileName()).normalize();
+        if (!path.startsWith(avatarsDir)) {
+            return null;
+        }
+        return Files.isRegularFile(path) ? path : null;
+    }
 }

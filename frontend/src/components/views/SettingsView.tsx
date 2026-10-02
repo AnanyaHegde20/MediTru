@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { CalendarClock, Lock, Plus, User, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { CalendarClock, Lock, Plus, Upload, User, X } from 'lucide-react';
 import { Doctor } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
-import { getToken } from '../../lib/api';
+import { getToken, postMultipart } from '../../lib/api';
 import { useDataStore } from '../../store/useDataStore';
 import { useToast } from '../Toast';
 
@@ -76,6 +76,46 @@ export const SettingsView: React.FC = () => {
   const [profileAllergies, setProfileAllergies] = useState('');
   const [profileCondition, setProfileCondition] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const avatarFileRef = useRef<HTMLInputElement>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentUser) return;
+    const allowed = ['image/png', 'image/jpeg', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      showToast('Please choose a PNG, JPG, or WEBP image.', 'error');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('Image must be 2 MB or smaller.', 'error');
+      e.target.value = '';
+      return;
+    }
+    setIsUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await postMultipart(`/api/users/${currentUser.id}/avatar`, formData);
+      const data = await res.json().catch(() => ({}) as Record<string, string>);
+      if (!res.ok) {
+        throw new Error(
+          (data as { error?: string }).error || 'Could not upload the photo.'
+        );
+      }
+      const avatar = (data as { avatar?: string }).avatar ?? '';
+      const result = await updateProfile({ avatar });
+      if (result.error) throw new Error(result.error);
+      setProfileAvatar(avatar);
+      showToast('Profile photo updated.');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Could not upload the photo.', 'error');
+    } finally {
+      setIsUploadingAvatar(false);
+      e.target.value = '';
+    }
+  };
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -358,6 +398,38 @@ export const SettingsView: React.FC = () => {
               onChange={(e) => setProfileAvatar(e.target.value)}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                id="btn-upload-avatar"
+                type="button"
+                onClick={() => avatarFileRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-60 text-slate-600 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+              >
+                {isUploadingAvatar ? (
+                  <span className="inline-block w-3.5 h-3.5 border-2 border-slate-300 border-t-blue-600 rounded-full animate-spin" />
+                ) : (
+                  <Upload className="w-3.5 h-3.5" />
+                )}
+                <span>{isUploadingAvatar ? 'Uploading…' : 'Upload photo'}</span>
+              </button>
+              <input
+                ref={avatarFileRef}
+                id="input-avatar-file"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={handleAvatarFile}
+              />
+              {profileAvatar && (
+                <img
+                  src={profileAvatar}
+                  alt="Avatar preview"
+                  className="w-8 h-8 rounded-full object-cover border border-slate-200"
+                  referrerPolicy="no-referrer"
+                />
+              )}
+            </div>
           </div>
           {currentUser?.role === 'doctor' && (
             <div className="space-y-1">

@@ -95,3 +95,7 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
 
   return res;
 }
+
+export async function postMultipart(path: string, formData: FormData): Promise<Response> {
+  return apiFetch(path, { method: 'POST', body: formData });
+}

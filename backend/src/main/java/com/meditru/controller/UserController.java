@@ -7,10 +7,16 @@ import com.meditru.service.AuditLogService;
 import com.meditru.service.UserService;
 import com.meditru.util.Csv;
 import com.meditru.util.Filters;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -136,6 +142,46 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @PostMapping("/{id}/avatar")
+    public ResponseEntity<?> uploadAvatar(@PathVariable Long id,
+                                          @RequestParam("file") MultipartFile file,
+                                          Authentication authentication) {
+        User user = service.findById(id);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        boolean isSelf = actorEmail(authentication).equalsIgnoreCase(user.getEmail());
+        boolean isAdmin = "admin".equals(actorRole(authentication));
+        if (!isSelf && !isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "You can only update your own avatar"));
+        }
+        try {
+            User updated = service.saveAvatar(id, file);
+            auditLog.record(actorEmail(authentication), actorRole(authentication), "AVATAR_UPDATED",
+                    "user", String.valueOf(id), "Profile photo updated for " + updated.getEmail());
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}/avatar")
+    public ResponseEntity<Resource> avatar(@PathVariable Long id) {
+        Path file = service.resolveAvatarFile(id);
+        if (file == null) {
+            return ResponseEntity.notFound().build();
+        }
+        String name = file.getFileName().toString().toLowerCase();
+        MediaType type = name.endsWith(".png") ? MediaType.IMAGE_PNG
+                : name.endsWith(".webp") ? MediaType.parseMediaType("image/webp")
+                : MediaType.IMAGE_JPEG;
+        return ResponseEntity.ok()
+                .contentType(type)
+                .header(HttpHeaders.CACHE_CONTROL, "private, max-age=3600")
+                .body(new FileSystemResource(file));
     }
 
     private String actorEmail(Authentication authentication) {
