@@ -15,6 +15,7 @@ import {
   readSeenIds,
   writeSeenIds,
 } from '../lib/notifications';
+import { useEscapeKey } from './ui/Dialog';
 
 interface NavbarProps {
   currentUser: import('../types').UserProfile;
@@ -38,6 +39,25 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
   const markServerNotificationsRead = useDataStore((state) => state.markServerNotificationsRead);
 
   const [seenIds, setSeenIds] = useState<string[]>(() => readSeenIds(currentUser.email ?? ''));
+
+  const anyPopoverOpen = showNotifications || showRoleMenu;
+  useEscapeKey(anyPopoverOpen, () => {
+    setShowNotifications(false);
+    setShowRoleMenu(false);
+  });
+
+  useEffect(() => {
+    if (!anyPopoverOpen) return;
+    const onPointerDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('#notifications-popover, #role-switch-dropdown')) return;
+      if (target.closest('#btn-notifications-bell, #btn-role-switcher')) return;
+      setShowNotifications(false);
+      setShowRoleMenu(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, [anyPopoverOpen]);
 
   useEffect(() => {
     fetchLabReports();
@@ -140,6 +160,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
               }}
               className="relative p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all cursor-pointer"
               aria-label="Notifications"
+              aria-haspopup="true"
+              aria-expanded={showNotifications}
+              aria-controls={showNotifications ? 'notifications-popover' : undefined}
             >
               <Bell className="w-4 h-4 md:w-5 md:h-5" />
               {unreadCount > 0 && (
@@ -208,6 +231,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
                 setShowNotifications(false);
               }}
               className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-2xs cursor-pointer"
+              aria-haspopup="true"
+              aria-expanded={showRoleMenu}
+              aria-controls={showRoleMenu ? 'role-switch-dropdown' : undefined}
             >
               <img
                 src={currentUser.avatar}

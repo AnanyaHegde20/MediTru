@@ -14,6 +14,7 @@ import {
 import { Appointment, Doctor, UserProfile } from '../../types';
 import { useToast } from '../Toast';
 import { useDataStore } from '../../store/useDataStore';
+import { Dialog } from '../ui/Dialog';
 
 interface AdminDashboardViewProps {
   onAddDoctor: (doc: Doctor) => void;
@@ -247,16 +248,21 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
       {/* Add Doctor Modal */}
       {showAddDoctorModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
+        <Dialog
+          onClose={() => setShowAddDoctorModal(false)}
+          labelledBy="add-doctor-title"
+          overlayClassName="bg-slate-900/50 backdrop-blur-xs animate-in fade-in"
+        >
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 relative">
             <button
               onClick={() => setShowAddDoctorModal(false)}
+              aria-label="Close"
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <h3 className="text-base font-bold text-slate-900 mb-1">Add Healthcare Provider</h3>
+            <h3 id="add-doctor-title" className="text-base font-bold text-slate-900 mb-1">Add Healthcare Provider</h3>
             <p className="text-xs text-slate-500 mb-4">
               Register a certified doctor to the MediTru directory and scheduling system.
             </p>
@@ -340,7 +346,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               </div>
             </form>
           </div>
-        </div>
+        </Dialog>
       )}
     </div>
   );

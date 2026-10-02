@@ -17,6 +17,7 @@ import confetti from 'canvas-confetti';
 import { ActiveTab, Doctor, Appointment, UserProfile } from '../../types';
 import { useToast } from '../Toast';
 import { SLOT_PERIODS, hasPublishedSlots, resolveTimeSlot, visibleSlots } from '../../lib/bookingSlots';
+import { Dialog } from '../ui/Dialog';
 
 interface AppointmentBookingViewProps {
   doctors: Doctor[];
@@ -371,10 +372,15 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
 
       {/* Booking Success Modal */}
       {showSuccessModal && bookedAppointmentInfo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
+        <Dialog
+          onClose={() => setShowSuccessModal(false)}
+          labelledBy="booking-success-title"
+          overlayClassName="bg-slate-900/50 backdrop-blur-xs animate-in fade-in"
+        >
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-center relative">
             <button
               onClick={() => setShowSuccessModal(false)}
+              aria-label="Close"
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg"
             >
               <X className="w-4 h-4" />
@@ -384,7 +390,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
               <CheckCircle2 className="w-6 h-6" />
             </div>
 
-            <h3 className="text-lg font-bold text-slate-900">Appointment Requested!</h3>
+            <h3 id="booking-success-title" className="text-lg font-bold text-slate-900">Appointment Requested!</h3>
             <p className="text-xs text-slate-500 mt-1">
               Your appointment with <strong>{bookedAppointmentInfo.doctorName}</strong> has been
               requested and is awaiting confirmation.
@@ -429,7 +435,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </Dialog>
       )}
     </div>
   );

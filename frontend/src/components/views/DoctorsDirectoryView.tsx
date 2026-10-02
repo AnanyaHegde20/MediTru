@@ -3,6 +3,7 @@ import { Pencil, Search, Star, Stethoscope, Trash2, X } from 'lucide-react';
 import { Doctor } from '../../types';
 import { useDataStore } from '../../store/useDataStore';
 import { useToast } from '../Toast';
+import { Dialog } from '../ui/Dialog';
 
 const SPECIALTY_OPTIONS = [
   'Cardiology',
@@ -265,16 +266,18 @@ export const DoctorsDirectoryView: React.FC = () => {
       </div>
 
       {editing && (
-        <div
+        <Dialog
           id="doctor-edit-modal"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+          onClose={closeEdit}
+          labelledBy="edit-doctor-title"
+          overlayClassName="bg-slate-900/40"
         >
           <form
             onSubmit={handleSave}
             className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md p-5 space-y-4"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-900">Edit Doctor Profile</h2>
+              <h2 id="edit-doctor-title" className="text-base font-bold text-slate-900">Edit Doctor Profile</h2>
               <button
                 type="button"
                 onClick={closeEdit}
@@ -354,7 +357,7 @@ export const DoctorsDirectoryView: React.FC = () => {
               </button>
             </div>
           </form>
-        </div>
+        </Dialog>
       )}
     </div>
   );

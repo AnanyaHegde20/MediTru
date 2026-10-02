@@ -214,6 +214,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             id="btn-logout"
             onClick={handleLogout}
             title="Sign Out / Switch Role"
+            aria-label="Sign out"
             className={`p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shrink-0 ${
               isCollapsed ? 'hidden' : 'ml-1'
             }`}

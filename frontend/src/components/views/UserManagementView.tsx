@@ -4,6 +4,7 @@ import { UserProfile, UserRole } from '../../types';
 import { useDataStore } from '../../store/useDataStore';
 import { useToast } from '../Toast';
 import { downloadCsv } from '../../lib/csvDownload';
+import { Dialog } from '../ui/Dialog';
 
 const ROLE_OPTIONS: UserRole[] = ['patient', 'doctor', 'admin'];
 
@@ -297,16 +298,18 @@ export const UserManagementView: React.FC = () => {
       </div>
 
       {showCreateModal && (
-        <div
+        <Dialog
           id="user-create-modal"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+          onClose={closeCreateModal}
+          labelledBy="create-user-title"
+          overlayClassName="bg-slate-900/40"
         >
           <form
             onSubmit={handleCreate}
             className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md p-5 space-y-4"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-900">Create User Account</h2>
+              <h2 id="create-user-title" className="text-base font-bold text-slate-900">Create User Account</h2>
               <button
                 type="button"
                 onClick={closeCreateModal}
@@ -396,13 +399,15 @@ export const UserManagementView: React.FC = () => {
               </button>
             </div>
           </form>
-        </div>
+        </Dialog>
       )}
 
       {pendingReset && (
-        <div
+        <Dialog
           id="reset-password-modal"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+          onClose={closeResetModal}
+          labelledBy="reset-password-title"
+          overlayClassName="bg-slate-900/40"
         >
           <form
             onSubmit={handleReset}
@@ -410,7 +415,7 @@ export const UserManagementView: React.FC = () => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-bold text-slate-900">Reset Password</h2>
+                <h2 id="reset-password-title" className="text-base font-bold text-slate-900">Reset Password</h2>
                 <p className="text-xs text-slate-400 mt-0.5">{pendingReset.email}</p>
               </div>
               <button
@@ -482,7 +487,7 @@ export const UserManagementView: React.FC = () => {
               </button>
             </div>
           </form>
-        </div>
+        </Dialog>
       )}
     </div>
   );

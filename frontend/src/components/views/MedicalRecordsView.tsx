@@ -20,6 +20,7 @@ import { LabReport, Prescription, UserProfile } from '../../types';
 import { downloadLabReport } from '../../lib/labReportDownload';
 import { downloadPrescription } from '../../lib/prescriptionDownload';
 import { useToast } from '../Toast';
+import { Dialog } from '../ui/Dialog';
 
 interface MedicalRecordsViewProps {
   currentUser: UserProfile;
@@ -597,16 +598,21 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
 
       {/* Upload Drag & Drop Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
+        <Dialog
+          onClose={() => setShowUploadModal(false)}
+          labelledBy="upload-document-title"
+          overlayClassName="bg-slate-900/50 backdrop-blur-xs animate-in fade-in"
+        >
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 relative">
             <button
               onClick={() => setShowUploadModal(false)}
+              aria-label="Close"
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <h3 className="text-base font-bold text-slate-900 mb-1">Upload Medical Document</h3>
+            <h3 id="upload-document-title" className="text-base font-bold text-slate-900 mb-1">Upload Medical Document</h3>
             <p className="text-xs text-slate-500 mb-4">
               Add lab panels, doctor prescriptions, or radiology imaging records.
             </p>
@@ -738,21 +744,26 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
               </div>
             </form>
           </div>
-        </div>
+        </Dialog>
       )}
 
       {/* New Prescription Modal */}
       {showRxModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
+        <Dialog
+          onClose={() => setShowRxModal(false)}
+          labelledBy="new-prescription-title"
+          overlayClassName="bg-slate-900/50 backdrop-blur-xs animate-in fade-in"
+        >
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 relative">
             <button
               onClick={() => setShowRxModal(false)}
+              aria-label="Close"
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <h3 className="text-base font-bold text-slate-900 mb-1">New Prescription</h3>
+            <h3 id="new-prescription-title" className="text-base font-bold text-slate-900 mb-1">New Prescription</h3>
             <p className="text-xs text-slate-500 mb-4">
               Prescribe medication for a registered patient.
             </p>
@@ -869,7 +880,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
               </div>
             </form>
           </div>
-        </div>
+        </Dialog>
       )}
     </div>
   );
