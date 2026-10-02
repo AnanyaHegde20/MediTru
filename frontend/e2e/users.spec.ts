@@ -15,6 +15,7 @@ test.describe('Admin user management', () => {
     await page.selectOption('#select-user-role', 'doctor');
     await page.click('#btn-submit-create-user');
     await expect(page.getByText('Account created for Dr. Playground.')).toBeVisible();
+    await page.fill('#input-user-search', email);
     await expect(page.locator(`[data-user-email="${email}"]`)).toBeVisible();
 
     await page.click('#btn-logout');
@@ -38,6 +39,7 @@ test.describe('Admin user management', () => {
     await page.selectOption('#select-user-role', 'patient');
     await page.click('#btn-submit-create-user');
     await expect(page.getByText('Account created for Temp Member.')).toBeVisible();
+    await page.fill('#input-user-search', email);
 
     const row = page.locator(`[data-user-email="${email}"]`);
     await row.locator('select').selectOption('doctor');
@@ -62,6 +64,7 @@ test.describe('Admin user management', () => {
     await page.selectOption('#select-user-role', 'patient');
     await page.click('#btn-submit-create-user');
     await expect(page.getByText('Account created for Reset Target.')).toBeVisible();
+    await page.fill('#input-user-search', email);
 
     const row = page.locator(`[data-user-email="${email}"]`);
     await row.locator('button[title^="Reset password"]').click();

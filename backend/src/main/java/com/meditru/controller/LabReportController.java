@@ -1,9 +1,11 @@
 package com.meditru.controller;
 
 import com.meditru.dto.AuthUser;
+import com.meditru.dto.PageEnvelope;
 import com.meditru.entity.LabReport;
 import com.meditru.service.AuthService;
 import com.meditru.service.LabReportService;
+import com.meditru.util.Filters;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -32,15 +34,28 @@ public class LabReportController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LabReport>> list(@RequestParam(required = false) String patientId,
-                                                Authentication authentication) {
+    public ResponseEntity<?> list(@RequestParam(required = false) String patientId,
+                                  @RequestParam(required = false) Integer page,
+                                  @RequestParam(required = false) Integer size,
+                                  @RequestParam(required = false) String q,
+                                  Authentication authentication) {
         try {
             AuthUser actor = requireActor(authentication);
+            List<LabReport> scoped;
             if ("patient".equals(actor.role())) {
-                return ResponseEntity.ok(service.findByPatient(actor.id()));
+                scoped = service.findByPatient(actor.id());
+            } else if (patientId != null) {
+                scoped = service.findByPatient(patientId);
+            } else {
+                scoped = service.findAll();
             }
-            if (patientId != null) return ResponseEntity.ok(service.findByPatient(patientId));
-            return ResponseEntity.ok(service.findAll());
+            List<LabReport> filtered = scoped.stream()
+                    .filter(r -> Filters.matches(q, r.getName(), r.getCategory(), r.getDoctorName(), r.getStatus()))
+                    .toList();
+            if (page == null) {
+                return ResponseEntity.ok(filtered);
+            }
+            return ResponseEntity.ok(PageEnvelope.of(filtered, page, size == null ? 10 : size));
         } catch (AuthService.UnauthorizedException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of());
         }

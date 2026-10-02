@@ -1,12 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Calendar, Download, Search, Stethoscope, User } from 'lucide-react';
 import { Appointment, UserProfile } from '../../types';
 import { useToast } from '../Toast';
 import { downloadCsv } from '../../lib/csvDownload';
+import { usePagedList } from '../../hooks/usePagedList';
 
 interface AppointmentsListViewProps {
-  appointments: Appointment[];
   currentUser: UserProfile;
   onUpdateStatus: (id: string, status: Appointment['status']) => Promise<void>;
 }
@@ -28,22 +28,30 @@ interface RowAction {
 }
 
 export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
-  appointments,
   currentUser,
   onUpdateStatus,
 }) => {
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>('All');
-  const [query, setQuery] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const { showToast } = useToast();
   const [searchParams] = useSearchParams();
 
+  const list = usePagedList<Appointment>({
+    path: '/api/appointments',
+    pageSize: 10,
+    initialQuery: searchParams.get('q') ?? '',
+    filters: { status: statusFilter === 'All' ? undefined : statusFilter },
+  });
+
   useEffect(() => {
-    setQuery(searchParams.get('q') ?? '');
+    list.search(searchParams.get('q') ?? '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const showPatient = currentUser.role !== 'patient';
   const showDoctor = currentUser.role !== 'doctor';
+
+  const rows: Appointment[] = list.items.map((apt) => ({ ...apt, id: String(apt.id) }));
 
   const handleExport = async () => {
     try {
@@ -85,26 +93,13 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
     try {
       await onUpdateStatus(apt.id, action.next);
       showToast(`Appointment marked as ${action.next}.`);
+      list.refresh();
     } catch {
       showToast('Could not update appointment status.', 'error');
     } finally {
       setBusyId(null);
     }
   };
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return appointments.filter((apt) => {
-      const matchesStatus = statusFilter === 'All' || apt.status === statusFilter;
-      const matchesQuery =
-        !q ||
-        apt.patientName?.toLowerCase().includes(q) ||
-        apt.doctorName?.toLowerCase().includes(q) ||
-        apt.specialty?.toLowerCase().includes(q) ||
-        apt.type?.toLowerCase().includes(q);
-      return matchesStatus && matchesQuery;
-    });
-  }, [appointments, statusFilter, query]);
 
   return (
     <div id="appointments-list-screen" className="space-y-5 animate-in fade-in duration-200">
@@ -140,9 +135,10 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
+              id="input-appointments-search"
               type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={list.query}
+              onChange={(e) => list.search(e.target.value)}
               placeholder="Search by patient, doctor, or specialty..."
               className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
             />
@@ -166,7 +162,11 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-        {filtered.length === 0 ? (
+        {list.loading && rows.length === 0 ? (
+          <div className="py-12 text-center text-sm text-slate-400">Loading appointments…</div>
+        ) : list.error && rows.length === 0 ? (
+          <div className="py-12 text-center text-sm text-rose-500">{list.error}</div>
+        ) : rows.length === 0 ? (
           <div className="py-12 text-center text-sm text-slate-400">
             No appointments match your filters.
           </div>
@@ -186,7 +186,7 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((apt) => (
+                {rows.map((apt) => (
                   <tr key={apt.id} className="border-b border-slate-50 hover:bg-slate-50/60 transition-colors">
                     {showPatient && (
                       <td className="py-3 pr-4">
@@ -252,6 +252,33 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
             </table>
           </div>
         )}
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+        <span>{list.totalElements} appointments</span>
+        <div className="flex items-center gap-3">
+          <button
+            id="btn-appointments-prev"
+            type="button"
+            onClick={() => list.setPage(Math.max(0, list.page - 1))}
+            disabled={!list.hasPrevious || list.loading}
+            className="px-3 py-1.5 rounded-lg border border-slate-200 font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            Previous
+          </button>
+          <span>
+            Page {list.page + 1} of {Math.max(list.totalPages, 1)}
+          </span>
+          <button
+            id="btn-appointments-next"
+            type="button"
+            onClick={() => list.setPage(list.page + 1)}
+            disabled={!list.hasNext || list.loading}
+            className="px-3 py-1.5 rounded-lg border border-slate-200 font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,10 +1,12 @@
 package com.meditru.controller;
 
 import com.meditru.dto.AuthUser;
+import com.meditru.dto.PageEnvelope;
 import com.meditru.entity.Appointment;
 import com.meditru.service.AppointmentService;
 import com.meditru.service.AuthService;
 import com.meditru.util.Csv;
+import com.meditru.util.Filters;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,17 +28,33 @@ public class AppointmentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Appointment>> list(@RequestParam(required = false) String patientId,
-                                                  @RequestParam(required = false) String doctorId,
-                                                  Authentication authentication) {
+    public ResponseEntity<?> list(@RequestParam(required = false) String patientId,
+                                  @RequestParam(required = false) String doctorId,
+                                  @RequestParam(required = false) Integer page,
+                                  @RequestParam(required = false) Integer size,
+                                  @RequestParam(required = false) String q,
+                                  @RequestParam(required = false) String status,
+                                  Authentication authentication) {
         try {
             AuthUser actor = requireActor(authentication);
+            List<Appointment> scoped;
             if ("patient".equals(actor.role())) {
-                return ResponseEntity.ok(service.findByPatient(actor.id()));
+                scoped = service.findByPatient(actor.id());
+            } else if (patientId != null) {
+                scoped = service.findByPatient(patientId);
+            } else if (doctorId != null) {
+                scoped = service.findByDoctor(doctorId);
+            } else {
+                scoped = service.findAll();
             }
-            if (patientId != null) return ResponseEntity.ok(service.findByPatient(patientId));
-            if (doctorId != null) return ResponseEntity.ok(service.findByDoctor(doctorId));
-            return ResponseEntity.ok(service.findAll());
+            List<Appointment> filtered = scoped.stream()
+                    .filter(a -> Filters.matches(q, a.getPatientName(), a.getDoctorName(), a.getSpecialty(), a.getType()))
+                    .filter(a -> Filters.statusMatches(status, a.getStatus()))
+                    .toList();
+            if (page == null) {
+                return ResponseEntity.ok(filtered);
+            }
+            return ResponseEntity.ok(PageEnvelope.of(filtered, page, size == null ? 10 : size));
         } catch (AuthService.UnauthorizedException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of());
         }

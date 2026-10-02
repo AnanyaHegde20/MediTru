@@ -257,7 +257,6 @@ function DoctorRoutes() {
       <Route path="appointments" element={
         <RouteErrorBoundary>
         <AppointmentsListView
-          appointments={store.appointments}
           currentUser={currentUser}
           onUpdateStatus={store.updateAppointmentStatus}
         />
@@ -380,7 +379,6 @@ function AdminRoutes() {
       <Route path="appointments" element={
         <RouteErrorBoundary>
         <AppointmentsListView
-          appointments={store.appointments}
           currentUser={currentUser}
           onUpdateStatus={store.updateAppointmentStatus}
         />

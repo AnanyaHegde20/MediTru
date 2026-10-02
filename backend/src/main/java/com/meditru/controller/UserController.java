@@ -1,9 +1,11 @@
 package com.meditru.controller;
 
+import com.meditru.dto.PageEnvelope;
 import com.meditru.dto.ResetPasswordRequest;
 import com.meditru.entity.User;
 import com.meditru.service.UserService;
 import com.meditru.util.Csv;
+import com.meditru.util.Filters;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +21,22 @@ public class UserController {
     public UserController(UserService service) { this.service = service; }
 
     @GetMapping
-    public List<User> list() { return service.findAll(); }
+    public ResponseEntity<?> list(@RequestParam(required = false) Integer page,
+                                  @RequestParam(required = false) Integer size,
+                                  @RequestParam(required = false) String q) {
+        List<User> filtered = service.findAll().stream()
+                .filter(u -> Filters.matches(q, u.getName(), u.getEmail(),
+                        u.getRole() != null ? u.getRole().name() : null))
+                .toList();
+        if (page == null) {
+            return ResponseEntity.ok(filtered);
+        }
+        Map<String, Long> facets = Map.of(
+                "admin", service.countByRole(User.UserRole.admin),
+                "doctor", service.countByRole(User.UserRole.doctor),
+                "patient", service.countByRole(User.UserRole.patient));
+        return ResponseEntity.ok(PageEnvelope.of(filtered, page, size == null ? 10 : size, facets));
+    }
 
     @GetMapping(value = "/export", produces = "text/csv;charset=UTF-8")
     public ResponseEntity<String> exportCsv() {
