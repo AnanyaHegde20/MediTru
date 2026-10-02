@@ -12,6 +12,7 @@ import {
   UserRole,
 } from '../types';
 import { apiFetch } from '../lib/api';
+import type { ServerNotification } from '../lib/notifications';
 
 interface DataStore {
   doctors: Doctor[];
@@ -23,6 +24,7 @@ interface DataStore {
   patientQueue: PatientQueueItem[];
   patientActivity: PatientActivityItem[];
   messageThreads: MessageThreadItem[];
+  serverNotifications: ServerNotification[];
 
   fetchDoctors: () => Promise<void>;
   fetchAppointments: (patientId?: string, doctorId?: string) => Promise<void>;
@@ -33,6 +35,8 @@ interface DataStore {
   fetchPatientQueue: (doctorId?: string) => Promise<void>;
   fetchMessageThreads: () => Promise<void>;
   fetchMessageThread: (id: string) => Promise<void>;
+  fetchServerNotifications: () => Promise<void>;
+  markServerNotificationsRead: () => Promise<void>;
 
   createUser: (input: {
     name: string;
@@ -231,6 +235,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
   patientQueue: [],
   patientActivity: [],
   messageThreads: [],
+  serverNotifications: [],
 
   fetchDoctors: async () => {
     try {
@@ -344,6 +349,46 @@ export const useDataStore = create<DataStore>((set, get) => ({
     } catch (e) {
       console.warn('Failed to fetch users, using empty list');
     }
+  },
+
+  fetchServerNotifications: async () => {
+    try {
+      const res = await apiFetch(apiUrl('/api/notifications'));
+      if (!res.ok) return;
+      const data = (await res.json()) as Array<{
+        id: number | string;
+        title: string;
+        desc: string;
+        timeLabel: string;
+        readAt: string | null;
+      }>;
+      set({
+        serverNotifications: data.map((n) => ({
+          id: String(n.id),
+          title: n.title,
+          desc: n.desc,
+          time: n.timeLabel,
+          readAt: n.readAt ?? null,
+        })),
+      });
+    } catch (e) {
+      console.warn('Failed to fetch server notifications, keeping previous list');
+    }
+  },
+
+  markServerNotificationsRead: async () => {
+    const res = await apiFetch(apiUrl('/api/notifications/read-all'), { method: 'POST' });
+    if (!res.ok) {
+      throw new Error(
+        await readErrorMessage(res, `POST /api/notifications/read-all failed: ${res.status}`)
+      );
+    }
+    set((state) => ({
+      serverNotifications: state.serverNotifications.map((notification) => ({
+        ...notification,
+        readAt: notification.readAt ?? new Date().toISOString(),
+      })),
+    }));
   },
 
   createUser: async (input) => {

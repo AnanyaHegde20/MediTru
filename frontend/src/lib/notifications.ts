@@ -1,11 +1,4 @@
-import {
-  Appointment,
-  LabReport,
-  MessageThreadItem,
-  Prescription,
-  UserProfile,
-  UserRole,
-} from '../types';
+import { LabReport, MessageThreadItem, Prescription, UserProfile, UserRole } from '../types';
 
 export interface DerivedNotification {
   id: string;
@@ -14,8 +7,19 @@ export interface DerivedNotification {
   time: string;
 }
 
+export interface ServerNotification {
+  id: string;
+  title: string;
+  desc: string;
+  time: string;
+  readAt: string | null;
+}
+
+export interface BellNotification extends DerivedNotification {
+  unread: boolean;
+}
+
 export interface NotificationData {
-  appointments: Appointment[];
   labReports: LabReport[];
   prescriptions: Prescription[];
   messageThreads: MessageThreadItem[];
@@ -33,21 +37,6 @@ export function buildNotifications(
   const items: DerivedNotification[] = [];
 
   if (role === 'patient') {
-    data.appointments
-      .filter(
-        (apt) =>
-          apt.patientId === currentUser.id &&
-          (apt.status === 'Pending' || apt.status === 'Confirmed')
-      )
-      .forEach((apt) =>
-        items.push({
-          id: `apt-${apt.id}`,
-          title: 'Appointment Reminder',
-          desc: `${apt.doctorName} • ${apt.date} at ${apt.time}`,
-          time: shortDate(apt.date),
-        })
-      );
-
     data.labReports
       .filter((report) => !report.patientId || report.patientId === currentUser.id)
       .forEach((report) =>
@@ -72,17 +61,6 @@ export function buildNotifications(
         })
       );
   } else if (role === 'doctor') {
-    data.appointments
-      .filter((apt) => apt.status === 'Pending')
-      .forEach((apt) =>
-        items.push({
-          id: `apt-${apt.id}`,
-          title: 'Appointment Request',
-          desc: `${apt.patientName} • ${apt.date} at ${apt.time}`,
-          time: shortDate(apt.date),
-        })
-      );
-
     data.prescriptions
       .filter((rx) => rx.status === 'Refill Requested')
       .forEach((rx) =>
@@ -91,17 +69,6 @@ export function buildNotifications(
           title: 'Refill Request',
           desc: `${rx.medicationName} refill is waiting for approval.`,
           time: rx.status,
-        })
-      );
-  } else {
-    data.appointments
-      .filter((apt) => apt.status === 'Pending')
-      .forEach((apt) =>
-        items.push({
-          id: `apt-${apt.id}`,
-          title: 'Pending Appointment',
-          desc: `${apt.patientName} with ${apt.doctorName}`,
-          time: shortDate(apt.date),
         })
       );
   }
@@ -118,6 +85,27 @@ export function buildNotifications(
     );
 
   return items;
+}
+
+export function combineNotifications(
+  server: ServerNotification[],
+  client: DerivedNotification[],
+  seenIds: string[]
+): BellNotification[] {
+  const fromServer: BellNotification[] = server.map((notification) => ({
+    id: `srv-${notification.id}`,
+    title: notification.title,
+    desc: notification.desc,
+    time: notification.time,
+    unread: !notification.readAt,
+  }));
+
+  const fromClient: BellNotification[] = client.map((notification) => ({
+    ...notification,
+    unread: !seenIds.includes(notification.id),
+  }));
+
+  return [...fromServer, ...fromClient];
 }
 
 export function seenStorageKey(email: string) {

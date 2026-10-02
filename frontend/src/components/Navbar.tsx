@@ -9,7 +9,12 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useDataStore } from '../store/useDataStore';
-import { buildNotifications, readSeenIds, writeSeenIds } from '../lib/notifications';
+import {
+  buildNotifications,
+  combineNotifications,
+  readSeenIds,
+  writeSeenIds,
+} from '../lib/notifications';
 
 interface NavbarProps {
   currentUser: import('../types').UserProfile;
@@ -22,48 +27,55 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
 
-  const appointments = useDataStore((state) => state.appointments);
   const labReports = useDataStore((state) => state.labReports);
   const prescriptions = useDataStore((state) => state.prescriptions);
   const messageThreads = useDataStore((state) => state.messageThreads);
-  const fetchAppointments = useDataStore((state) => state.fetchAppointments);
+  const serverNotifications = useDataStore((state) => state.serverNotifications);
   const fetchLabReports = useDataStore((state) => state.fetchLabReports);
   const fetchPrescriptions = useDataStore((state) => state.fetchPrescriptions);
   const fetchMessageThreads = useDataStore((state) => state.fetchMessageThreads);
+  const fetchServerNotifications = useDataStore((state) => state.fetchServerNotifications);
+  const markServerNotificationsRead = useDataStore((state) => state.markServerNotificationsRead);
 
   const [seenIds, setSeenIds] = useState<string[]>(() => readSeenIds(currentUser.email ?? ''));
 
   useEffect(() => {
-    fetchAppointments(undefined, undefined);
     fetchLabReports();
     fetchPrescriptions();
     fetchMessageThreads();
-  }, [fetchAppointments, fetchLabReports, fetchPrescriptions, fetchMessageThreads]);
+    fetchServerNotifications();
+  }, [fetchLabReports, fetchPrescriptions, fetchMessageThreads, fetchServerNotifications]);
 
   useEffect(() => {
     setSeenIds(readSeenIds(currentUser.email ?? ''));
-  }, [currentUser.email]);
+    fetchServerNotifications();
+  }, [currentUser.email, fetchServerNotifications]);
 
   const notifications = useMemo(
     () =>
-      buildNotifications(currentUser.role, currentUser, {
-        appointments,
-        labReports,
-        prescriptions,
-        messageThreads,
-      }).map((notification) => ({
-        ...notification,
-        unread: !seenIds.includes(notification.id),
-      })),
-    [currentUser, appointments, labReports, prescriptions, messageThreads, seenIds]
+      combineNotifications(
+        serverNotifications,
+        buildNotifications(currentUser.role, currentUser, {
+          labReports,
+          prescriptions,
+          messageThreads,
+        }),
+        seenIds
+      ),
+    [currentUser, serverNotifications, labReports, prescriptions, messageThreads, seenIds]
   );
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
     const ids = notifications.map((n) => n.id);
     writeSeenIds(currentUser.email ?? '', ids);
     setSeenIds(ids);
+    try {
+      await markServerNotificationsRead();
+    } catch (err) {
+      console.warn('Failed to persist server-side notification read state', err);
+    }
   };
 
   const handleSignOut = () => {
@@ -124,6 +136,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
               onClick={() => {
                 setShowNotifications(!showNotifications);
                 setShowRoleMenu(false);
+                fetchServerNotifications();
               }}
               className="relative p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all cursor-pointer"
               aria-label="Notifications"

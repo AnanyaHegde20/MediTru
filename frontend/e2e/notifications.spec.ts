@@ -24,4 +24,31 @@ test.describe('Notification bell', () => {
     await expect(page.getByText("You're all caught up.")).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Mark all read' })).toHaveCount(0);
   });
+
+  test('reminder read state is persisted on the server', async ({ page }) => {
+    await login(page, 'patient');
+    await expect(page.locator('#notification-unread-dot')).toBeVisible();
+
+    await page.click('#btn-notifications-bell');
+    await expect(page.locator('#notifications-popover')).toBeVisible();
+    await page.getByRole('button', { name: 'Mark all read' }).click();
+    await expect(page.locator('#notification-unread-dot')).toHaveCount(0);
+
+    const result = await page.evaluate(async () => {
+      const token = localStorage.getItem('meditru_token');
+      const res = await fetch('/api/notifications', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const rows = (await res.json()) as Array<{ readAt: string | null }>;
+      return {
+        status: res.status,
+        total: rows.length,
+        unread: rows.filter((row) => !row.readAt).length,
+      };
+    });
+
+    expect(result.status).toBe(200);
+    expect(result.total).toBeGreaterThan(0);
+    expect(result.unread).toBe(0);
+  });
 });
