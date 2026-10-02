@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Calendar, Download, Search, Stethoscope, User } from 'lucide-react';
 import { Appointment, UserProfile } from '../../types';
 import { useToast } from '../Toast';
@@ -35,6 +36,11 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
   const [query, setQuery] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const { showToast } = useToast();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    setQuery(searchParams.get('q') ?? '');
+  }, [searchParams]);
 
   const showPatient = currentUser.role !== 'patient';
   const showDoctor = currentUser.role !== 'doctor';

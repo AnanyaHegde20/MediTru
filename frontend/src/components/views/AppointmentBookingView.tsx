@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useSearchParams } from 'react-router-dom';
 import { ActiveTab, Doctor, Appointment, UserProfile } from '../../types';
 import { useToast } from '../Toast';
 import { SLOT_PERIODS, hasPublishedSlots, resolveTimeSlot, visibleSlots } from '../../lib/bookingSlots';
@@ -34,6 +35,11 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
 }) => {
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    setSearchQuery(searchParams.get('q') ?? '');
+  }, [searchParams]);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(
     doctors[0] ?? null
   );
@@ -72,7 +78,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
     const matchesSearch =
       doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       doc.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.hospital.toLowerCase().includes(searchQuery.toLowerCase());
+      (doc.hospital ?? '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSpecialty && matchesSearch;
   });
 
@@ -96,7 +102,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
       type: `${selectedDoctor.specialty} Consultation`,
       duration: '30m',
       notes: consultReason,
-      room: selectedDoctor.hospital.split(',')[0],
+      room: (selectedDoctor.hospital ?? 'Main Campus').split(',')[0],
     };
 
     try {

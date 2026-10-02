@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, Sparkles } from 'lucide-react';
 import { Appointment, LabReport, UserProfile } from '../../types';
 import { useDataStore } from '../../store/useDataStore';
 
@@ -33,6 +34,12 @@ export const PatientsDirectoryView: React.FC<PatientsDirectoryViewProps> = ({
 }) => {
   const { fetchPatients } = useDataStore();
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    setQuery(searchParams.get('q') ?? '');
+  }, [searchParams]);
 
   useEffect(() => {
     let alive = true;
@@ -44,15 +51,36 @@ export const PatientsDirectoryView: React.FC<PatientsDirectoryViewProps> = ({
     };
   }, []);
 
+  const normalizedQuery = query.trim().toLowerCase();
+  const visiblePatients = normalizedQuery
+    ? patients.filter(
+        (p) =>
+          p.name.toLowerCase().includes(normalizedQuery) ||
+          (p.email ?? '').toLowerCase().includes(normalizedQuery) ||
+          (p.medicalCondition ?? '').toLowerCase().includes(normalizedQuery)
+      )
+    : patients;
+
   const lastVisitFor = (name: string) =>
     appointments.find((a) => a.patientName === name);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
         <div>
           <h2 className="text-base font-bold text-slate-900">Registered Patient Directory</h2>
           <p className="text-xs text-slate-400">Manage patient charts, EHR records, and consultation history</p>
+        </div>
+        <div className="relative w-56 max-w-full shrink-0">
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            id="input-patient-search"
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search patients..."
+            className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+          />
         </div>
       </div>
 
@@ -65,9 +93,13 @@ export const PatientsDirectoryView: React.FC<PatientsDirectoryViewProps> = ({
         <div className="py-10 text-center text-xs text-slate-400">
           No patients registered yet.
         </div>
+      ) : visiblePatients.length === 0 ? (
+        <div className="py-10 text-center text-xs text-slate-400">
+          No patients match your search.
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
-          {patients.map((p) => {
+          {visiblePatients.map((p) => {
             const visit = lastVisitFor(p.name);
             return (
               <div

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   FileText,
   Upload,
@@ -73,6 +74,11 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
   >('Lab Reports');
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    setSearchQuery(searchParams.get('q') ?? '');
+  }, [searchParams]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showRxModal, setShowRxModal] = useState(false);
   const [rxPatientId, setRxPatientId] = useState('');

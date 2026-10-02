@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Pencil, Search, Star, Stethoscope, Trash2, X } from 'lucide-react';
 import { Doctor } from '../../types';
 import { useDataStore } from '../../store/useDataStore';
@@ -22,6 +23,11 @@ export const DoctorsDirectoryView: React.FC = () => {
   const { showToast } = useToast();
 
   const [query, setQuery] = useState('');
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    setQuery(searchParams.get('q') ?? '');
+  }, [searchParams]);
   const [editing, setEditing] = useState<Doctor | null>(null);
   const [editName, setEditName] = useState('');
   const [editSpecialty, setEditSpecialty] = useState('');

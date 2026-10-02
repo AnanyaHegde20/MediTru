@@ -6,9 +6,16 @@ import {
   ChevronDown,
   X,
   LogOut,
+  Stethoscope,
+  Calendar,
+  FileText,
+  Users,
+  UserCog,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useDataStore } from '../store/useDataStore';
+import { apiFetch } from '../lib/api';
+import { mapSearchResults, SearchResult } from '../lib/search';
 import {
   buildNotifications,
   combineNotifications,
@@ -21,12 +28,95 @@ interface NavbarProps {
   currentUser: import('../types').UserProfile;
 }
 
+const RESULT_ICONS = {
+  doctor: Stethoscope,
+  patient: Users,
+  user: UserCog,
+  appointment: Calendar,
+  lab: FileText,
+} as const;
+
+const RESULT_LABELS: Record<SearchResult['type'], string> = {
+  doctor: 'Doctor',
+  patient: 'Patient',
+  user: 'Account',
+  appointment: 'Visit',
+  lab: 'Record',
+};
+
 export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
   const navigate = useNavigate();
   const { handleLogout } = useAuth();
   const [internalQuery, setInternalQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
+
+  const mappedResults = useMemo(
+    () => mapSearchResults(searchResults, currentUser.role),
+    [searchResults, currentUser.role]
+  );
+
+  useEffect(() => {
+    const q = internalQuery.trim();
+    if (q.length < 2) {
+      setSearchResults([]);
+      setShowResults(false);
+      setActiveIndex(-1);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      (async () => {
+        try {
+          const res = await apiFetch(`/api/search?q=${encodeURIComponent(q)}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          if (cancelled) return;
+          setSearchResults(Array.isArray(data) ? (data as SearchResult[]) : []);
+          setActiveIndex(0);
+          setShowResults(true);
+        } catch {
+          if (!cancelled) setSearchResults([]);
+        }
+      })();
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [internalQuery]);
+
+  const selectResult = (index: number) => {
+    const target = mappedResults[index];
+    if (!target) return;
+    setInternalQuery('');
+    setSearchResults([]);
+    setShowResults(false);
+    setActiveIndex(-1);
+    navigate(target.path);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showResults || mappedResults.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((i) => (i + 1) % mappedResults.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((i) => (i - 1 + mappedResults.length) % mappedResults.length);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      selectResult(activeIndex >= 0 ? activeIndex : 0);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      setShowResults(false);
+      setActiveIndex(-1);
+    }
+  };
 
   const labReports = useDataStore((state) => state.labReports);
   const prescriptions = useDataStore((state) => state.prescriptions);
@@ -132,18 +222,83 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
           <input
             id="global-search-input"
             type="text"
+            role="combobox"
             value={internalQuery}
             onChange={(e) => setInternalQuery(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+            onBlur={() => setShowResults(false)}
             placeholder={getSearchPlaceholder()}
+            aria-expanded={showResults}
+            aria-controls={showResults ? 'global-search-results' : undefined}
+            aria-autocomplete="list"
+            aria-label="Search"
+            aria-activedescendant={
+              showResults && activeIndex >= 0 ? `global-search-option-${activeIndex}` : undefined
+            }
             className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs md:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all shadow-2xs"
           />
           {internalQuery && (
             <button
               onClick={() => setInternalQuery('')}
+              aria-label="Clear search"
               className="absolute right-3 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
+          )}
+
+          {showResults && (
+            <div
+              id="global-search-results"
+              role="listbox"
+              aria-label="Search results"
+              className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-slate-200 z-50 overflow-hidden max-h-80 overflow-y-auto"
+            >
+              {mappedResults.length === 0 ? (
+                <div
+                  id="global-search-option-empty"
+                  role="option"
+                  aria-disabled="true"
+                  aria-selected="false"
+                  className="px-3 py-3 text-xs text-slate-400"
+                >
+                  No results for “{internalQuery.trim()}”.
+                </div>
+              ) : (
+                mappedResults.map((result, index) => {
+                  const Icon = RESULT_ICONS[result.type];
+                  const isActive = index === activeIndex;
+                  return (
+                    <button
+                      key={result.key}
+                      id={`global-search-option-${index}`}
+                      type="button"
+                      role="option"
+                      aria-selected={isActive}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onMouseEnter={() => setActiveIndex(index)}
+                      onClick={() => selectResult(index)}
+                      className={`w-full text-left px-3 py-2 flex items-center gap-2.5 text-xs cursor-pointer ${
+                        isActive ? 'bg-blue-50' : 'hover:bg-slate-50'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-semibold text-slate-800 truncate">
+                          {result.title}
+                        </span>
+                        <span className="block text-[11px] text-slate-400 truncate">
+                          {result.subtitle}
+                        </span>
+                      </span>
+                      <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400 shrink-0">
+                        {RESULT_LABELS[result.type]}
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
           )}
         </div>
 
