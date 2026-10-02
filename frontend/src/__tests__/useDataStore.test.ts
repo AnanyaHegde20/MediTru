@@ -629,4 +629,33 @@ describe('useDataStore', () => {
     await expect(useDataStore.getState().deleteUser('7')).rejects.toThrow('Forbidden');
     expect(useDataStore.getState().users).toHaveLength(1);
   });
+
+  it('resets a user password', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ message: 'Password reset' }) }))
+    );
+    await expect(
+      useDataStore.getState().resetUserPassword('7', 'NewPass99!')
+    ).resolves.toBeUndefined();
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/users/7/reset-password'),
+      expect.objectContaining({ method: 'POST' })
+    );
+  });
+
+  it('surfaces server errors when resetting a password fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 400,
+        text: async () => '{"error":"Password must be at least 8 characters"}',
+        json: async () => ({ error: 'Password must be at least 8 characters' }),
+      }))
+    );
+    await expect(useDataStore.getState().resetUserPassword('7', 'short')).rejects.toThrow(
+      'Password must be at least 8 characters'
+    );
+  });
 });

@@ -42,6 +42,7 @@ interface DataStore {
   }) => Promise<UserProfile>;
   updateUserRole: (id: string, role: UserRole) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
+  resetUserPassword: (id: string, password: string) => Promise<void>;
 
   bookAppointment: (apt: Appointment) => Promise<void>;
   updateAppointmentStatus: (id: string, status: Appointment['status']) => Promise<void>;
@@ -376,6 +377,18 @@ export const useDataStore = create<DataStore>((set, get) => ({
       throw new Error(await readErrorMessage(res, `DELETE /api/users/${id} failed: ${res.status}`));
     }
     set((state) => ({ users: state.users.filter((u) => u.id !== id) }));
+  },
+
+  resetUserPassword: async (id, password) => {
+    const res = await apiFetch(apiUrl(`/api/users/${id}/reset-password`), {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    });
+    if (!res.ok) {
+      throw new Error(
+        await readErrorMessage(res, `POST /api/users/${id}/reset-password failed: ${res.status}`)
+      );
+    }
   },
 
   fetchPatientQueue: async (doctorId) => {

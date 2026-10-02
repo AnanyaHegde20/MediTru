@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Download, Plus, ShieldCheck, Trash2, UserCog, X } from 'lucide-react';
+import { Download, KeyRound, Plus, ShieldCheck, Trash2, UserCog, X } from 'lucide-react';
 import { UserProfile, UserRole } from '../../types';
 import { useDataStore } from '../../store/useDataStore';
 import { useToast } from '../Toast';
@@ -19,6 +19,7 @@ export const UserManagementView: React.FC = () => {
   const createUser = useDataStore((state) => state.createUser);
   const updateUserRole = useDataStore((state) => state.updateUserRole);
   const deleteUser = useDataStore((state) => state.deleteUser);
+  const resetUserPassword = useDataStore((state) => state.resetUserPassword);
   const { showToast } = useToast();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -28,6 +29,10 @@ export const UserManagementView: React.FC = () => {
   const [role, setRole] = useState<UserRole>('patient');
   const [isSaving, setIsSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<UserProfile | null>(null);
+  const [pendingReset, setPendingReset] = useState<UserProfile | null>(null);
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetConfirm, setResetConfirm] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -81,6 +86,35 @@ export const UserManagementView: React.FC = () => {
       setPendingDelete(null);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Could not delete the account.', 'error');
+    }
+  };
+
+  const closeResetModal = () => {
+    setPendingReset(null);
+    setResetPassword('');
+    setResetConfirm('');
+  };
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pendingReset) return;
+    if (resetPassword.length < 8) {
+      showToast('Password must be at least 8 characters.', 'error');
+      return;
+    }
+    if (resetPassword !== resetConfirm) {
+      showToast('Passwords do not match.', 'error');
+      return;
+    }
+    setIsResetting(true);
+    try {
+      await resetUserPassword(pendingReset.id, resetPassword);
+      showToast(`Password reset for ${pendingReset.name}.`, 'success');
+      closeResetModal();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Could not reset the password.', 'error');
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -195,6 +229,14 @@ export const UserManagementView: React.FC = () => {
                             </option>
                           ))}
                         </select>
+                        <button
+                          type="button"
+                          onClick={() => setPendingReset(user)}
+                          title={`Reset password for ${user.name}`}
+                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <KeyRound className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           type="button"
                           onClick={() => setPendingDelete(user)}
@@ -351,6 +393,92 @@ export const UserManagementView: React.FC = () => {
                   <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 )}
                 <span>{isSaving ? 'Creating…' : 'Create Account'}</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {pendingReset && (
+        <div
+          id="reset-password-modal"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+        >
+          <form
+            onSubmit={handleReset}
+            className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md p-5 space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Reset Password</h2>
+                <p className="text-xs text-slate-400 mt-0.5">{pendingReset.email}</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeResetModal}
+                aria-label="Close"
+                className="p-1 text-slate-400 hover:text-slate-700 rounded cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <label
+                htmlFor="input-reset-password"
+                className="block text-xs font-semibold text-slate-700"
+              >
+                New Password <span className="text-rose-500">*</span>
+              </label>
+              <input
+                id="input-reset-password"
+                type="password"
+                value={resetPassword}
+                onChange={(e) => setResetPassword(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label
+                htmlFor="input-reset-password-confirm"
+                className="block text-xs font-semibold text-slate-700"
+              >
+                Confirm New Password <span className="text-rose-500">*</span>
+              </label>
+              <input
+                id="input-reset-password-confirm"
+                type="password"
+                value={resetConfirm}
+                onChange={(e) => setResetConfirm(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+
+            <p className="text-[11px] text-slate-400">
+              {pendingReset.name} will need to sign in with the new password. Any existing
+              sessions are signed out immediately.
+            </p>
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                id="btn-cancel-reset-password"
+                type="button"
+                onClick={closeResetModal}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                id="btn-submit-reset-password"
+                type="submit"
+                disabled={isResetting}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-75 text-white rounded-xl text-xs font-semibold shadow-xs cursor-pointer transition-colors"
+              >
+                {isResetting && (
+                  <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                )}
+                <span>{isResetting ? 'Resetting…' : 'Reset Password'}</span>
               </button>
             </div>
           </form>

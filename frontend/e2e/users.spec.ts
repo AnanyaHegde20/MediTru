@@ -48,4 +48,35 @@ test.describe('Admin user management', () => {
     await expect(page.getByText('Account deleted for Temp Member.')).toBeVisible();
     await expect(row).toHaveCount(0);
   });
+
+  test('admin resets a password and the user signs in with it', async ({ page }) => {
+    await login(page, 'admin');
+    await page.goto('/admin/users');
+    await expect(page.locator('#user-accounts-view')).toBeVisible();
+
+    const email = `reset-${Date.now()}@medicare.health`;
+    await page.click('#btn-create-user');
+    await page.fill('#input-user-name', 'Reset Target');
+    await page.fill('#input-user-email', email);
+    await page.fill('#input-user-password', 'secret123');
+    await page.selectOption('#select-user-role', 'patient');
+    await page.click('#btn-submit-create-user');
+    await expect(page.getByText('Account created for Reset Target.')).toBeVisible();
+
+    const row = page.locator(`[data-user-email="${email}"]`);
+    await row.locator('button[title^="Reset password"]').click();
+    await expect(page.locator('#reset-password-modal')).toBeVisible();
+    await page.fill('#input-reset-password', 'NewPass99!');
+    await page.fill('#input-reset-password-confirm', 'NewPass99!');
+    await page.click('#btn-submit-reset-password');
+    await expect(page.getByText('Password reset for Reset Target.')).toBeVisible();
+    await expect(page.locator('#reset-password-modal')).toHaveCount(0);
+
+    await page.click('#btn-logout');
+    await page.goto('/login');
+    await page.fill('#login-email-input', email);
+    await page.fill('#login-password-input', 'NewPass99!');
+    await page.click('#btn-submit-signin');
+    await page.waitForURL(/\/patient\/dashboard/);
+  });
 });

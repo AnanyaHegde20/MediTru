@@ -149,4 +149,56 @@ class UserManagementTest {
                         .header("Authorization", "Bearer " + patientToken))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void adminResetsUserPasswordAndRevokesExistingSessions() throws Exception {
+        mockMvc.perform(post("/api/users/" + patientId + "/reset-password")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("password", "NewPass99!"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Password reset"));
+
+        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + patientToken))
+                .andExpect(status().isUnauthorized());
+
+        String token = login("plain@test.com", "NewPass99!");
+        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest("plain@test.com", "secret123"))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void resetPasswordRequiresAdmin() throws Exception {
+        mockMvc.perform(post("/api/users/" + patientId + "/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("password", "NewPass99!"))))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/users/" + patientId + "/reset-password")
+                        .header("Authorization", "Bearer " + patientToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("password", "NewPass99!"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void resetPasswordValidatesInput() throws Exception {
+        mockMvc.perform(post("/api/users/" + patientId + "/reset-password")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("password", "short"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Password must be at least 8 characters"));
+
+        mockMvc.perform(post("/api/users/999999/reset-password")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("password", "NewPass99!"))))
+                .andExpect(status().isNotFound());
+    }
 }

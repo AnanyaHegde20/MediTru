@@ -59,5 +59,15 @@ public class UserService {
 
     public void delete(Long id) { repo.deleteById(id); }
 
+    public void resetPassword(Long id, String password) {
+        if (password == null || password.length() < 8) {
+            throw new IllegalArgumentException("Password must be at least 8 characters");
+        }
+        User user = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        user.setPassword(passwordEncoder.encode(password));
+        user.bumpTokenVersion();
+        repo.save(user);
+    }
+
     public long countByRole(UserRole role) { return repo.countByRole(role); }
 }

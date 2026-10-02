@@ -1,5 +1,6 @@
 package com.meditru.controller;
 
+import com.meditru.dto.ResetPasswordRequest;
 import com.meditru.entity.User;
 import com.meditru.service.UserService;
 import com.meditru.util.Csv;
@@ -7,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -73,5 +75,18 @@ public class UserController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/reset-password")
+    public ResponseEntity<?> resetPassword(@PathVariable Long id, @RequestBody ResetPasswordRequest request) {
+        if (service.findById(id) == null) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            service.resetPassword(id, request.password());
+            return ResponseEntity.ok(Map.of("message", "Password reset"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 }
