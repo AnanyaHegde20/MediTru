@@ -92,19 +92,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       id="sidebar-container"
-      className={`hidden md:flex flex-col bg-white border-r border-slate-200 min-h-screen fixed top-0 left-0 bottom-0 z-30 transition-all duration-200 select-none ${
+      className={`hidden md:flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 min-h-screen fixed top-0 left-0 bottom-0 z-30 transition-all duration-200 select-none ${
         isCollapsed ? 'w-20' : 'w-[240px]'
       }`}
     >
       {/* Brand Header */}
-      <div className={`p-6 pb-4 flex items-center border-b border-slate-100 ${isCollapsed ? 'justify-center px-3' : 'justify-between'}`}>
+      <div className={`p-6 pb-4 flex items-center border-b border-slate-100 dark:border-slate-800 ${isCollapsed ? 'justify-center px-3' : 'justify-between'}`}>
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0">
             M
           </div>
           {!isCollapsed && (
             <div>
-              <div className="font-bold text-slate-900 text-lg tracking-tight flex items-center gap-1.5">
+              <div className="font-bold text-slate-900 dark:text-slate-100 text-lg tracking-tight flex items-center gap-1.5">
                 MediTru
               </div>
               <p className="text-[11px] text-slate-400 font-medium leading-none">Healthcare OS</p>
@@ -115,7 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={onToggleCollapse}
             title="Collapse sidebar"
-            className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -125,7 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <button
           onClick={onToggleCollapse}
           title="Expand sidebar"
-          className="mx-auto mt-2 p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          className="mx-auto mt-2 p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -154,7 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 } ${
                   isActive
                     ? 'bg-blue-50 text-blue-600 font-semibold'
-                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`
               }
             >
@@ -192,18 +192,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* User Avatar + Name + Role at Bottom */}
-      <div className="p-4 border-t border-slate-100">
+      <div className="p-4 border-t border-slate-100 dark:border-slate-800">
         <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
           <div className={`flex items-center gap-3 min-w-0 ${isCollapsed ? 'justify-center' : ''}`}>
             <img
               src={currentUser.avatar}
               alt={currentUser.name}
-              className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
+              className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0"
               referrerPolicy="no-referrer"
             />
             {!isCollapsed && (
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold text-slate-900 truncate">
+                <div className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
                   {currentUser.name}
                 </div>
                 <div className="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full w-max font-medium capitalize mt-0.5">

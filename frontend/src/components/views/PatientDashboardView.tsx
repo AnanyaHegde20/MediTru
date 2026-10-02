@@ -96,10 +96,10 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
       {/* Top Welcome Heading */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
             Good morning, {currentUser.name.split(' ')[0]} 👋
           </h1>
-          <p className="text-slate-500 text-sm mt-0.5">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
             {nextAppointment
               ? `Your next appointment with ${nextAppointment.doctorName} is tomorrow at ${nextAppointment.time}.`
               : 'Welcome back to your healthcare dashboard.'}
@@ -122,10 +122,10 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
           className="card-minimal flex flex-col justify-between hover:border-slate-300 transition-all cursor-pointer group"
         >
           <div>
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Appointments
             </span>
-            <span className="text-2xl font-bold text-slate-900 mt-1 block">
+            <span className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 block">
               {appointments.length < 10 ? `0${appointments.length}` : appointments.length}
             </span>
           </div>
@@ -141,10 +141,10 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
           className="card-minimal flex flex-col justify-between hover:border-slate-300 transition-all cursor-pointer group"
         >
           <div>
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Prescriptions
             </span>
-            <span className="text-2xl font-bold text-slate-900 mt-1 block">
+            <span className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 block">
               {prescriptions.length < 10 ? `0${prescriptions.length}` : prescriptions.length}
             </span>
           </div>
@@ -162,14 +162,14 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
           className="card-minimal flex flex-col justify-between hover:border-slate-300 transition-all cursor-pointer group"
         >
           <div>
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Lab Reports
             </span>
-            <span className="text-2xl font-bold text-slate-900 mt-1 block">
+            <span className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 block">
               {labReports.length < 10 ? `0${labReports.length}` : labReports.length}
             </span>
           </div>
-          <span className="text-xs text-slate-500 font-medium mt-2">
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-2">
             {latestReportLabel}
           </span>
         </div>
@@ -180,16 +180,16 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
           className="card-minimal flex flex-col justify-between hover:border-slate-300 transition-all cursor-pointer group"
         >
           <div>
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Messages
             </span>
-            <span className="text-2xl font-bold text-slate-900 mt-1 block">
+            <span className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 block">
               {unreadMessages < 10 ? `0${unreadMessages}` : unreadMessages}
             </span>
           </div>
           <span
             className={`text-xs font-medium mt-2 ${
-              unreadMessages > 0 ? 'text-amber-600' : 'text-slate-500'
+              unreadMessages > 0 ? 'text-amber-600' : 'text-slate-500 dark:text-slate-400'
             }`}
           >
             {unreadMessages > 0 ? 'Unread (Care Team)' : 'All caught up'}
@@ -201,8 +201,8 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Upcoming Appointments (7 Cols) */}
         <div className="lg:col-span-7 card-minimal flex flex-col">
-          <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
-            <h3 className="font-bold text-slate-900 text-sm md:text-base">Upcoming Appointments</h3>
+          <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm md:text-base">Upcoming Appointments</h3>
             <button
               onClick={() => onNavigateTab('appointments')}
               className="text-blue-600 text-xs font-semibold hover:underline"
@@ -222,11 +222,11 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
                   id={`upcoming-apt-${apt.id}`}
                   className={`flex items-center p-3 rounded-lg border transition-colors ${
                     idx === 0
-                      ? 'bg-slate-50/80 border-slate-200/80'
-                      : 'bg-white border-slate-100 hover:bg-slate-50/50'
+                      ? 'bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/80'
+                      : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                   }`}
                 >
-                  <div className="w-10 h-10 bg-white rounded-lg flex flex-col items-center justify-center border border-slate-200 mr-3 shrink-0 shadow-2xs">
+                  <div className="w-10 h-10 bg-white dark:bg-slate-900 rounded-lg flex flex-col items-center justify-center border border-slate-200 dark:border-slate-700 mr-3 shrink-0 shadow-2xs">
                     <span className="text-[9px] uppercase font-bold text-slate-400 leading-none">
                       {month}
                     </span>
@@ -236,10 +236,10 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
                   </div>
 
                   <div className="flex-1 min-w-0 mr-2">
-                    <div className="text-sm font-semibold text-slate-900 truncate">
+                    <div className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
                       {apt.doctorName}
                     </div>
-                    <div className="text-xs text-slate-500 truncate">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
                       {apt.specialty} • {apt.time}
                     </div>
                   </div>
@@ -272,8 +272,8 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
 
         {/* Right Column: Recent Lab Reports (5 Cols) */}
         <div className="lg:col-span-5 card-minimal flex flex-col">
-          <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
-            <h3 className="font-bold text-slate-900 text-sm md:text-base">Recent Lab Reports</h3>
+          <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm md:text-base">Recent Lab Reports</h3>
             <button
               onClick={() => onNavigateTab('records')}
               className="text-blue-600 text-xs font-semibold hover:underline"
@@ -287,14 +287,14 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
               <div
                 key={report.id}
                 onClick={() => onSelectReport(report)}
-                className="flex items-center justify-between p-2.5 rounded-lg border border-transparent hover:border-slate-100 hover:bg-slate-50/80 transition-all cursor-pointer group"
+                className="flex items-center justify-between p-2.5 rounded-lg border border-transparent hover:border-slate-100 dark:hover:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all cursor-pointer group"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
                     <FileText className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-semibold text-slate-900 group-hover:text-blue-600 truncate transition-colors">
+                    <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 truncate transition-colors">
                       {report.name}
                     </div>
                     <div className="text-[10px] text-slate-400">
@@ -340,7 +340,7 @@ export const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({
               value={quickPrompt}
               onChange={(e) => setQuickPrompt(e.target.value)}
               placeholder="Ask anything about your health, lab reports, or medication..."
-              className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <button

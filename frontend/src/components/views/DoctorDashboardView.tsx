@@ -85,13 +85,13 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
         {/* Stat 1: Total Patients Today */}
         <div className="card-minimal flex flex-col justify-between">
           <div className="flex items-start justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Patients</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Patients</span>
             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
               <Users className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold text-slate-900 tracking-tight">{uniquePatients}</div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">{uniquePatients}</div>
             <div className="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" />
               <span>{completedAppointments} Completed</span>
@@ -105,13 +105,13 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
           className="card-minimal flex flex-col justify-between hover:border-slate-300 transition-all cursor-pointer group"
         >
           <div className="flex items-start justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Reports To Review</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Reports To Review</span>
             <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
               <FileCheck2 className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold text-slate-900 tracking-tight">{abnormalReports}</div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">{abnormalReports}</div>
             <div
               className={`text-xs font-medium mt-1 flex items-center gap-1 ${
                 abnormalReports > 0 ? 'text-rose-600' : 'text-emerald-600'
@@ -129,13 +129,13 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
           className="card-minimal flex flex-col justify-between hover:border-slate-300 transition-all cursor-pointer group"
         >
           <div className="flex items-start justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">New Messages</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">New Messages</span>
             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
               <MessageSquare className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold text-slate-900 tracking-tight">{unreadMessages}</div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">{unreadMessages}</div>
             <div className="text-xs text-blue-600 font-medium mt-1">
               <span>
                 {unreadMessages > 0
@@ -149,13 +149,13 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
         {/* Stat 4: Patients Waiting */}
         <div className="card-minimal flex flex-col justify-between">
           <div className="flex items-start justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Waiting Now</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Waiting Now</span>
             <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
               <Clock className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold text-slate-900 tracking-tight">{waitingCount}</div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">{waitingCount}</div>
             <div className="text-xs text-amber-600 font-medium mt-1">
               <span>{inProgressCount} In Progress</span>
             </div>
@@ -168,8 +168,8 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
         {/* Left Column: Today's Schedule */}
         <div className="card-minimal flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h2 className="text-sm md:text-base font-bold text-slate-900">Today's Schedule</h2>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h2 className="text-sm md:text-base font-bold text-slate-900 dark:text-slate-100">Today's Schedule</h2>
               <button
                 onClick={() => onNavigateTab('appointments')}
                 className="text-xs font-semibold text-blue-600 hover:underline"
@@ -178,24 +178,24 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
               </button>
             </div>
 
-            <div className="divide-y divide-slate-100 mt-2">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800 mt-2">
               {schedule.map((item) => (
                 <div
                   key={item.id}
-                  className="py-3 flex items-center justify-between gap-3 hover:bg-slate-50/80 px-2 rounded-lg transition-colors"
+                  className="py-3 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/80 px-2 rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <img
                       src={item.patientAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}
                       alt={item.patientName}
-                      className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0"
+                      className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0"
                       referrerPolicy="no-referrer"
                     />
                     <div className="min-w-0">
-                      <div className="text-xs md:text-sm font-semibold text-slate-900 truncate">
+                      <div className="text-xs md:text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
                         {item.patientName}
                       </div>
-                      <div className="text-[11px] text-slate-500 truncate">
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                         {item.type}
                       </div>
                     </div>
@@ -203,7 +203,7 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
 
                   <div className="text-right shrink-0 flex items-center gap-3">
                     <div>
-                      <div className="text-xs font-bold text-slate-900">{item.time}</div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-slate-100">{item.time}</div>
                       <div className="text-[10px] text-slate-400">Duration: {item.duration}</div>
                     </div>
 
@@ -224,12 +224,12 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <span>
               Next patient in line:{' '}
               {nextWaitingPatient ? (
                 <>
-                  <strong className="text-slate-900 font-semibold">{nextWaitingPatient.patientName}</strong>{' '}
+                  <strong className="text-slate-900 dark:text-slate-100 font-semibold">{nextWaitingPatient.patientName}</strong>{' '}
                   ({nextWaitingPatient.waitTime})
                 </>
               ) : (
@@ -248,9 +248,9 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
         {/* Right Column: Patient Queue */}
         <div className="card-minimal flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm md:text-base font-bold text-slate-900">Patient Queue</h2>
+                <h2 className="text-sm md:text-base font-bold text-slate-900 dark:text-slate-100">Patient Queue</h2>
                 <span className="badge-clean badge-clean-info">
                   {waitingCount} Waiting
                 </span>
@@ -265,7 +265,7 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
                     className={`px-2 py-0.5 rounded capitalize font-medium transition-colors cursor-pointer ${
                       activeQueueTab === tab
                         ? 'bg-blue-600 text-white font-semibold'
-                        : 'text-slate-500 hover:bg-slate-100'
+                        : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     {tab === 'in-progress' ? 'Active' : tab}
@@ -274,18 +274,18 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
               </div>
             </div>
 
-            <div className="divide-y divide-slate-100 mt-2">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800 mt-2">
               {filteredQueue.map((item) => (
                 <div
                   key={item.id}
-                  className="py-2.5 px-2 flex items-center justify-between gap-3 hover:bg-slate-50 rounded-lg transition-colors"
+                  className="py-2.5 px-2 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
                 >
                   <div className="min-w-0">
-                    <div className="text-xs md:text-sm font-semibold text-slate-900 flex items-center gap-2">
+                    <div className="text-xs md:text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                       <span>{item.patientName}</span>
                       <span className="text-[11px] font-normal text-slate-400">({item.age} yrs)</span>
                     </div>
-                    <div className="text-[11px] text-slate-500 truncate">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                       {item.status} • {item.waitTime} • {item.reason}
                     </div>
                   </div>
@@ -332,7 +332,7 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Patient Activity Feed (2 Cols) */}
         <div className="lg:col-span-2 card-minimal">
-          <h3 className="text-xs md:text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+          <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
             <Activity className="w-4 h-4 text-blue-600" />
             <span>Recent Patient Activity</span>
           </h3>
@@ -343,12 +343,12 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
             ) : recentActivity.map((act) => (
               <div
                 key={act.id}
-                className="flex items-start justify-between gap-3 text-xs text-slate-600 py-1.5 px-2 hover:bg-slate-50 rounded-lg transition-colors"
+                className="flex items-start justify-between gap-3 text-xs text-slate-600 dark:text-slate-400 py-1.5 px-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
               >
                 <div className="flex items-start gap-2 min-w-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
                   <p className="truncate">
-                    {act.text} <strong className="text-slate-900 font-semibold">{act.highlightName}</strong> {act.detail}
+                    {act.text} <strong className="text-slate-900 dark:text-slate-100 font-semibold">{act.highlightName}</strong> {act.detail}
                   </p>
                 </div>
                 <span className="text-[10px] text-slate-400 shrink-0 font-medium">{act.timeAgo}</span>
@@ -364,16 +364,16 @@ export const DoctorDashboardView: React.FC<DoctorDashboardViewProps> = ({
               <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs">
                 <Sparkles className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-bold text-slate-900">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                 AI Clinical Notes Assistant
               </h3>
             </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
               Generate instant, compliant SOAP consultation summaries and prescriptions powered by Gemini.
             </p>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <span className="badge-clean badge-clean-info">Gemini 3.7</span>
             <button
               id="btn-open-clinical-notes-cta"

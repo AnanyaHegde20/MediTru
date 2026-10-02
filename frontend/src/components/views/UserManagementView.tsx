@@ -11,7 +11,7 @@ import { usePagedList } from '../../hooks/usePagedList';
 const ROLE_OPTIONS: UserRole[] = ['patient', 'doctor', 'admin'];
 
 const ROLE_BADGE_STYLES: Record<UserRole, string> = {
-  patient: 'bg-slate-100 text-slate-700',
+  patient: 'bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 text-slate-700 dark:text-slate-300 dark:text-slate-300',
   doctor: 'bg-blue-100 text-blue-700',
   admin: 'bg-violet-100 text-violet-700',
 };
@@ -146,8 +146,8 @@ export const UserManagementView: React.FC = () => {
     <div id="user-accounts-view" className="space-y-5 animate-in fade-in duration-150">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">User Accounts</h1>
-          <p className="text-slate-500 text-sm mt-0.5">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 dark:text-slate-100 tracking-tight">User Accounts</h1>
+          <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-sm mt-0.5">
             Manage who can sign in to MediTru and what they are allowed to do
           </p>
         </div>
@@ -160,14 +160,14 @@ export const UserManagementView: React.FC = () => {
               value={list.query}
               onChange={(e) => list.search(e.target.value)}
               placeholder="Search name or email..."
-              className="w-44 pl-8 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="w-44 pl-8 pr-3 py-2 bg-white dark:bg-slate-900 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
           </div>
           <button
             id="btn-export-users-csv"
             type="button"
             onClick={handleExport}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white dark:bg-slate-900 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 dark:text-slate-400 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>
@@ -184,19 +184,19 @@ export const UserManagementView: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/80 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <tr className="border-b border-slate-100 dark:border-slate-800 dark:border-slate-800 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 <th className="py-3 px-4">User</th>
                 <th className="py-3 px-4">Role</th>
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 dark:divide-slate-800">
               {users.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-50 transition-colors" data-user-email={user.email}>
+                <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 dark:hover:bg-slate-800 transition-colors" data-user-email={user.email}>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
@@ -207,7 +207,7 @@ export const UserManagementView: React.FC = () => {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-bold text-slate-900 truncate">{user.name}</div>
+                        <div className="font-bold text-slate-900 dark:text-slate-100 dark:text-slate-100 truncate">{user.name}</div>
                         <div className="text-[11px] text-slate-400 truncate">{user.email}</div>
                       </div>
                     </div>
@@ -222,7 +222,7 @@ export const UserManagementView: React.FC = () => {
                   <td className="py-3 px-4">
                     {pendingDelete?.id === user.id ? (
                       <div className="flex items-center justify-end gap-2">
-                        <span className="text-[11px] text-slate-500">Delete account?</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-400">Delete account?</span>
                         <button
                           type="button"
                           onClick={handleDelete}
@@ -233,7 +233,7 @@ export const UserManagementView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setPendingDelete(null)}
-                          className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[11px] font-semibold cursor-pointer"
+                          className="px-2 py-1 bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 rounded-lg text-[11px] font-semibold cursor-pointer"
                         >
                           Cancel
                         </button>
@@ -247,7 +247,7 @@ export const UserManagementView: React.FC = () => {
                           id={`select-role-${user.id}`}
                           value={user.role}
                           onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
-                          className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-700 focus:outline-none cursor-pointer"
+                          className="px-2 py-1.5 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-[11px] font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300 focus:outline-none cursor-pointer"
                         >
                           {ROLE_OPTIONS.map((option) => (
                             <option key={option} value={option}>
@@ -292,7 +292,7 @@ export const UserManagementView: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">
         <span>{list.totalElements} accounts</span>
         <div className="flex items-center gap-3">
           <button
@@ -300,7 +300,7 @@ export const UserManagementView: React.FC = () => {
             type="button"
             onClick={() => list.setPage(Math.max(0, list.page - 1))}
             disabled={!list.hasPrevious || list.loading}
-            className="px-3 py-1.5 rounded-lg border border-slate-200 font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 dark:border-slate-700 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             Previous
           </button>
@@ -312,7 +312,7 @@ export const UserManagementView: React.FC = () => {
             type="button"
             onClick={() => list.setPage(list.page + 1)}
             disabled={!list.hasNext || list.loading}
-            className="px-3 py-1.5 rounded-lg border border-slate-200 font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 dark:border-slate-700 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             Next
           </button>
@@ -320,32 +320,32 @@ export const UserManagementView: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center gap-3">
+        <div className="bg-white dark:bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/80 p-4 shadow-2xs flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
             <UserCog className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900 leading-tight">{list.totalElements}</div>
+            <div className="text-lg font-bold text-slate-900 dark:text-slate-100 dark:text-slate-100 leading-tight">{list.totalElements}</div>
             <div className="text-[11px] text-slate-400">Total accounts</div>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center gap-3">
+        <div className="bg-white dark:bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/80 p-4 shadow-2xs flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
             <ShieldCheck className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900 leading-tight">
+            <div className="text-lg font-bold text-slate-900 dark:text-slate-100 dark:text-slate-100 leading-tight">
               {list.facets?.admin ?? 0}
             </div>
             <div className="text-[11px] text-slate-400">Administrators</div>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center gap-3">
+        <div className="bg-white dark:bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/80 p-4 shadow-2xs flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
             <UserCog className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900 leading-tight">
+            <div className="text-lg font-bold text-slate-900 dark:text-slate-100 dark:text-slate-100 leading-tight">
               {list.facets?.doctor ?? 0}
             </div>
             <div className="text-[11px] text-slate-400">Doctors</div>
@@ -362,22 +362,22 @@ export const UserManagementView: React.FC = () => {
         >
           <form
             onSubmit={handleCreate}
-            className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md p-5 space-y-4"
+            className="bg-white dark:bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 shadow-xl w-full max-w-md p-5 space-y-4"
           >
             <div className="flex items-center justify-between">
-              <h2 id="create-user-title" className="text-base font-bold text-slate-900">Create User Account</h2>
+              <h2 id="create-user-title" className="text-base font-bold text-slate-900 dark:text-slate-100 dark:text-slate-100">Create User Account</h2>
               <button
                 type="button"
                 onClick={closeCreateModal}
                 aria-label="Close"
-                className="p-1 text-slate-400 hover:text-slate-700 rounded cursor-pointer"
+                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 dark:hover:text-slate-200 rounded cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="input-user-name" className="block text-xs font-semibold text-slate-700">
+              <label htmlFor="input-user-name" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
                 Full Name <span className="text-rose-500">*</span>
               </label>
               <input
@@ -385,12 +385,12 @@ export const UserManagementView: React.FC = () => {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="input-user-email" className="block text-xs font-semibold text-slate-700">
+              <label htmlFor="input-user-email" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
                 Email <span className="text-rose-500">*</span>
               </label>
               <input
@@ -398,12 +398,12 @@ export const UserManagementView: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="input-user-password" className="block text-xs font-semibold text-slate-700">
+              <label htmlFor="input-user-password" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
                 Password <span className="text-rose-500">*</span>
               </label>
               <input
@@ -411,19 +411,19 @@ export const UserManagementView: React.FC = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="select-user-role" className="block text-xs font-semibold text-slate-700">
+              <label htmlFor="select-user-role" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
                 Role
               </label>
               <select
                 id="select-user-role"
                 value={role}
                 onChange={(e) => setRole(e.target.value as UserRole)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none"
               >
                 {ROLE_OPTIONS.map((option) => (
                   <option key={option} value={option}>
@@ -438,7 +438,7 @@ export const UserManagementView: React.FC = () => {
                 id="btn-cancel-create-user"
                 type="button"
                 onClick={closeCreateModal}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold cursor-pointer"
+                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 rounded-xl text-xs font-semibold cursor-pointer"
               >
                 Cancel
               </button>
@@ -467,18 +467,18 @@ export const UserManagementView: React.FC = () => {
         >
           <form
             onSubmit={handleReset}
-            className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md p-5 space-y-4"
+            className="bg-white dark:bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 shadow-xl w-full max-w-md p-5 space-y-4"
           >
             <div className="flex items-center justify-between">
               <div>
-                <h2 id="reset-password-title" className="text-base font-bold text-slate-900">Reset Password</h2>
+                <h2 id="reset-password-title" className="text-base font-bold text-slate-900 dark:text-slate-100 dark:text-slate-100">Reset Password</h2>
                 <p className="text-xs text-slate-400 mt-0.5">{pendingReset.email}</p>
               </div>
               <button
                 type="button"
                 onClick={closeResetModal}
                 aria-label="Close"
-                className="p-1 text-slate-400 hover:text-slate-700 rounded cursor-pointer"
+                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 dark:hover:text-slate-200 rounded cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -487,7 +487,7 @@ export const UserManagementView: React.FC = () => {
             <div className="space-y-1">
               <label
                 htmlFor="input-reset-password"
-                className="block text-xs font-semibold text-slate-700"
+                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300"
               >
                 New Password <span className="text-rose-500">*</span>
               </label>
@@ -496,14 +496,14 @@ export const UserManagementView: React.FC = () => {
                 type="password"
                 value={resetPassword}
                 onChange={(e) => setResetPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
             <div className="space-y-1">
               <label
                 htmlFor="input-reset-password-confirm"
-                className="block text-xs font-semibold text-slate-700"
+                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300"
               >
                 Confirm New Password <span className="text-rose-500">*</span>
               </label>
@@ -512,7 +512,7 @@ export const UserManagementView: React.FC = () => {
                 type="password"
                 value={resetConfirm}
                 onChange={(e) => setResetConfirm(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
@@ -526,7 +526,7 @@ export const UserManagementView: React.FC = () => {
                 id="btn-cancel-reset-password"
                 type="button"
                 onClick={closeResetModal}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold cursor-pointer"
+                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 rounded-xl text-xs font-semibold cursor-pointer"
               >
                 Cancel
               </button>

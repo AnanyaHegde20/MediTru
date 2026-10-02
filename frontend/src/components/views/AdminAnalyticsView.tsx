@@ -69,7 +69,7 @@ export const AdminAnalyticsView: React.FC<AdminAnalyticsViewProps> = ({ appointm
     <div id="admin-analytics-screen" className="space-y-6 animate-in fade-in duration-200">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-slate-900">Analytics & KPIs</h2>
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Analytics & KPIs</h2>
           <p className="text-xs text-slate-400">
             Platform-wide appointment, revenue and specialty performance
           </p>
@@ -82,15 +82,15 @@ export const AdminAnalyticsView: React.FC<AdminAnalyticsViewProps> = ({ appointm
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((kpi) => (
-          <div key={kpi.id} id={`kpi-${kpi.id}`} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div key={kpi.id} id={`kpi-${kpi.id}`} className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-2xs">
             <div className="flex items-start justify-between">
-              <span className="text-xs font-semibold text-slate-600">{kpi.label}</span>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{kpi.label}</span>
               <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${kpi.tone}`}>
                 <kpi.icon className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-3">
-              <div className="text-2xl font-bold text-slate-900 tracking-tight">{kpi.value}</div>
+              <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">{kpi.value}</div>
               <div className={`inline-flex items-center gap-1 mt-1 text-[11px] font-medium px-2 py-0.5 rounded-md ${kpi.subTone}`}>
                 <span>{kpi.sub}</span>
               </div>

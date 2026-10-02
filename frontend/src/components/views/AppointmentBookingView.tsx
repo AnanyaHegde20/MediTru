@@ -133,7 +133,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
   return (
     <div id="appointment-booking-screen" className="space-y-6 animate-in fade-in duration-200">
       {/* Top Search & Filter Section - Matches Figma Image 4 */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/80 p-5 shadow-2xs space-y-4">
         {/* Search Bar */}
         <div className="relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -143,7 +143,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Find doctors by name, specialty, location..."
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
           />
         </div>
 
@@ -157,7 +157,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
               className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 selectedSpecialty === spec
                   ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-100/90 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                  : 'bg-slate-100 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
               {spec}
@@ -176,10 +176,10 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
               <div
                 key={doc.id}
                 id={`doctor-card-${doc.id}`}
-                className={`bg-white rounded-2xl border p-5 flex flex-col justify-between transition-all duration-150 ${
+                className={`bg-white dark:bg-slate-900 rounded-2xl border p-5 flex flex-col justify-between transition-all duration-150 ${
                   isSelected
                     ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-md'
-                    : 'border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-slate-300'
+                    : 'border-slate-200 dark:border-slate-700/80 shadow-2xs hover:shadow-sm hover:border-slate-300'
                 }`}
               >
                 <div>
@@ -188,14 +188,14 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
                     <img
                       src={doc.avatar}
                       alt={doc.name}
-                      className="w-12 h-12 rounded-full object-cover border border-slate-200 shrink-0"
+                      className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0"
                       referrerPolicy="no-referrer"
                     />
                     <div className="min-w-0">
-                      <h3 className="text-xs md:text-sm font-bold text-slate-900 truncate">
+                      <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                         {doc.name}
                       </h3>
-                      <p className="text-xs text-slate-500 truncate font-medium">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate font-medium">
                         {doc.specialty}
                       </p>
                       <p className="text-[11px] text-slate-400 truncate">Checkup</p>
@@ -204,7 +204,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
 
                   {/* Experience & Star Rating */}
                   <div className="flex items-center justify-between mt-4 text-xs">
-                    <span className="text-slate-500 font-medium">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">
                       {doc.experienceYears} years exp
                     </span>
                     <div className="flex items-center gap-1 font-bold text-slate-800">
@@ -237,8 +237,8 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
         </div>
 
         {/* Right Sticky Booking Panel - Matches Figma Image 4 */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs h-fit sticky top-20">
-          <h2 className="text-sm md:text-base font-bold text-slate-900 pb-3 border-b border-slate-100">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/80 p-5 shadow-2xs h-fit sticky top-20">
+          <h2 className="text-sm md:text-base font-bold text-slate-900 dark:text-slate-100 pb-3 border-b border-slate-100 dark:border-slate-800">
             Book Appointment
           </h2>
 
@@ -249,18 +249,18 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
           ) : (
             <>
           {/* Selected Doctor Badge */}
-          <div className="my-4 p-3 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center gap-3">
+          <div className="my-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/70 flex items-center gap-3">
             <img
               src={selectedDoctor.avatar}
               alt={selectedDoctor.name}
-              className="w-10 h-10 rounded-full object-cover border border-slate-200"
+              className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700"
               referrerPolicy="no-referrer"
             />
             <div className="min-w-0 flex-1">
-              <div className="text-xs font-bold text-slate-900 truncate">
+              <div className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                 {selectedDoctor.name}
               </div>
-              <div className="text-[11px] text-slate-500 truncate">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                 {selectedDoctor.specialty} • ${selectedDoctor.consultationFee} Consult
               </div>
             </div>
@@ -271,10 +271,10 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-800">October 2024</span>
               <div className="flex items-center gap-1 text-slate-400">
-                <button className="p-1 hover:text-slate-700 rounded transition-colors">
+                <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200 rounded transition-colors">
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <button className="p-1 hover:text-slate-700 rounded transition-colors">
+                <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200 rounded transition-colors">
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -302,7 +302,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
                     className={`py-2 rounded-lg transition-all cursor-pointer ${
                       isSelectedDay
                         ? 'bg-blue-600 text-white font-bold shadow-xs'
-                        : 'text-slate-700 hover:bg-slate-100'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     {day}
@@ -332,7 +332,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
                         className={`py-1.5 px-2 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                           isActive
                             ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-2xs'
-                            : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                            : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                         }`}
                       >
                         {slot}
@@ -359,7 +359,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
               value={consultReason}
               onChange={(e) => setConsultReason(e.target.value)}
               placeholder="e.g., Blood pressure check, skin rash..."
-              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -383,11 +383,11 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
           labelledBy="booking-success-title"
           overlayClassName="bg-slate-900/50 backdrop-blur-xs animate-in fade-in"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-center relative">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 text-center relative">
             <button
               onClick={() => setShowSuccessModal(false)}
               aria-label="Close"
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-lg"
             >
               <X className="w-4 h-4" />
             </button>
@@ -396,28 +396,28 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
               <CheckCircle2 className="w-6 h-6" />
             </div>
 
-            <h3 id="booking-success-title" className="text-lg font-bold text-slate-900">Appointment Requested!</h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <h3 id="booking-success-title" className="text-lg font-bold text-slate-900 dark:text-slate-100">Appointment Requested!</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Your appointment with <strong>{bookedAppointmentInfo.doctorName}</strong> has been
               requested and is awaiting confirmation.
             </p>
 
-            <div className="my-4 p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-left text-xs space-y-1.5">
+            <div className="my-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/80 text-left text-xs space-y-1.5">
               <div className="flex justify-between">
                 <span className="text-slate-400">Doctor:</span>
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
                   {bookedAppointmentInfo.doctorName} ({bookedAppointmentInfo.specialty})
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Date & Time:</span>
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
                   {bookedAppointmentInfo.date} at {bookedAppointmentInfo.time}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Patient:</span>
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
                   {bookedAppointmentInfo.patientName}
                 </span>
               </div>
@@ -435,7 +435,7 @@ export const AppointmentBookingView: React.FC<AppointmentBookingViewProps> = ({
               </button>
               <button
                 onClick={() => setShowSuccessModal(false)}
-                className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl"
+                className="py-2 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl"
               >
                 Done
               </button>

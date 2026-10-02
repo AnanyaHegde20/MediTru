@@ -28,7 +28,7 @@ const STATUS_STYLES = {
   good: 'text-emerald-700 bg-emerald-100',
   info: 'text-blue-700 bg-blue-100',
   bad: 'text-rose-700 bg-rose-100',
-  neutral: 'text-slate-500 bg-slate-100',
+  neutral: 'text-slate-500 dark:text-slate-400 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 dark:bg-slate-800',
 } as const;
 
 const statusPill = (kind: keyof typeof STATUS_STYLES, label: string) => (
@@ -304,19 +304,19 @@ export const SettingsView: React.FC = () => {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-5">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+      <div className="bg-white dark:bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/80 p-5 shadow-2xs space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 dark:border-slate-800">
           <div>
-            <h2 className="text-base font-bold text-slate-900">Application & Service Settings</h2>
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 dark:text-slate-100">Application & Service Settings</h2>
             <p className="text-xs text-slate-400">Configure notifications and security protocols</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl border border-slate-200/80 space-y-3">
+          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/80 space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Clinical Integrations</h3>
             <div className="space-y-2 text-xs">
-              <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
+              <div className="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800 dark:border-slate-800">
                 <span>Gemini AI Health Engine</span>
                 {!health
                   ? statusPill('neutral', 'Checking…')
@@ -324,7 +324,7 @@ export const SettingsView: React.FC = () => {
                     ? statusPill('good', 'Active')
                     : statusPill('bad', 'Unavailable')}
               </div>
-              <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
+              <div className="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800 dark:border-slate-800">
                 <span>REST API Integration</span>
                 {apiReachable === null
                   ? statusPill('neutral', 'Checking…')
@@ -348,15 +348,15 @@ export const SettingsView: React.FC = () => {
       <form
         id="profile-settings"
         onSubmit={handleSaveProfile}
-        className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4"
+        className="bg-white dark:bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/80 p-5 shadow-2xs space-y-4"
       >
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 dark:border-slate-800">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
               <User className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">My Profile</h2>
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 dark:text-slate-100">My Profile</h2>
               <p className="text-xs text-slate-400">Personal details visible to your care team</p>
             </div>
           </div>
@@ -364,7 +364,7 @@ export const SettingsView: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1">
-            <label htmlFor="input-profile-name" className="block text-xs font-semibold text-slate-700">
+            <label htmlFor="input-profile-name" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
               Full Name <span className="text-rose-500">*</span>
             </label>
             <input
@@ -372,11 +372,11 @@ export const SettingsView: React.FC = () => {
               type="text"
               value={profileName}
               onChange={(e) => setProfileName(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div className="space-y-1">
-            <label htmlFor="input-profile-phone" className="block text-xs font-semibold text-slate-700">
+            <label htmlFor="input-profile-phone" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
               Phone
             </label>
             <input
@@ -384,11 +384,11 @@ export const SettingsView: React.FC = () => {
               type="tel"
               value={profilePhone}
               onChange={(e) => setProfilePhone(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div className="space-y-1">
-            <label htmlFor="input-profile-avatar" className="block text-xs font-semibold text-slate-700">
+            <label htmlFor="input-profile-avatar" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
               Avatar URL
             </label>
             <input
@@ -396,7 +396,7 @@ export const SettingsView: React.FC = () => {
               type="text"
               value={profileAvatar}
               onChange={(e) => setProfileAvatar(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <div className="flex items-center gap-3 pt-1">
               <button
@@ -404,7 +404,7 @@ export const SettingsView: React.FC = () => {
                 type="button"
                 onClick={() => avatarFileRef.current?.click()}
                 disabled={isUploadingAvatar}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-60 text-slate-600 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-900 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 dark:hover:bg-slate-800 disabled:opacity-60 text-slate-600 dark:text-slate-400 dark:text-slate-400 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
               >
                 {isUploadingAvatar ? (
                   <span className="inline-block w-3.5 h-3.5 border-2 border-slate-300 border-t-blue-600 rounded-full animate-spin" />
@@ -425,7 +425,7 @@ export const SettingsView: React.FC = () => {
                 <img
                   src={profileAvatar}
                   alt="Avatar preview"
-                  className="w-8 h-8 rounded-full object-cover border border-slate-200"
+                  className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 dark:border-slate-700"
                   referrerPolicy="no-referrer"
                 />
               )}
@@ -433,7 +433,7 @@ export const SettingsView: React.FC = () => {
           </div>
           {currentUser?.role === 'doctor' && (
             <div className="space-y-1">
-              <label htmlFor="input-profile-badge" className="block text-xs font-semibold text-slate-700">
+              <label htmlFor="input-profile-badge" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
                 Badge / Specialty
               </label>
               <input
@@ -441,14 +441,14 @@ export const SettingsView: React.FC = () => {
                 type="text"
                 value={profileBadge}
                 onChange={(e) => setProfileBadge(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           )}
           {currentUser?.role === 'patient' && (
             <>
               <div className="space-y-1">
-                <label htmlFor="input-profile-age" className="block text-xs font-semibold text-slate-700">
+                <label htmlFor="input-profile-age" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
                   Age
                 </label>
                 <input
@@ -458,11 +458,11 @@ export const SettingsView: React.FC = () => {
                   max={150}
                   value={profileAge}
                   onChange={(e) => setProfileAge(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
               <div className="space-y-1">
-                <label htmlFor="input-profile-gender" className="block text-xs font-semibold text-slate-700">
+                <label htmlFor="input-profile-gender" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
                   Gender
                 </label>
                 <input
@@ -470,11 +470,11 @@ export const SettingsView: React.FC = () => {
                   type="text"
                   value={profileGender}
                   onChange={(e) => setProfileGender(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
               <div className="space-y-1">
-                <label htmlFor="input-profile-blood-group" className="block text-xs font-semibold text-slate-700">
+                <label htmlFor="input-profile-blood-group" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
                   Blood Group
                 </label>
                 <input
@@ -482,11 +482,11 @@ export const SettingsView: React.FC = () => {
                   type="text"
                   value={profileBloodGroup}
                   onChange={(e) => setProfileBloodGroup(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
               <div className="space-y-1 md:col-span-2">
-                <label htmlFor="input-profile-allergies" className="block text-xs font-semibold text-slate-700">
+                <label htmlFor="input-profile-allergies" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
                   Allergies (comma separated)
                 </label>
                 <input
@@ -494,11 +494,11 @@ export const SettingsView: React.FC = () => {
                   type="text"
                   value={profileAllergies}
                   onChange={(e) => setProfileAllergies(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
               <div className="space-y-1">
-                <label htmlFor="input-profile-condition" className="block text-xs font-semibold text-slate-700">
+                <label htmlFor="input-profile-condition" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
                   Medical Condition
                 </label>
                 <input
@@ -506,7 +506,7 @@ export const SettingsView: React.FC = () => {
                   type="text"
                   value={profileCondition}
                   onChange={(e) => setProfileCondition(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </>
@@ -531,15 +531,15 @@ export const SettingsView: React.FC = () => {
       <form
         id="password-settings"
         onSubmit={handleChangePassword}
-        className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4"
+        className="bg-white dark:bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/80 p-5 shadow-2xs space-y-4"
       >
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 dark:border-slate-800">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
               <Lock className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">Change Password</h2>
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 dark:text-slate-100">Change Password</h2>
               <p className="text-xs text-slate-400">Use at least 8 characters</p>
             </div>
           </div>
@@ -547,7 +547,7 @@ export const SettingsView: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1">
-            <label htmlFor="input-password-current" className="block text-xs font-semibold text-slate-700">
+            <label htmlFor="input-password-current" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
               Current Password
             </label>
             <input
@@ -555,11 +555,11 @@ export const SettingsView: React.FC = () => {
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div className="space-y-1">
-            <label htmlFor="input-password-new" className="block text-xs font-semibold text-slate-700">
+            <label htmlFor="input-password-new" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
               New Password
             </label>
             <input
@@ -567,11 +567,11 @@ export const SettingsView: React.FC = () => {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div className="space-y-1">
-            <label htmlFor="input-password-confirm" className="block text-xs font-semibold text-slate-700">
+            <label htmlFor="input-password-confirm" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">
               Confirm New Password
             </label>
             <input
@@ -579,7 +579,7 @@ export const SettingsView: React.FC = () => {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -602,15 +602,15 @@ export const SettingsView: React.FC = () => {
       {isDoctor && (
         <div
           id="availability-settings"
-          className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4"
+          className="bg-white dark:bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/80 p-5 shadow-2xs space-y-4"
         >
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                 <CalendarClock className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-slate-900">My Availability</h2>
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 dark:text-slate-100">My Availability</h2>
                 <p className="text-xs text-slate-400">
                   {myProfile
                     ? `Publishing open time slots for ${myProfile.name}.`
@@ -627,7 +627,7 @@ export const SettingsView: React.FC = () => {
             <div>
               <label
                 htmlFor="input-availability-time"
-                className="block text-xs font-semibold text-slate-700 mb-1"
+                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-1"
               >
                 Time
               </label>
@@ -636,13 +636,13 @@ export const SettingsView: React.FC = () => {
                 type="time"
                 value={newTime}
                 onChange={(e) => setNewTime(e.target.value)}
-                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
               <label
                 htmlFor="select-availability-period"
-                className="block text-xs font-semibold text-slate-700 mb-1"
+                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-1"
               >
                 Period
               </label>
@@ -650,7 +650,7 @@ export const SettingsView: React.FC = () => {
                 id="select-availability-period"
                 value={newPeriod}
                 onChange={(e) => setNewPeriod(e.target.value as SlotPeriod)}
-                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none"
+                className="px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 dark:text-slate-100 focus:outline-none"
               >
                 {PERIODS.map((period) => (
                   <option key={period} value={period}>
@@ -664,7 +664,7 @@ export const SettingsView: React.FC = () => {
               type="button"
               onClick={handleAddSlot}
               disabled={!newTime}
-              className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-60 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
+              className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 dark:hover:bg-slate-700 disabled:opacity-60 text-slate-700 dark:text-slate-300 dark:text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Slot</span>
@@ -673,7 +673,7 @@ export const SettingsView: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {PERIODS.map((period) => (
-              <div key={period} className="p-3 rounded-xl border border-slate-200/80 space-y-2">
+              <div key={period} className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/80 space-y-2">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   {PERIOD_LABELS[period]}
                 </div>

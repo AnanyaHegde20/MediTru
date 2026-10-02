@@ -54,7 +54,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             key={toast.id}
             id="app-toast"
             data-toast-type={toast.type}
-            className="pointer-events-auto bg-white border border-slate-200 shadow-lg rounded-xl px-4 py-3 flex items-center gap-3 min-w-[280px] max-w-sm animate-in fade-in slide-in-from-bottom-2"
+            className="pointer-events-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg rounded-xl px-4 py-3 flex items-center gap-3 min-w-[280px] max-w-sm animate-in fade-in slide-in-from-bottom-2"
           >
             {toast.type === "success" ? (
               <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
@@ -63,10 +63,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             ) : (
               <Info className="w-5 h-5 text-blue-500 shrink-0" />
             )}
-            <p className="text-sm text-slate-700 flex-1">{toast.message}</p>
+            <p className="text-sm text-slate-700 dark:text-slate-300 flex-1">{toast.message}</p>
             <button
               onClick={() => dismiss(toast.id)}
-              className="text-slate-400 hover:text-slate-600 shrink-0"
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 shrink-0"
             >
               <X className="w-4 h-4" />
             </button>

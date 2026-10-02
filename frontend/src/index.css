@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --primary: #2563EB;
   --secondary: #10B981;
@@ -12,6 +14,18 @@
   --radius-card: 12px;
   --radius-ui: 8px;
   --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.dark {
+  --primary: #3B82F6;
+  --secondary: #34D399;
+  --danger: #F87171;
+  --warning: #FBBF24;
+  --bg: #0B1220;
+  --surface: #111827;
+  --text-main: #E2E8F0;
+  --text-muted: #94A3B8;
+  --shadow: 0 1px 3px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.35);
 }
 
 body {
@@ -79,4 +93,34 @@ body {
 .badge-clean-neutral {
   background: #F1F5F9;
   color: #475569;
+}
+
+.dark .card-minimal {
+  background: var(--surface);
+  border-color: #1E293B;
+}
+
+.dark .badge-clean-success {
+  background: #064E3B;
+  color: #6EE7B7;
+}
+
+.dark .badge-clean-warning {
+  background: #451A03;
+  color: #FCD34D;
+}
+
+.dark .badge-clean-info {
+  background: #1E3A8A;
+  color: #93C5FD;
+}
+
+.dark .badge-clean-danger {
+  background: #450A0A;
+  color: #FCA5A5;
+}
+
+.dark .badge-clean-neutral {
+  background: #1E293B;
+  color: #CBD5E1;
 }

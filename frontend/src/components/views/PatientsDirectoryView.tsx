@@ -65,10 +65,10 @@ export const PatientsDirectoryView: React.FC<PatientsDirectoryViewProps> = ({
     appointments.find((a) => a.patientName === name);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
-      <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/80 p-5 shadow-2xs space-y-4">
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
         <div>
-          <h2 className="text-base font-bold text-slate-900">Registered Patient Directory</h2>
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Registered Patient Directory</h2>
           <p className="text-xs text-slate-400">Manage patient charts, EHR records, and consultation history</p>
         </div>
         <div className="relative w-56 max-w-full shrink-0">
@@ -79,7 +79,7 @@ export const PatientsDirectoryView: React.FC<PatientsDirectoryViewProps> = ({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search patients..."
-            className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+            className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
           />
         </div>
       </div>
@@ -104,23 +104,23 @@ export const PatientsDirectoryView: React.FC<PatientsDirectoryViewProps> = ({
             return (
               <div
                 key={p.id}
-                className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-white hover:shadow-xs transition-all flex flex-col justify-between"
+                className="p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/50 hover:bg-white hover:shadow-xs transition-all flex flex-col justify-between"
               >
                 <div className="flex items-start gap-3">
                   {p.avatar ? (
                     <img
                       src={p.avatar}
                       alt={p.name}
-                      className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                      className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700"
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 border border-slate-200 flex items-center justify-center text-xs font-bold">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs font-bold">
                       {initials(p.name)}
                     </div>
                   )}
                   <div className="min-w-0">
-                    <div className="text-xs md:text-sm font-bold text-slate-900">
+                    <div className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100">
                       {p.name}
                       {p.age != null ? ` (${p.age}y)` : ''}
                     </div>
@@ -134,7 +134,7 @@ export const PatientsDirectoryView: React.FC<PatientsDirectoryViewProps> = ({
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
+                <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                   {showViewChart ? (
                     <button
                       onClick={() => {
@@ -144,7 +144,7 @@ export const PatientsDirectoryView: React.FC<PatientsDirectoryViewProps> = ({
                         onSelectReport?.(report ?? null);
                         onNavigateToRecords?.();
                       }}
-                      className="text-[11px] font-semibold text-slate-600 hover:text-blue-600"
+                      className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600"
                     >
                       View Chart
                     </button>

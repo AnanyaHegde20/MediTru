@@ -142,6 +142,7 @@ GET/POST/PUT/DELETE on resources use the H2 **file** database (`backend/data/`),
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/health` | Health check (returns status, timestamp, hasGeminiKey) |
+| GET | `/api/search` | Global search `?q=` — doctors, users, patients, appointments, and lab reports scoped to the caller's role (min 2 chars, max 5 hits per type) |
 | POST | `/api/gemini/health-assistant` | AI health assistant (message + chat history + optional report context) |
 | POST | `/api/gemini/clinical-notes` | AI SOAP clinical notes generator |
 
@@ -161,6 +162,8 @@ AI calls are hardened: 5s connect / 30s read timeouts, API key sent via the `x-g
 All other `/api/**` endpoints require a valid JWT. Role rules:
 - `DELETE /api/**` → ADMIN only
 - `/api/users` GET/POST/PUT → ADMIN only, including `POST /api/users/{id}/reset-password`
+- `GET /api/audit-log` → ADMIN only
+- `GET /api/users/{id}/avatar` → public (serves the stored profile photo); `POST /api/users/{id}/avatar` → the user themselves or an admin
 - `GET /api/appointments/export`, `GET /api/users/export` → ADMIN only (CSV downloads)
 - `/api/patients` → DOCTOR or ADMIN
 - `/api/prescriptions` POST/PUT, `/api/patient-queue` GET/POST/PUT, `/api/doctors` POST/PUT → DOCTOR or ADMIN
@@ -183,13 +186,15 @@ All other `/api/**` endpoints require a valid JWT. Role rules:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/users` | List all users |
+| GET | `/api/users` | List all users; without parameters returns the full array, `?page=&size=&q=` returns `{ items, page, size, totalElements, totalPages, hasNext, hasPrevious, facets }` with `facets` = per-role counts |
 | POST | `/api/users` | Create user (400 on duplicate email) |
 | GET | `/api/users/{id}` | Get user by id |
 | PUT | `/api/users/{id}` | Partial update user |
 | DELETE | `/api/users/{id}` | Delete user (204) |
 | GET | `/api/users/email/{email}` | Lookup user by email |
 | POST | `/api/users/{id}/reset-password` | Admin sets a new password `{ password }` (min 8 chars); 404 for unknown users, 400 for short passwords. Revokes the user's sessions — they must sign in with the new password |
+| POST | `/api/users/{id}/avatar` | Multipart `file` upload (png/jpg/jpeg/webp, max 2 MB) — self or admin; stores under `avatars/`, returns the user with `avatar=/api/users/{id}/avatar?v=…`, and syncs the matching doctor profile |
+| GET | `/api/users/{id}/avatar` | Serve the stored profile photo (public) |
 | GET | `/api/users/export` | Download all users as CSV (no password column) |
 
 ### Patients
@@ -214,7 +219,7 @@ Doctors manage their published time slots from **Settings → My Availability** 
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/appointments` | List appointments; `?patientId=` or `?doctorId=` filter |
+| GET | `/api/appointments` | List appointments; `?patientId=` or `?doctorId=` filter; `?page=&size=&q=&status=` returns the page envelope (`q` matches patient/doctor/specialty/type) |
 | POST | `/api/appointments` | Create appointment (status must be `Pending` or `Confirmed`, defaults to `Pending`) |
 | GET | `/api/appointments/{id}` | Get appointment by id |
 | PUT | `/api/appointments/{id}` | Update appointment; status changes are validated (see workflow below) |
@@ -242,7 +247,7 @@ Doctors manage their published time slots from **Settings → My Availability** 
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/lab-reports` | List lab reports; `?patientId=` filter |
+| GET | `/api/lab-reports` | List lab reports; `?patientId=` filter; `?page=&size=&q=` returns the page envelope |
 | POST | `/api/lab-reports` | Create report metadata only (`valuesJson`, `aiSummaryJson` = JSON strings) |
 | POST | `/api/lab-reports/upload` | **Multipart upload** `file` + metadata (`name`, `category`, `date`, `doctorName`, `status`, `valuesJson`, `aiSummaryJson`, optional `patientId`) → report with real `fileSize`, `fileName`, `downloadUrl` |
 | GET | `/api/lab-reports/{id}` | Get report by id |
@@ -280,6 +285,14 @@ Doctors manage their published time slots from **Settings → My Availability** 
 | POST | `/api/notifications/read-all` | Mark every notification for the caller as read → `{"message":"All notifications marked read"}` |
 
 Reminders are generated **server-side**: a scheduled scan (`@Scheduled`, every `meditru.notifications.scan-interval-ms`, default 60s) reconciles a `notifications` table against the appointments table — patients get a row for each of their `Pending`/`Confirmed` appointments ("Appointment Reminder"), the appointment's doctor gets one for `Pending` ("Appointment Request", matched by doctor name to a doctor account), and admins get one per platform-wide `Pending` appointment ("Pending Appointment"). Rows disappear automatically when an appointment is cancelled/completed/deleted. Read state is stored per user on the server, so "Mark all read" survives reloads and different devices; the bell merges these with client-side activity (lab reports, refill requests, new messages).
+
+### Audit Log
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/audit-log` | ADMIN only; full history of `LOGIN_SUCCESS`, `LOGIN_FAILED`, `REGISTERED`, `USER_CREATED`, `ROLE_CHANGED`, `USER_UPDATED`, `USER_DELETED`, `PASSWORD_RESET`, `AVATAR_UPDATED`, `DOCTOR_CREATED`, `DOCTOR_DELETED`, `APPOINTMENT_BOOKED`, `APPOINTMENT_STATUS_CHANGED`, `LAB_UPLOADED`, `LAB_DELETED`, `REFILL_REQUESTED`; `?page=&size=&action=` returns the page envelope |
+
+Every recorded row stores `createdAt`, `actorEmail`, `actorRole`, `action`, `targetType`, `targetId`, and a human-readable `detail`. Audit writes are best-effort (failures log a warning and never break the main operation).
 
 ### Example Request — Health Assistant
 
@@ -333,6 +346,11 @@ POST /api/gemini/clinical-notes
 
 ## Frontend Behavior
 
+- **Global search** (top navbar): type-ahead combobox (250 ms debounce, min 2 chars) over doctors, users, patients, appointments, and lab reports via `GET /api/search`, scoped to the caller's role; results link straight to the matching view.
+- **List pagination:** the appointments, user accounts, and lab report lists page server-side (`?page=&size=&q=`) with debounced search boxes and Previous/Next controls; bulk result sets no longer flood the DOM.
+- **Audit log:** admins get `/admin/audit` (Sidebar → Audit Log) showing the newest actions first, with an action-type filter and pagination.
+- **Profile avatars:** Settings → upload a photo (png/jpg/webp, max 2 MB) that appears in the navbar and syncs to the doctor directory.
+- **Dark mode:** the `#btn-toggle-theme` toggle in the navbar flips a `.dark` class on `<html>`; the choice persists in `localStorage` (`meditru-theme`) and is applied before first paint (no flash).
 - **Notification bell** (top navbar): merges server-side appointment reminders with lab-report, refill, and message activity; the red unread dot reflects server read state plus locally-seen client items, and **Mark all read** persists both.
 - **Error toasts:** failed background GETs (after one automatic retry) and throttled requests show a global error toast; mutations surface their own error messages. Duplicate toasts for the same message are suppressed for 4 seconds.
 - **Session safety:** changing your password in **Settings** signs you out everywhere (you must sign in again); an admin resetting your password does the same.

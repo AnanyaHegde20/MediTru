@@ -105,8 +105,8 @@ export const DoctorsDirectoryView: React.FC = () => {
     <div id="doctors-directory-view" className="space-y-5 animate-in fade-in duration-150">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Doctor Directory</h1>
-          <p className="text-slate-500 text-sm mt-0.5">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Doctor Directory</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
             Review provider profiles, specialties and published availability
           </p>
         </div>
@@ -118,38 +118,38 @@ export const DoctorsDirectoryView: React.FC = () => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search name, specialty, hospital..."
-            className="pl-9 pr-3 py-2 w-full md:w-72 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="pl-9 pr-3 py-2 w-full md:w-72 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center gap-3">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/80 p-4 shadow-2xs flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
             <Stethoscope className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900 leading-tight">{doctors.length}</div>
+            <div className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">{doctors.length}</div>
             <div className="text-[11px] text-slate-400">Provider profiles</div>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center gap-3">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/80 p-4 shadow-2xs flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
             <Stethoscope className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900 leading-tight">
+            <div className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">
               {new Set(doctors.map((d) => d.specialty)).size}
             </div>
             <div className="text-[11px] text-slate-400">Specialties</div>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center gap-3">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/80 p-4 shadow-2xs flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
             <Star className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900 leading-tight">
+            <div className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">
               {doctors.length > 0
                 ? (
                     doctors.reduce((sum, d) => sum + (d.rating ?? 0), 0) / doctors.length
@@ -161,11 +161,11 @@ export const DoctorsDirectoryView: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 <th className="py-3 px-4">Doctor</th>
                 <th className="py-3 px-4">Specialty</th>
                 <th className="py-3 px-4">Hospital</th>
@@ -174,12 +174,12 @@ export const DoctorsDirectoryView: React.FC = () => {
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filtered.map((doc) => (
                 <tr
                   key={doc.id}
                   data-doctor-name={doc.name}
-                  className="hover:bg-slate-50 transition-colors"
+                  className="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
@@ -196,15 +196,15 @@ export const DoctorsDirectoryView: React.FC = () => {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-bold text-slate-900 truncate">{doc.name}</div>
+                        <div className="font-bold text-slate-900 dark:text-slate-100 truncate">{doc.name}</div>
                         <div className="text-[11px] text-slate-400 truncate">
                           {doc.email || 'No linked login'}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-slate-700">{doc.specialty}</td>
-                  <td className="py-3 px-4 text-slate-500 truncate max-w-[180px]">
+                  <td className="py-3 px-4 text-slate-700 dark:text-slate-300">{doc.specialty}</td>
+                  <td className="py-3 px-4 text-slate-500 dark:text-slate-400 truncate max-w-[180px]">
                     {doc.hospital || '—'}
                   </td>
                   <td className="py-3 px-4">
@@ -213,11 +213,11 @@ export const DoctorsDirectoryView: React.FC = () => {
                       <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-slate-500">{slotCount(doc)}</td>
+                  <td className="py-3 px-4 text-slate-500 dark:text-slate-400">{slotCount(doc)}</td>
                   <td className="py-3 px-4">
                     {pendingDelete?.id === doc.id ? (
                       <div className="flex items-center justify-end gap-2">
-                        <span className="text-[11px] text-slate-500">Remove doctor?</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400">Remove doctor?</span>
                         <button
                           type="button"
                           id={`btn-confirm-delete-doctor-${doc.id}`}
@@ -229,7 +229,7 @@ export const DoctorsDirectoryView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setPendingDelete(null)}
-                          className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[11px] font-semibold cursor-pointer"
+                          className="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-lg text-[11px] font-semibold cursor-pointer"
                         >
                           Cancel
                         </button>
@@ -280,22 +280,22 @@ export const DoctorsDirectoryView: React.FC = () => {
         >
           <form
             onSubmit={handleSave}
-            className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md p-5 space-y-4"
+            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl w-full max-w-md p-5 space-y-4"
           >
             <div className="flex items-center justify-between">
-              <h2 id="edit-doctor-title" className="text-base font-bold text-slate-900">Edit Doctor Profile</h2>
+              <h2 id="edit-doctor-title" className="text-base font-bold text-slate-900 dark:text-slate-100">Edit Doctor Profile</h2>
               <button
                 type="button"
                 onClick={closeEdit}
                 aria-label="Close"
-                className="p-1 text-slate-400 hover:text-slate-700 rounded cursor-pointer"
+                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="input-edit-doctor-name" className="block text-xs font-semibold text-slate-700">
+              <label htmlFor="input-edit-doctor-name" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Full Name <span className="text-rose-500">*</span>
               </label>
               <input
@@ -303,19 +303,19 @@ export const DoctorsDirectoryView: React.FC = () => {
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="select-edit-doctor-specialty" className="block text-xs font-semibold text-slate-700">
+              <label htmlFor="select-edit-doctor-specialty" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Specialty <span className="text-rose-500">*</span>
               </label>
               <select
                 id="select-edit-doctor-specialty"
                 value={editSpecialty}
                 onChange={(e) => setEditSpecialty(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none"
               >
                 {!SPECIALTY_OPTIONS.includes(editSpecialty) && editSpecialty && (
                   <option value={editSpecialty}>{editSpecialty}</option>
@@ -329,7 +329,7 @@ export const DoctorsDirectoryView: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="input-edit-doctor-hospital" className="block text-xs font-semibold text-slate-700">
+              <label htmlFor="input-edit-doctor-hospital" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Hospital / Department
               </label>
               <input
@@ -337,7 +337,7 @@ export const DoctorsDirectoryView: React.FC = () => {
                 type="text"
                 value={editHospital}
                 onChange={(e) => setEditHospital(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
@@ -346,7 +346,7 @@ export const DoctorsDirectoryView: React.FC = () => {
                 id="btn-cancel-doctor-edit"
                 type="button"
                 onClick={closeEdit}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold cursor-pointer"
+                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-semibold cursor-pointer"
               >
                 Cancel
               </button>

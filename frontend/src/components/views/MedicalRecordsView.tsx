@@ -245,7 +245,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
   return (
     <div id="medical-records-screen" className="space-y-6 animate-in fade-in duration-200">
       {/* Category Tabs & Upload CTA Header - Matches Figma Screen 6 */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/80 p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Navigation Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
           {(
@@ -258,7 +258,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 activeCategoryTab === tab
                   ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/60'
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200 dark:border-slate-700/60'
               }`}
             >
               {tab}
@@ -292,10 +292,10 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
       {/* Main Grid: Table on Left (2 Cols) & Document Preview + AI Summary Card on Right (1 Col) */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Left Table View */}
-        <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs flex flex-col justify-between">
+        <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/80 p-5 shadow-2xs flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-3">
-              <h2 className="text-sm md:text-base font-bold text-slate-900">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-3">
+              <h2 className="text-sm md:text-base font-bold text-slate-900 dark:text-slate-100">
                 {activeCategoryTab} Directory
               </h2>
               <div className="w-56 relative">
@@ -305,7 +305,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Filter records..."
-                  className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -315,7 +315,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       <th className="pb-3 px-2">Date</th>
                       <th className="pb-3 px-2">Report Name</th>
                       <th className="pb-3 px-2">Doctor</th>
@@ -323,27 +323,27 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                       <th className="pb-3 px-2 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {filteredReports.map((report) => {
                       const isSelected = activeReport?.id === report.id;
                       return (
                         <tr
                           key={report.id}
                           onClick={() => onSelectReport(report)}
-                          className={`hover:bg-slate-50 transition-colors cursor-pointer ${
+                          className={`hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer ${
                             isSelected ? 'bg-blue-50/50' : ''
                           }`}
                         >
-                          <td className="py-3.5 px-2 text-slate-500 font-medium whitespace-nowrap">
+                          <td className="py-3.5 px-2 text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">
                             {report.date}
                           </td>
-                          <td className="py-3.5 px-2 font-bold text-slate-900 whitespace-nowrap">
+                          <td className="py-3.5 px-2 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               <FileText className="w-4 h-4 text-blue-600" />
                               <span>{report.name}</span>
                             </div>
                           </td>
-                          <td className="py-3.5 px-2 text-slate-600 whitespace-nowrap">
+                          <td className="py-3.5 px-2 text-slate-600 dark:text-slate-400 whitespace-nowrap">
                             {report.doctorName}
                           </td>
                           <td className="py-3.5 px-2 whitespace-nowrap">
@@ -409,13 +409,13 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                 {prescriptions.map((rx) => (
                   <div
                     key={rx.id}
-                    className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 flex items-center justify-between gap-3"
+                    className="p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between gap-3"
                   >
                     <div>
-                      <h4 className="text-xs md:text-sm font-bold text-slate-900">
+                      <h4 className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-100">
                         {rx.medicationName} <span className="text-blue-600 font-medium">({rx.dosage})</span>
                       </h4>
-                      <p className="text-xs text-slate-500 mt-0.5">{rx.instructions}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{rx.instructions}</p>
                       <p className="text-[11px] text-slate-400 mt-1">Prescribed by {rx.doctorName} • Refills: {rx.refillsRemaining} remaining</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -451,7 +451,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                       )}
                       <span
                         className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
-                          RX_STATUS_STYLES[rx.status] ?? 'bg-slate-100 text-slate-600'
+                          RX_STATUS_STYLES[rx.status] ?? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                         }`}
                       >
                         {rx.status}
@@ -470,7 +470,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
             )}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
             <span>Showing {filteredReports.length} records</span>
             <span className="flex items-center gap-1 text-emerald-600 font-medium">
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -480,10 +480,10 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
         </div>
 
         {/* Right Side Panel (On Row Click): Document Preview + AI Summary Card - Matches Figma Screen 6 */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-5 h-fit sticky top-20">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/80 p-5 shadow-2xs space-y-5 h-fit sticky top-20">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
             <div>
-              <h3 className="text-sm font-bold text-slate-900">{activeReport?.name}</h3>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">{activeReport?.name}</h3>
               <p className="text-[11px] text-slate-400">
                 {activeReport?.date} • {activeReport?.doctorName}
               </p>
@@ -515,7 +515,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
               </button>
             </div>
 
-            <p className="text-xs text-slate-700 leading-relaxed font-normal">
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
               {activeReport?.aiSummary.overview}
             </p>
 
@@ -528,7 +528,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
               {activeReport?.aiSummary.keyFindings.map((finding, idx) => (
                 <div
                   key={idx}
-                  className="text-xs text-slate-700 pl-4 border-l-2 border-emerald-400 bg-white/60 p-1.5 rounded-r-lg"
+                  className="text-xs text-slate-700 dark:text-slate-300 pl-4 border-l-2 border-emerald-400 bg-white dark:bg-slate-900/60 p-1.5 rounded-r-lg"
                 >
                   {finding}
                 </div>
@@ -560,15 +560,15 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
               Diagnostic Markers
             </div>
 
-            <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden">
               {activeReport?.values.map((val, idx) => (
                 <div key={idx} className="p-2.5 flex items-center justify-between text-xs">
                   <div>
-                    <span className="font-semibold text-slate-900">{val.parameter}</span>
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">{val.parameter}</span>
                     <div className="text-[10px] text-slate-400">Ref: {val.referenceRange} {val.unit}</div>
                   </div>
                   <div className="text-right">
-                    <span className="font-bold text-slate-900">{val.value} {val.unit}</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{val.value} {val.unit}</span>
                     <div
                       className={`text-[10px] font-bold ${
                         val.status === 'Normal' ? 'text-emerald-600' : 'text-rose-600'
@@ -593,7 +593,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
             </button>
             <button
               onClick={() => onAskAIAboutReport(activeReport)}
-              className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              className="py-2 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
               <Bot className="w-3.5 h-3.5 text-blue-600" />
               <span>Explain</span>
@@ -609,17 +609,17 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
           labelledBy="upload-document-title"
           overlayClassName="bg-slate-900/50 backdrop-blur-xs animate-in fade-in"
         >
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 relative">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 relative">
             <button
               onClick={() => setShowUploadModal(false)}
               aria-label="Close"
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-lg"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <h3 id="upload-document-title" className="text-base font-bold text-slate-900 mb-1">Upload Medical Document</h3>
-            <p className="text-xs text-slate-500 mb-4">
+            <h3 id="upload-document-title" className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1">Upload Medical Document</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
               Add lab panels, doctor prescriptions, or radiology imaging records.
             </p>
 
@@ -644,7 +644,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                   setIsDragOver(false);
                   pickFile(e.dataTransfer.files?.[0]);
                 }}
-                className={`block border-2 border-dashed rounded-2xl p-6 text-center bg-slate-50/50 transition-colors cursor-pointer ${
+                className={`block border-2 border-dashed rounded-2xl p-6 text-center bg-slate-50 dark:bg-slate-800/50 transition-colors cursor-pointer ${
                   isDragOver ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:border-blue-500'
                 }`}
               >
@@ -671,7 +671,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
               </label>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Report / Test Name
                 </label>
                 <input
@@ -680,19 +680,19 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                   value={newReportName}
                   onChange={(e) => setNewReportName(e.target.value)}
                   placeholder="e.g. Hemoglobin A1c (HbA1c) Panel"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Category
                   </label>
                   <select
                     value={newReportCategory}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNewReportCategory(e.target.value as 'Hematology' | 'Lipid' | 'Metabolic')}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none"
                   >
                     <option value="Hematology">Hematology</option>
                     <option value="Lipid">Lipid</option>
@@ -701,13 +701,13 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Ordering Doctor
                   </label>
                   <select
                     value={newReportDoctor}
                     onChange={(e) => setNewReportDoctor(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none"
                   >
                     <option value="Dr. Alan Stone">Dr. Alan Stone (Cardiology)</option>
                     <option value="Dr. Robert Mercer">Dr. Robert Mercer (General Med)</option>
@@ -724,7 +724,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                   onChange={(e) => setIsAbnormal(e.target.checked)}
                   className="rounded text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="flag-abnormal" className="text-slate-700 font-medium">
+                <label htmlFor="flag-abnormal" className="text-slate-700 dark:text-slate-300 font-medium">
                   Flag as Abnormal (Triggers automated doctor review alert)
                 </label>
               </div>
@@ -733,7 +733,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowUploadModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   Cancel
                 </button>
@@ -760,29 +760,29 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
           labelledBy="new-prescription-title"
           overlayClassName="bg-slate-900/50 backdrop-blur-xs animate-in fade-in"
         >
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 relative">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 relative">
             <button
               onClick={() => setShowRxModal(false)}
               aria-label="Close"
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-lg"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <h3 id="new-prescription-title" className="text-base font-bold text-slate-900 mb-1">New Prescription</h3>
-            <p className="text-xs text-slate-500 mb-4">
+            <h3 id="new-prescription-title" className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1">New Prescription</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
               Prescribe medication for a registered patient.
             </p>
 
             <form onSubmit={handleCreatePrescription} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Patient</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Patient</label>
                 <select
                   id="input-rx-patient"
                   required
                   value={rxPatientId}
                   onChange={(e) => setRxPatientId(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="">
                     {patients.length === 0 ? 'No patients registered yet' : 'Select a patient…'}
@@ -796,7 +796,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Medication Name
                 </label>
                 <input
@@ -806,37 +806,37 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                   value={rxMedication}
                   onChange={(e) => setRxMedication(e.target.value)}
                   placeholder="e.g. Atorvastatin"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Dosage</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Dosage</label>
                   <input
                     id="input-rx-dosage"
                     type="text"
                     value={rxDosage}
                     onChange={(e) => setRxDosage(e.target.value)}
                     placeholder="e.g. 20 mg"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Frequency</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Frequency</label>
                   <input
                     id="input-rx-frequency"
                     type="text"
                     value={rxFrequency}
                     onChange={(e) => setRxFrequency(e.target.value)}
                     placeholder="e.g. Once daily"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Instructions
                 </label>
                 <textarea
@@ -845,12 +845,12 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                   onChange={(e) => setRxInstructions(e.target.value)}
                   placeholder="e.g. Take at bedtime with water"
                   rows={2}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Refills Allowed
                 </label>
                 <input
@@ -860,7 +860,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                   max={12}
                   value={rxRefills}
                   onChange={(e) => setRxRefills(Math.max(0, Number(e.target.value)))}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
@@ -868,7 +868,7 @@ export const MedicalRecordsView: React.FC<MedicalRecordsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowRxModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   Cancel
                 </button>

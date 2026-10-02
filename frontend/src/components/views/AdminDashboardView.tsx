@@ -95,15 +95,15 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       {/* Top KPI Row - Matches Figma Screen 7 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Total Patients */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-2xs">
           <div className="flex items-start justify-between">
-            <span className="text-xs font-semibold text-slate-600">Total Patients</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Total Patients</span>
             <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
               <Users className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-slate-900 tracking-tight">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
               {patients.length.toLocaleString()}
             </div>
             <div className="inline-flex items-center gap-1 mt-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
@@ -114,15 +114,15 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
         </div>
 
         {/* KPI 2: Active Doctors */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-2xs">
           <div className="flex items-start justify-between">
-            <span className="text-xs font-semibold text-slate-600">Active Doctors</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Active Doctors</span>
             <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <Stethoscope className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-slate-900 tracking-tight">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
               {doctors.length}
             </div>
             <div className="inline-flex items-center gap-1 mt-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
@@ -133,15 +133,15 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
         </div>
 
         {/* KPI 3: Active Appointments */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-2xs">
           <div className="flex items-start justify-between">
-            <span className="text-xs font-semibold text-slate-600">Active Appointments</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Active Appointments</span>
             <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
               <Calendar className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-slate-900 tracking-tight">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
               {activeAppointments.length}
             </div>
             <div className="inline-flex items-center gap-1 mt-1 text-[11px] font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
@@ -152,15 +152,15 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
         </div>
 
         {/* KPI 4: Consultation Revenue */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-2xs">
           <div className="flex items-start justify-between">
-            <span className="text-xs font-semibold text-slate-600">Consultation Revenue</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Consultation Revenue</span>
             <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-slate-900 tracking-tight">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
               ${revenue.toLocaleString()}
             </div>
             <div className="inline-flex items-center gap-1 mt-1 text-[11px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
@@ -172,16 +172,16 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       </div>
 
       {/* Recent System Activity Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-2">
-            <h3 className="text-sm font-bold text-slate-900">Recent Healthcare Audit Activity</h3>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/80 p-5 shadow-2xs">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-2">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Recent Healthcare Audit Activity</h3>
             <span className="text-[11px] font-semibold text-slate-400">Live appointment ledger</span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   <th className="pb-2 px-2">Patient</th>
                   <th className="pb-2 px-2">Action</th>
                   <th className="pb-2 px-2">Doctor / Unit</th>
@@ -189,12 +189,12 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   <th className="pb-2 px-2 text-right">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {recentActivity.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-2.5 px-2 font-bold text-slate-900">{item.patient}</td>
-                    <td className="py-2.5 px-2 text-slate-600">{item.action}</td>
-                    <td className="py-2.5 px-2 text-slate-500">{item.doctor}</td>
+                  <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                    <td className="py-2.5 px-2 font-bold text-slate-900 dark:text-slate-100">{item.patient}</td>
+                    <td className="py-2.5 px-2 text-slate-600 dark:text-slate-400">{item.action}</td>
+                    <td className="py-2.5 px-2 text-slate-500 dark:text-slate-400">{item.doctor}</td>
                     <td className="py-2.5 px-2 text-slate-400">{item.time}</td>
                     <td className="py-2.5 px-2 text-right">
                       <span
@@ -253,23 +253,23 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           labelledBy="add-doctor-title"
           overlayClassName="bg-slate-900/50 backdrop-blur-xs animate-in fade-in"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 relative">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 relative">
             <button
               onClick={() => setShowAddDoctorModal(false)}
               aria-label="Close"
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-lg"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <h3 id="add-doctor-title" className="text-base font-bold text-slate-900 mb-1">Add Healthcare Provider</h3>
-            <p className="text-xs text-slate-500 mb-4">
+            <h3 id="add-doctor-title" className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1">Add Healthcare Provider</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
               Register a certified doctor to the MediTru directory and scheduling system.
             </p>
 
             <form onSubmit={handleAddDoctorSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Doctor Full Name
                 </label>
                 <input
@@ -279,20 +279,20 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                   value={docName}
                   onChange={(e) => setDocName(e.target.value)}
                   placeholder="e.g. Dr. Maya Patel"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Specialty
                   </label>
                   <select
                     id="select-add-doctor-specialty"
                     value={docSpecialty}
                     onChange={(e) => setDocSpecialty(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none"
                   >
                     <option value="Cardiology">Cardiology</option>
                     <option value="Dermatology">Dermatology</option>
@@ -304,27 +304,27 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Consultation Fee ($)
                   </label>
                   <input
                     type="number"
                     value={docFee}
                     onChange={(e) => setDocFee(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Hospital / Department
                 </label>
                 <input
                   type="text"
                   value={docHospital}
                   onChange={(e) => setDocHospital(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none"
                 />
               </div>
 
@@ -332,7 +332,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowAddDoctorModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   Cancel
                 </button>

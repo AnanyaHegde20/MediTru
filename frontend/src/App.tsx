@@ -48,7 +48,7 @@ import { ActiveTab } from './types';
 
 function RouteFallback() {
   return (
-    <div className="min-h-[40vh] flex items-center justify-center text-slate-500 text-sm">
+    <div className="min-h-[40vh] flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
       <span className="inline-block w-4 h-4 border-2 border-slate-300 border-t-blue-600 rounded-full animate-spin mr-2" />
       Loading…
     </div>
@@ -63,7 +63,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   if (!currentUser) return null;
 
   return (
-    <div id="medicare-app-root" className="min-h-screen bg-[#F8FAFC] flex text-slate-900 font-sans antialiased">
+    <div id="medicare-app-root" className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1220] flex text-slate-900 dark:text-slate-100 font-sans antialiased">
       <Sidebar
         currentUser={currentUser}
         onLogout={handleLogout}
@@ -412,7 +412,7 @@ function RootRouter() {
 
   if (!authReady) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center text-slate-500 text-sm">
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1220] flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
         <span className="inline-block w-4 h-4 border-2 border-slate-300 border-t-blue-600 rounded-full animate-spin mr-2" />
         Loading MediTru…
       </div>
